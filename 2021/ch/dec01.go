@@ -1,10 +1,7 @@
 package ch
 
-import "fmt"
-
-func Dec01a(args []string) error {
-	fmt.Printf("Args: %d (%v)\n", len(args), args)
-	depths, err := dataAsInts(args, "inputs/dec01a.txt")
+func Dec01a(ctx AOContext) error {
+	depths, err := ctx.DataAsInts("inputs/dec01a.txt")
 	if err != nil {
 		return err
 	}
@@ -20,6 +17,6 @@ func Dec01a(args []string) error {
 		}
 	}
 
-	fmt.Printf("%d\n", rv)
+	ctx.FinalAnswer.Printf("%d\n", rv)
 	return nil
 }

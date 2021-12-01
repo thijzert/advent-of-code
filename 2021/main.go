@@ -1,42 +1,45 @@
 package main
 
 import (
+	"context"
+	"flag"
+	"fmt"
+	"io"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/thijzert/advent-of-code/2021/ch"
 )
 
-type AdventFunc func(args []string) error
-
-var allFuncs []AdventFunc
+var allFuncs []ch.AdventFunc
 
 func init() {
-	allFuncs = []AdventFunc{
+	allFuncs = []ch.AdventFunc{
 		ch.Dec01a,
 	}
 }
 
 func main() {
-	argIdx := len(os.Args)
-	for i, arg := range os.Args {
-		if arg == "--" {
-			argIdx = i + 1
-			break
-		}
+	var funcIdx int = len(allFuncs) - 1
+	var quiet bool
+
+	flag.IntVar(&funcIdx, "f", funcIdx, fmt.Sprintf("Index to challenge (0-%d)", funcIdx))
+	flag.BoolVar(&quiet, "q", false, "Suppress debug output")
+	flag.Parse()
+
+	var debugOut io.Writer = os.Stdout
+	if quiet {
+		debugOut = io.Discard
 	}
 
-	funcIdx := len(allFuncs) - 1
-	if argIdx > 1 {
-		if i, err := strconv.Atoi(os.Args[1]); err == nil {
-			if i > 0 && i < len(allFuncs) {
-				funcIdx = i
-			}
-		}
+	ctx := ch.AOContext{
+		Ctx:         context.Background(),
+		Args:        flag.Args(),
+		Debug:       log.New(debugOut, "", log.Lshortfile),
+		FinalAnswer: log.New(os.Stdout, "final answer: ", log.Lshortfile),
 	}
 
-	err := allFuncs[funcIdx](os.Args[argIdx:])
+	err := allFuncs[funcIdx](ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
