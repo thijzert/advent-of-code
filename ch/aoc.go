@@ -6,7 +6,7 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/thijzert/advent-of-code/2021/data"
+	"github.com/thijzert/advent-of-code/data"
 )
 
 type AOContext struct {

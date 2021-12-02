@@ -1,7 +1,9 @@
-package ch
+package aoc21
 
-func Dec01a(ctx AOContext) error {
-	depths, err := ctx.DataAsInts("inputs/dec01a.txt")
+import "github.com/thijzert/advent-of-code/ch"
+
+func Dec01a(ctx ch.AOContext) error {
+	depths, err := ctx.DataAsInts("inputs/2021/dec01.txt")
 	if err != nil {
 		return err
 	}
@@ -21,8 +23,8 @@ func Dec01a(ctx AOContext) error {
 	return nil
 }
 
-func Dec01b(ctx AOContext) error {
-	depths, err := ctx.DataAsInts("inputs/dec01a.txt")
+func Dec01b(ctx ch.AOContext) error {
+	depths, err := ctx.DataAsInts("inputs/2021/dec01.txt")
 	if err != nil {
 		return err
 	}

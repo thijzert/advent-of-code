@@ -1,16 +1,17 @@
-package ch
+package aoc21
 
 import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec02a(ctx AOContext) error {
+func Dec02a(ctx ch.AOContext) error {
 	depth := 0
 	hPosition := 0
 
-	movement, err := ctx.DataLines("inputs/dec02.txt")
+	movement, err := ctx.DataLines("inputs/2021/dec02.txt")
 	if err != nil {
 		return err
 	}
@@ -44,12 +45,12 @@ func Dec02a(ctx AOContext) error {
 	return nil
 }
 
-func Dec02b(ctx AOContext) error {
+func Dec02b(ctx ch.AOContext) error {
 	aim := 0
 	depth := 0
 	hPosition := 0
 
-	movement, err := ctx.DataLines("inputs/dec02.txt")
+	movement, err := ctx.DataLines("inputs/2021/dec02.txt")
 	if err != nil {
 		return err
 	}

@@ -8,17 +8,18 @@ import (
 	"log"
 	"os"
 
-	"github.com/thijzert/advent-of-code/2021/ch"
+	"github.com/thijzert/advent-of-code/ch"
+	"github.com/thijzert/advent-of-code/ch/aoc21"
 )
 
 var allFuncs []ch.AdventFunc
 
 func init() {
 	allFuncs = []ch.AdventFunc{
-		ch.Dec01a,
-		ch.Dec01b,
-		ch.Dec02a,
-		ch.Dec02b,
+		aoc21.Dec01a,
+		aoc21.Dec01b,
+		aoc21.Dec02a,
+		aoc21.Dec02b,
 	}
 }
 

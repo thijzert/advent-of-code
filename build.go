@@ -50,7 +50,7 @@ func main() {
 			if err != nil {
 				return err
 			}
-			runArgs := append([]string{"build/aoc-2021"}, flag.Args()...)
+			runArgs := append([]string{"build/aoc"}, flag.Args()...)
 			return passthru(ctx, runArgs...)
 		}
 	} else {
@@ -70,28 +70,6 @@ func main() {
 }
 
 func compile(ctx context.Context, conf compileConfig) error {
-	// All years in reverse order
-	allYears := []string{"2021"}
-
-	for _, year := range allYears {
-		if err := compileYear(ctx, year, conf); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func compileYear(ctx context.Context, year string, conf compileConfig) error {
-	// Change directory to year-specific folder
-	prevCwd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	if err := os.Chdir(year); err != nil {
-		return errors.Errorf("Error: cannot find %s directory. (error: %s)\nAre you *sure* you're running this from the repository root?", year, err)
-	}
-	defer os.Chdir(prevCwd)
-
 	// Embed static assets
 	if err := os.Chdir("data"); err != nil {
 		return errors.Errorf("Error: cannot find data directory. (error: %s)", err)
@@ -110,12 +88,12 @@ func compileYear(ctx context.Context, year string, conf compileConfig) error {
 	os.Chdir("../")
 
 	// Build main executable
-	execOutput := "../build/aoc-" + year
+	execOutput := "build/aoc"
 	if runtime.GOOS == "windows" || conf.GOOS == "windows" {
 		execOutput += ".exe"
 	}
 
-	gofiles, err := filepath.Glob("*.go")
+	gofiles, err := filepath.Glob("cmd/aoc/*.go")
 	if err != nil || len(gofiles) == 0 {
 		return errors.WithMessage(err, "error: cannot find any go files to compile.")
 	}
