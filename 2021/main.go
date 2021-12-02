@@ -17,6 +17,7 @@ func init() {
 	allFuncs = []ch.AdventFunc{
 		ch.Dec01a,
 		ch.Dec01b,
+		ch.Dec02a,
 	}
 }
 

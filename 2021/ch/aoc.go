@@ -2,6 +2,7 @@ package ch
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strconv"
 
@@ -13,6 +14,14 @@ type AOContext struct {
 	Args        []string
 	Debug       *log.Logger
 	FinalAnswer *log.Logger
+}
+
+func (ctx AOContext) DataLines(assetName string) ([]string, error) {
+	if len(ctx.Args) == 0 {
+		return data.GetLines(assetName)
+	}
+
+	return ctx.Args, nil
 }
 
 func (ctx AOContext) DataAsInts(assetName string) ([]int, error) {
@@ -32,3 +41,5 @@ func (ctx AOContext) DataAsInts(assetName string) ([]int, error) {
 }
 
 type AdventFunc func(AOContext) error
+
+var notImplemented = errors.New("not implemented")
