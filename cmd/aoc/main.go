@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/thijzert/advent-of-code/ch"
+	"github.com/thijzert/advent-of-code/ch/aoc20"
 	"github.com/thijzert/advent-of-code/ch/aoc21"
 )
 
@@ -16,6 +17,7 @@ var allFuncs []ch.AdventFunc
 
 func init() {
 	allFuncs = []ch.AdventFunc{
+		aoc20.Dec25a,
 		aoc21.Dec01a,
 		aoc21.Dec01b,
 		aoc21.Dec02a,
