@@ -18,6 +18,7 @@ func init() {
 		ch.Dec01a,
 		ch.Dec01b,
 		ch.Dec02a,
+		ch.Dec02b,
 	}
 }
 
