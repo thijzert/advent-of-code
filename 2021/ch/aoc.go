@@ -42,4 +42,8 @@ func (ctx AOContext) DataAsInts(assetName string) ([]int, error) {
 
 type AdventFunc func(AOContext) error
 
-var notImplemented = errors.New("not implemented")
+var errNotImplemented = errors.New("not implemented")
+
+func ExampleChallenge(ctx AOContext) error {
+	return errNotImplemented
+}
