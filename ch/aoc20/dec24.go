@@ -14,11 +14,13 @@ func Dec24a(ctx ch.AOContext) error {
 	ctx.Debug.Printf("Board dimensions: %d×%d", len(board), len(board[0]))
 
 	// Pass 3: count everything
-	ctx.FinalAnswer.Print(countHexBoard(board))
+	ctx.FinalAnswer.Print(board.Count())
 	return nil
 }
 
-func getHexBoard(directions []string, margin int) [][]bool {
+type hexBoard [][]bool
+
+func getHexBoard(directions []string, margin int) hexBoard {
 	minX, minY, maxX, maxY := 0, 0, 0, 0
 
 	// Pass 1: determine the max size of the grid
@@ -47,7 +49,7 @@ func getHexBoard(directions []string, margin int) [][]bool {
 	maxX += margin
 	maxY += margin
 
-	board := make([][]bool, maxY-minY+1)
+	board := make(hexBoard, maxY-minY+1)
 	for i := range board {
 		board[i] = make([]bool, maxX-minX+1)
 	}
@@ -63,18 +65,6 @@ func getHexBoard(directions []string, margin int) [][]bool {
 	}
 
 	return board
-}
-
-func countHexBoard(board [][]bool) int {
-	rv := 0
-	for _, row := range board {
-		for _, black := range row {
-			if black {
-				rv++
-			}
-		}
-	}
-	return rv
 }
 
 func hexBoardPos(directions string) (int, int) {
@@ -105,6 +95,46 @@ func hexBoardPos(directions string) (int, int) {
 	return x, y
 }
 
+func (board hexBoard) Count() int {
+	rv := 0
+	for _, row := range board {
+		for _, black := range row {
+			if black {
+				rv++
+			}
+		}
+	}
+	return rv
+}
+
+func (board hexBoard) At(x, y int) bool {
+	if y < 0 || y >= len(board) {
+		return false
+	}
+	if x < 0 || x >= len(board[y]) {
+		return false
+	}
+
+	return board[x][y]
+}
+
+func (board hexBoard) AdjacentBlack(x, y int) int {
+	b := func(x bool) int {
+		if x {
+			return 1
+		} else {
+			return 0
+		}
+	}
+
+	return b(board.At(y+1, x)) +
+		b(board.At(y+1, x+1)) +
+		b(board.At(y, x-1)) +
+		b(board.At(y, x+1)) +
+		b(board.At(y-1, x-1)) +
+		b(board.At(y-1, x))
+}
+
 func Dec24b(ctx ch.AOContext) error {
 	lines, err := ctx.DataLines("inputs/2020/dec24.txt")
 	if err != nil {
@@ -121,54 +151,27 @@ func Dec24b(ctx ch.AOContext) error {
 	ctx.Debug.Printf("Board dimensions: %d×%d", len(board), len(board[0]))
 
 	for i := 0; i < 100; i++ {
-		iterateHexBoard(bufBoard, board)
-		// printBoard(bufBoard)
+		board.iterate(bufBoard)
 		board, bufBoard = bufBoard, board
-		ctx.Debug.Printf("Day %3d: %d", i+1, countHexBoard(board))
+		ctx.Debug.Printf("Day %3d: %d", i+1, board.Count())
 	}
 
 	// Pass 3: count everything
-	ctx.FinalAnswer.Print(countHexBoard(board))
+	ctx.FinalAnswer.Print(board.Count())
 	return nil
 }
 
-func iterateHexBoard(buf, currentBoard [][]bool) {
+func (currentBoard hexBoard) iterate(buf hexBoard) {
 	for y, row := range currentBoard {
 		for x, black := range row {
-			btiles := 0
-			if y > 0 {
-				if currentBoard[y-1][x] {
-					btiles++
-				}
-				if x > 0 && currentBoard[y-1][x-1] {
-					btiles++
-				}
-			}
-			if x > 0 && row[x-1] {
-				btiles++
-			}
-			if x < len(row)-1 && row[x+1] {
-				btiles++
-			}
-			if y < len(currentBoard)-1 {
-				if currentBoard[y+1][x] {
-					btiles++
-				}
-				if x < len(row)-1 && currentBoard[y+1][x+1] {
-					btiles++
-				}
-			}
+			btiles := currentBoard.AdjacentBlack(x, y)
 
 			if black {
-				//fmt.Printf("Found a black tile at %d,%d with %d black tiles around it", x, y, btiles)
 				if btiles == 0 || btiles > 2 {
 					black = false
-					//fmt.Printf(" - flipping it to white")
 				}
-				//fmt.Printf("\n")
 			} else {
 				if btiles == 2 {
-					//fmt.Printf("Flipping tile at %d,%d to black\n", x, y)
 					black = true
 				}
 			}
