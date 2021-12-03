@@ -1,7 +1,6 @@
 package aoc20
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
@@ -14,114 +13,176 @@ func Dec23a(ctx ch.AOContext) error {
 		input = ctx.Args[0]
 	}
 
-	cc := newCrabCup(input)
+	cc := newCrabCup(input, len(input))
 	for i := 0; i < 100; i++ {
 		cc.Move(ctx.Debug)
 	}
 
-	ctx.Debug.Print(cc.Result())
-
-	return errors.New("not implemented")
+	ctx.FinalAnswer.Print(cc.Result())
+	return nil
 }
 
 type crabCup struct {
-	Cups    []int
-	Grab    []int
-	Current int
+	Cups    *krabbyNode
+	lookup  []*krabbyNode
+	Grab    *krabbyNode
+	Current *krabbyNode
 }
 
-func newCrabCup(labeling string) *crabCup {
+func newCrabCup(labeling string, length int) *crabCup {
 	rv := &crabCup{
-		Cups:    make([]int, len(labeling)),
-		Grab:    make([]int, 3),
-		Current: 0,
+		Cups:    &krabbyNode{V: 1},
+		lookup:  make([]*krabbyNode, length),
+		Grab:    nil,
+		Current: nil,
 	}
-	for i, c := range labeling {
-		rv.Cups[i] = int(c - '0')
+	for i := range rv.lookup {
+		if i == 0 {
+			rv.Current = rv.Cups
+		} else {
+			nd := &krabbyNode{
+				Prev: rv.Current,
+				V:    i + 1,
+				Next: nil,
+			}
+			rv.Current.Next = nd
+			rv.Current = nd
+		}
+		rv.lookup[i] = rv.Current
+	}
+	// Close the circle
+	rv.Current.Next = rv.Cups
+	rv.Cups.Prev = rv.Current
+	rv.Current = rv.Cups
+
+	// Overwrite labeling
+	nd := rv.Current
+	for _, c := range labeling {
+		nd.V = int(c - '0')
+		rv.lookup[nd.V-1] = nd
+		nd = nd.Next
 	}
 	return rv
 }
 
 func (cc *crabCup) String() string {
-	rv := "cups: "
-	for i, l := range cc.Cups {
-		if i == cc.Current {
-			rv += fmt.Sprintf("(%d)", l)
-		} else {
-			rv += fmt.Sprintf(" %d ", l)
-		}
+	return "cups: " + cc.Current.String()
+}
+
+func (cc *crabCup) Result() string {
+	start := cc.lookup[0]
+	rv := ""
+	nd := start.Next
+	for nd != start {
+		rv += fmt.Sprintf("%d", nd.V)
+		nd = nd.Next
 	}
 	return rv
 }
 
-func (cc *crabCup) Result() string {
-	for i, l := range cc.Cups {
-		if l == 1 {
-			rv := ""
-			for j := range cc.Cups[1:] {
-				rv += fmt.Sprintf("%d", cc.Cups[(i+j+1)%len(cc.Cups)])
-			}
-			return rv
-		}
-	}
-	return "?"
-}
-
 func (cc *crabCup) Move(l *log.Logger) {
-	l.Print(cc)
-
-	L := len(cc.Cups)
-	buf := make([]int, L)
-	copy(buf, cc.Cups)
-
-	for i := range cc.Grab {
-		j := (cc.Current + i + 1) % L
-		cc.Grab[i] = buf[j]
-		buf[j] = 0
+	if l != nil {
+		l.Print(cc)
 	}
 
-	l.Printf("pick up: %d", cc.Grab)
+	cc.Grab = cc.Current.Next
+	cc.Grab.Remove(cc.Grab.Next.Next)
 
-	dest := cc.Cups[cc.Current]
+	if l != nil {
+		l.Printf("pick up: %s", cc.Grab)
+	}
+
+	dest := cc.Current.V
 	found := true
 	for found {
 		dest--
 		if dest == 0 {
-			dest += L
+			dest += len(cc.lookup)
 		}
-		found = false
-		for _, p := range cc.Grab {
-			if p == dest {
-				found = true
-			}
-		}
+		found = cc.Grab.Contains(dest)
 	}
 
-	l.Printf("destination: %d", dest)
-
-	isrc := cc.Current
-	idest := cc.Current
-	for range cc.Cups {
-		if buf[isrc%L] == dest {
-			cc.Cups[idest%L] = dest
-			idest++
-			for _, p := range cc.Grab {
-				cc.Cups[idest%L] = p
-				idest++
-			}
-			isrc++
-		} else if buf[isrc%L] == 0 {
-			isrc++
-		} else {
-			cc.Cups[idest%L] = buf[isrc%L]
-			isrc++
-			idest++
-		}
+	if l != nil {
+		l.Printf("destination: %d", dest)
 	}
 
-	cc.Current = (cc.Current + 1) % L
+	cc.lookup[dest-1].Insert(cc.Grab)
+	cc.Current = cc.Current.Next
 }
 
 func Dec23b(ctx ch.AOContext) error {
-	return errors.New("not implemented")
+	input := "643719258"
+	if len(ctx.Args) > 0 {
+		input = ctx.Args[0]
+	}
+
+	cc := newCrabCup(input, 1000000)
+	for i := 0; i < 10000000; i++ {
+		cc.Move(nil)
+		if i%1000000 == 0 {
+			ctx.Debug.Printf("move %d - current: %d", i+1, cc.Current.V)
+		}
+	}
+
+	a := cc.lookup[0].Next.V
+	b := cc.lookup[0].Next.Next.V
+
+	ctx.Debug.Printf("Value after 1:      %d", a)
+	ctx.Debug.Printf("The one after that: %d", b)
+
+	ctx.FinalAnswer.Print(a * b)
+	return nil
+}
+
+type krabbyNode struct {
+	Prev *krabbyNode
+	V    int
+	Next *krabbyNode
+}
+
+func (k *krabbyNode) Insert(b *krabbyNode) {
+	after := k.Next
+	end := b.Prev
+
+	k.Next = b
+	b.Prev = k
+
+	after.Prev = end
+	end.Next = after
+}
+
+func (k *krabbyNode) Remove(until *krabbyNode) {
+	before := k.Prev
+	after := until.Next
+
+	before.Next = after
+	after.Prev = before
+
+	k.Prev = until
+	until.Next = k
+}
+
+func (k *krabbyNode) String() string {
+	rv := fmt.Sprintf("%d", k.V)
+	nd := k.Next
+	for nd != k {
+		rv += fmt.Sprintf(" %d", nd.V)
+		nd = nd.Next
+	}
+	return rv
+}
+
+func (k *krabbyNode) Contains(v int) bool {
+	if k.V == v {
+		return true
+	}
+	// There's probably some double pointer magic to be done here
+	nd := k.Next
+	for nd != k {
+		if nd.V == v {
+			return true
+		}
+		nd = nd.Next
+	}
+	return false
 }
