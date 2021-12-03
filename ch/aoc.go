@@ -33,7 +33,7 @@ func (ctx AOContext) DataAsInts(assetName string) ([]int, error) {
 	for _, str := range ctx.Args {
 		i, err := strconv.Atoi(str)
 		if err != nil {
-			return rv, err
+			continue
 		}
 		rv = append(rv, i)
 	}
