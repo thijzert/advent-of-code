@@ -9,22 +9,44 @@ import (
 )
 
 func Dec04a(ctx ch.AOContext) error {
-	lines, err := ctx.DataLines("inputs/2021/dec04.txt")
+	draw, sheets, err := setupSquidBingo(ctx, "inputs/2021/dec04.txt")
 	if err != nil {
 		return err
 	}
-
-	drawStr := strings.Split(lines[0], ",")
-	draw := make([]int, len(drawStr))
-	for i, s := range drawStr {
-		draw[i], _ = strconv.Atoi(s)
-	}
-	lines = lines[2:]
 
 	ctx.Debug.Printf("Draw: %d", draw)
 
 	minMoves := len(draw) + 5
 	finalScore := 0
+
+	for _, bs := range sheets {
+		moves, score := bs.PlayBingo(draw)
+
+		if moves < minMoves {
+			ctx.Debug.Printf("\n%s", bs)
+			ctx.Debug.Printf("this sheet won in %d moves with %d points - a new record", moves, score)
+
+			minMoves = moves
+			finalScore = score
+		}
+	}
+
+	ctx.FinalAnswer.Print(finalScore)
+	return nil
+}
+
+func setupSquidBingo(ctx ch.AOContext, assetName string) (draw []int, sheets []bingoSheet, err error) {
+	lines, err := ctx.DataLines(assetName)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	drawStr := strings.Split(lines[0], ",")
+	draw = make([]int, len(drawStr))
+	for i, s := range drawStr {
+		draw[i], _ = strconv.Atoi(s)
+	}
+	lines = lines[2:]
 
 	for len(lines) > 1 {
 		var i int
@@ -35,22 +57,13 @@ func Dec04a(ctx ch.AOContext) error {
 			}
 		}
 
-		bs := newSheet(lines[:i])
-		moves, score := bs.PlayBingo(draw)
-
-		if moves < minMoves {
-			ctx.Debug.Printf("\n%s", bs)
-			ctx.Debug.Printf("this sheet won in %d moves with %d points - a new record", moves, score)
-
-			minMoves = moves
-			finalScore = score
-		}
+		bs := newSquidBingoSheet(lines[:i])
+		sheets = append(sheets, bs)
 
 		lines = lines[i+1:]
 	}
 
-	ctx.FinalAnswer.Print(finalScore)
-	return nil
+	return
 }
 
 type bingoSheet struct {
@@ -58,7 +71,7 @@ type bingoSheet struct {
 	Contents []int
 }
 
-func newSheet(lines []string) bingoSheet {
+func newSquidBingoSheet(lines []string) bingoSheet {
 	S := len(lines)
 	rv := bingoSheet{
 		Size:     S,
@@ -115,7 +128,7 @@ func (bs bingoSheet) PlayBingo(draw []int) (moves, score int) {
 
 		bs.Contents[i] *= -1
 		rows[rowIdx]--
-		cols[rowIdx]--
+		cols[colIdx]--
 
 		if rows[rowIdx] == 0 || cols[colIdx] == 0 {
 			// We won!
@@ -134,5 +147,29 @@ func (bs bingoSheet) PlayBingo(draw []int) (moves, score int) {
 }
 
 func Dec04b(ctx ch.AOContext) error {
-	return fmt.Errorf("not implemented")
+	draw, sheets, err := setupSquidBingo(ctx, "inputs/2021/dec04.txt")
+	if err != nil {
+		return err
+	}
+
+	ctx.Debug.Printf("Draw: %d", draw)
+
+	maxMoves := 0
+	finalScore := 0
+
+	for _, bs := range sheets {
+		moves, score := bs.PlayBingo(draw)
+
+		ctx.Debug.Printf("\n%s", bs)
+		ctx.Debug.Printf("this sheet won in %d moves with %d points", moves, score)
+
+		if moves > maxMoves {
+			ctx.Debug.Printf("a new record")
+			maxMoves = moves
+			finalScore = score
+		}
+	}
+
+	ctx.FinalAnswer.Print(finalScore)
+	return nil
 }
