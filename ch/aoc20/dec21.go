@@ -1,7 +1,8 @@
 package aoc20
 
 import (
-	"errors"
+	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/thijzert/advent-of-code/ch"
@@ -16,68 +17,31 @@ func Dec21a(ctx ch.AOContext) error {
 	recipes := readRecipeList(lines)
 
 	ingredientOccurrence := make(map[string]int)
-	ingredientMap := make(map[string]int)
-	allergenMap := make(map[string]int)
-
 	for _, r := range recipes {
 		for _, ing := range r.Ingredients {
-			ingredientMap[ing] = -1
-
 			oc := ingredientOccurrence[ing]
 			ingredientOccurrence[ing] = oc + 1
 		}
-		for _, alg := range r.Allergens {
-			allergenMap[alg] = -1
-		}
 	}
 
-	allIngredients := make([]string, 0, len(ingredientMap))
-	allAllergens := make([]string, 0, len(allergenMap))
-
-	for ing := range ingredientMap {
-		ingredientMap[ing] = len(allIngredients)
-		allIngredients = append(allIngredients, ing)
+	allIngredients, allAllergens, allergenIngredients, err := translationTableFromRecipes(recipes)
+	if err != nil {
+		return err
 	}
-	for alg := range allergenMap {
-		allergenMap[alg] = len(allAllergens)
-		allAllergens = append(allAllergens, alg)
-	}
-	ctx.Debug.Printf("Allergens: %d; ingredients: %d", len(allAllergens), len(allIngredients))
+	ctx.Printf("Allergens: %d; ingredients: %d", len(allAllergens), len(allIngredients))
 
-	transTable := make([][]bool, len(allAllergens))
-	for i := range transTable {
-		transTable[i] = make([]bool, len(allIngredients))
-		for j := range transTable[i] {
-			transTable[i][j] = true
-		}
-	}
-
-	for _, r := range recipes {
-		mask := make([]bool, len(allIngredients))
-		for _, ing := range r.Ingredients {
-			mask[ingredientMap[ing]] = true
-		}
-
-		for _, alg := range r.Allergens {
-			// ctx.Debug.Printf("Anything that isn't %s cannot possibly contain %s", r.Ingredients, alg)
-			i := allergenMap[alg]
-			for j := range transTable[i] {
-				transTable[i][j] = transTable[i][j] && mask[j]
-			}
-		}
+	unsafe := make(map[string]string)
+	for alg, ing := range allergenIngredients {
+		unsafe[ing] = alg
 	}
 
 	var safeIngredients []string
-	for j, ing := range allIngredients {
-		safe := true
-		for i := range allAllergens {
-			safe = safe && !transTable[i][j]
-		}
-		if safe {
+	for _, ing := range allIngredients {
+		if _, ok := unsafe[ing]; !ok {
 			safeIngredients = append(safeIngredients, ing)
 		}
 	}
-	ctx.Debug.Printf("Safe ingredients: %s", safeIngredients)
+	ctx.Printf("Safe ingredients: (%d) %s", len(safeIngredients), safeIngredients)
 
 	totalOcc := 0
 	for _, ing := range safeIngredients {
@@ -85,11 +49,39 @@ func Dec21a(ctx ch.AOContext) error {
 	}
 
 	ctx.FinalAnswer.Print(totalOcc)
+
+	ctx.Printf("%v", allergenIngredients)
+
 	return nil
 }
 
 func Dec21b(ctx ch.AOContext) error {
-	return errors.New("not implemented")
+	lines, err := ctx.DataLines("inputs/2020/dec21.txt")
+	if err != nil {
+		return err
+	}
+
+	recipes := readRecipeList(lines)
+	allIngredients, allAllergens, allergenIngredients, err := translationTableFromRecipes(recipes)
+	if err != nil {
+		return err
+	}
+	ctx.Printf("Allergens: %d; ingredients: %d", len(allAllergens), len(allIngredients))
+
+	unsafe := make(map[string]string)
+	for alg, ing := range allergenIngredients {
+		unsafe[ing] = alg
+	}
+
+	ctx.Printf("%v", allergenIngredients)
+
+	rv := ""
+	for _, alg := range allAllergens {
+		rv += "," + allergenIngredients[alg]
+	}
+
+	ctx.FinalAnswer.Print(rv[1:])
+	return nil
 }
 
 type recipe struct {
@@ -118,4 +110,98 @@ func readRecipeList(lines []string) []recipe {
 	}
 
 	return rv
+}
+
+func translationTableFromRecipes(recipes []recipe) (allIngredients []string, allAllergens []string, allergenIngredients map[string]string, err error) {
+	ingredientOccurrence := make(map[string]int)
+	ingredientMap := make(map[string]int)
+	allergenMap := make(map[string]int)
+
+	for _, r := range recipes {
+		for _, ing := range r.Ingredients {
+			ingredientMap[ing] = -1
+
+			oc := ingredientOccurrence[ing]
+			ingredientOccurrence[ing] = oc + 1
+		}
+		for _, alg := range r.Allergens {
+			allergenMap[alg] = -1
+		}
+	}
+
+	allAllergens = make([]string, 0, len(allergenMap))
+	allIngredients = make([]string, 0, len(ingredientMap))
+
+	for alg := range allergenMap {
+		allAllergens = append(allAllergens, alg)
+	}
+	for ing := range ingredientMap {
+		allIngredients = append(allIngredients, ing)
+	}
+
+	sort.Strings(allAllergens)
+	sort.Strings(allIngredients)
+
+	for i, alg := range allAllergens {
+		allergenMap[alg] = i
+	}
+	for j, ing := range allIngredients {
+		ingredientMap[ing] = j
+	}
+
+	transTable := make([][]bool, len(allAllergens))
+	for i := range transTable {
+		transTable[i] = make([]bool, len(allIngredients))
+		for j := range transTable[i] {
+			transTable[i][j] = true
+		}
+	}
+
+	for _, r := range recipes {
+		mask := make([]bool, len(allIngredients))
+		for _, ing := range r.Ingredients {
+			mask[ingredientMap[ing]] = true
+		}
+
+		for _, alg := range r.Allergens {
+			// ctx.Debug.Printf("Anything that isn't %s cannot possibly contain %s", r.Ingredients, alg)
+			i := allergenMap[alg]
+			for j := range transTable[i] {
+				transTable[i][j] = transTable[i][j] && mask[j]
+			}
+		}
+	}
+
+	allergenIngredients = make(map[string]string)
+	done := false
+	for !done {
+		done = true
+		for i, alg := range allAllergens {
+			found := 0
+			last := -1
+			for j := range allIngredients {
+				if transTable[i][j] {
+					found++
+					last = j
+				}
+			}
+
+			if found == 1 {
+				allergenIngredients[alg] = allIngredients[last]
+				// update mask
+				for j := range allIngredients {
+					transTable[i][j] = j == last
+				}
+				for ii := range allAllergens {
+					transTable[ii][last] = ii == i
+				}
+			} else if found == 0 {
+				return nil, nil, nil, fmt.Errorf("no possible ingredients left for allergen '%s'", alg)
+			} else {
+				done = false
+			}
+		}
+	}
+
+	return
 }

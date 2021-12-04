@@ -40,6 +40,14 @@ func (ctx AOContext) DataAsInts(assetName string) ([]int, error) {
 	return rv, nil
 }
 
+func (ctx AOContext) Print(v ...interface{}) {
+	ctx.Debug.Print(v...)
+}
+
+func (ctx AOContext) Printf(format string, v ...interface{}) {
+	ctx.Debug.Printf(format, v...)
+}
+
 type AdventFunc func(AOContext) error
 
 var errNotImplemented = errors.New("not implemented")
