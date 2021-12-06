@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/thijzert/advent-of-code/data"
 )
@@ -36,6 +37,28 @@ func (ctx AOContext) DataAsInts(assetName string) ([]int, error) {
 			continue
 		}
 		rv = append(rv, i)
+	}
+	return rv, nil
+}
+
+func (ctx AOContext) DataAsIntListss(assetName string) ([][]int, error) {
+	lines, err := ctx.DataLines(assetName)
+	if err != nil {
+		return nil, err
+	}
+
+	var rv [][]int
+	for _, line := range lines {
+		strs := strings.Split(line, ",")
+		iline := make([]int, 0, len(strs))
+		for _, str := range strs {
+			i, err := strconv.Atoi(str)
+			if err != nil {
+				continue
+			}
+			iline = append(iline, i)
+		}
+		rv = append(rv, iline)
 	}
 	return rv, nil
 }
