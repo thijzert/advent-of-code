@@ -41,7 +41,7 @@ func (ctx AOContext) DataAsInts(assetName string) ([]int, error) {
 	return rv, nil
 }
 
-func (ctx AOContext) DataAsIntListss(assetName string) ([][]int, error) {
+func (ctx AOContext) DataAsIntLists(assetName string) ([][]int, error) {
 	lines, err := ctx.DataLines(assetName)
 	if err != nil {
 		return nil, err

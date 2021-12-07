@@ -5,7 +5,7 @@ import (
 )
 
 func Dec06a(ctx ch.AOContext) error {
-	lanternfish, err := ctx.DataAsIntListss("inputs/2021/dec06.txt")
+	lanternfish, err := ctx.DataAsIntLists("inputs/2021/dec06.txt")
 	if err != nil {
 		return err
 	}
@@ -21,7 +21,7 @@ func Dec06a(ctx ch.AOContext) error {
 }
 
 func Dec06b(ctx ch.AOContext) error {
-	lanternfish, err := ctx.DataAsIntListss("inputs/2021/dec06.txt")
+	lanternfish, err := ctx.DataAsIntLists("inputs/2021/dec06.txt")
 	if err != nil {
 		return err
 	}
