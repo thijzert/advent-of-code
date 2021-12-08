@@ -3,6 +3,7 @@ package aoc20
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/thijzert/advent-of-code/ch"
 )
@@ -68,7 +69,7 @@ func Dec20b(ctx ch.AOContext) error {
 			}
 			ctx.Printf("    %4d", ids)
 		}
-		ctx.Printf("Image: (%d×%d)\n%s", img.Size, img.Size, img)
+		ctx.Printf("Image: (%d×%d)\n%s", img.Size, img.Size, img.RenderWithBorders())
 	}
 	if err != nil {
 		return err
@@ -156,6 +157,11 @@ func formSatelliteImage(ctx ch.AOContext, assetName string) (satelliteImage, err
 		Size:  size,
 		Tiles: make([]satelliteImageTile, size*size),
 	}
+
+	// for i, t := range allNeighbours {
+	// 	rv.Tiles[i].Tile = t.Tile
+	// }
+	// return rv, fmt.Errorf("fuck dit")
 
 	defer func() {
 		for i, ptile := range picture {
@@ -299,19 +305,46 @@ func (i satelliteImage) String() string {
 				t, b = i.Tiles[j].At(x%8, y%8), i.Tiles[j].At(x%8, 1+y%8)
 			}
 
-			if t != 0 && b != 0 {
-				rv += "\u2588"
-			} else if t != 0 {
-				rv += "\u2580"
-			} else if b != 0 {
-				rv += "\u2584"
-			} else {
-				rv += " "
-			}
+			rv += blocks(t, b)
 		}
 	}
 
 	return rv
+}
+
+func (i satelliteImage) RenderWithBorders() string {
+	lines := make([]string, 5*i.Size)
+	for y := 0; y < i.Size; y++ {
+		for x := 0; x < i.Size; x++ {
+			j := i.Size*y + x
+			if i.Tiles[j].Tile == nil {
+				for k := 0; k < 5; k++ {
+					lines[5*y+k] += "          "
+				}
+				continue
+			}
+
+			for k := 0; k < 5; k++ {
+				a := 2*k - 1
+				for b := -1; b < 9; b++ {
+					top, bottom := i.Tiles[j].At(b, a), i.Tiles[j].At(b, a+1)
+					if b == -1 || b == 8 {
+						top *= 5
+						bottom *= 5
+					} else {
+						if k == 0 {
+							top *= 5
+						} else if k == 4 {
+							bottom *= 5
+						}
+					}
+					lines[5*y+k] += blocks(top, bottom)
+				}
+			}
+		}
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 func (i satelliteImage) At(x, y int) int {
@@ -321,6 +354,71 @@ func (i satelliteImage) At(x, y int) int {
 	}
 
 	return i.Tiles[j].At(x%8, y%8)
+}
+
+func blocks(t, b int) string {
+	if t == b {
+		if t == 0 {
+			return " "
+		} else if t == 5 {
+			return "\x1b[31m\u2588\x1b[0m"
+		} else if t == 2 {
+			return "\x1b[34m\u2588\x1b[0m"
+		} else {
+			return "\u2588"
+		}
+	}
+
+	if t == 0 {
+		if b == 5 {
+			return "\x1b[31m\u2584\x1b[0m"
+		} else if b == 2 {
+			return "\x1b[34m\u2584\x1b[0m"
+		} else {
+			return "\u2584"
+		}
+	}
+
+	if b == 0 {
+		if t == 5 {
+			return "\x1b[31m\u2580\x1b[0m"
+		} else if t == 2 {
+			return "\x1b[34m\u2580\x1b[0m"
+		} else {
+			return "\u2580"
+		}
+	}
+
+	if t == 1 {
+		if b == 5 {
+			return "\x1b[41m\u2580\x1b[0m"
+		} else if b == 2 {
+			return "\x1b[44m\u2580\x1b[0m"
+		}
+	}
+	if b == 1 {
+		if t == 5 {
+			return "\x1b[41m\u2584\x1b[0m"
+		} else if t == 2 {
+			return "\x1b[44m\u2584\x1b[0m"
+		}
+	}
+
+	if b == 5 && t == 2 {
+		return "\x1b[41m\x1b[34m\u2580\x1b[0m"
+	} else if b == 2 && t == 5 {
+		return "\x1b[41m\x1b[34m\u2584\x1b[0m"
+	}
+
+	if t != 0 && b != 0 {
+		return "\u2588"
+	} else if t != 0 {
+		return "\u2580"
+	} else if b != 0 {
+		return "\u2584"
+	} else {
+		return " "
+	}
 }
 
 type satelliteImageTile struct {
