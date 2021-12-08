@@ -115,14 +115,13 @@ func formSatelliteImage(ctx ch.AOContext, assetName string) (satelliteImage, err
 	}
 
 	for i, tile := range allNeighbours {
-		for k := 0; k < 4; k++ {
-			edge := tile.Tile.Edges[k]
+		for k, edge := range tile.Tile.Edges[:4] {
 			for j, otherTile := range allNeighbours {
 				if j == i {
 					continue
 				}
 				fits := false
-				for l, otherEdge := range otherTile.Tile.Rdges {
+				for l, otherEdge := range otherTile.Tile.Rdges[:4] {
 					if edge == otherEdge || edge == otherTile.Tile.Edges[l] {
 						fits = true
 					}
@@ -140,16 +139,21 @@ func formSatelliteImage(ctx ch.AOContext, assetName string) (satelliteImage, err
 		Rotation int
 		Flipped  bool
 	}
-	pNeighbours := func(p protoTile, side int) (int, []*tileNeighbours) {
+	pNeighbours := func(p protoTile, side int, orientation bool) (int, []*tileNeighbours) {
 		if p.TN == nil {
 			return -1, nil
 		}
 
+		edges := p.TN.Tile.Edges
+		if orientation {
+			edges = p.TN.Tile.Rdges
+		}
+
 		n := (side + p.Rotation) % 4
 		if p.Flipped {
-			return p.TN.Tile.Edges[4+n], p.TN.Neighbours[(8-n)%4]
+			return edges[4+n], p.TN.Neighbours[(8-n)%4]
 		}
-		return p.TN.Tile.Edges[n], p.TN.Neighbours[n]
+		return edges[n], p.TN.Neighbours[n]
 	}
 	picture := make([]protoTile, size*size)
 
@@ -157,11 +161,6 @@ func formSatelliteImage(ctx ch.AOContext, assetName string) (satelliteImage, err
 		Size:  size,
 		Tiles: make([]satelliteImageTile, size*size),
 	}
-
-	// for i, t := range allNeighbours {
-	// 	rv.Tiles[i].Tile = t.Tile
-	// }
-	// return rv, fmt.Errorf("fuck dit")
 
 	defer func() {
 		for i, ptile := range picture {
@@ -203,11 +202,12 @@ func formSatelliteImage(ctx ch.AOContext, assetName string) (satelliteImage, err
 	}
 
 	// HACK: fudge the data so that it's identical to the example
-	picture[0].Flipped = true
-	picture[0].Rotation = 2
+	// picture[0].Flipped = true
+	// picture[0].Rotation = 2
+	//picture[0].Rotation = 3
 
 	for k := 0; k < 4; k++ {
-		c, poss := pNeighbours(picture[0], k)
+		c, poss := pNeighbours(picture[0], k, false)
 		id := 0
 		if len(poss) > 0 {
 			id = poss[0].Tile.ID
@@ -237,7 +237,7 @@ func formSatelliteImage(ctx ch.AOContext, assetName string) (satelliteImage, err
 					if n < 0 || n >= len(rv.Tiles) || picture[n].TN == nil {
 						continue
 					}
-					c, neigh := pNeighbours(picture[n], k)
+					c, neigh := pNeighbours(picture[n], k, false)
 					constraints[k] = c
 					for _, tn := range neigh {
 						if !tn.Used {
@@ -266,7 +266,7 @@ func formSatelliteImage(ctx ch.AOContext, assetName string) (satelliteImage, err
 								if c == -1 {
 									continue
 								}
-								c0, _ := pNeighbours(picture[i], (k+2)%4)
+								c0, _ := pNeighbours(picture[i], (2+k)%4, true)
 								ctx.Printf("Rotated %d times, side %d is: %010b - looking for %010b", r, k, c0, c)
 								correct = correct && (c == c0)
 							}
@@ -471,7 +471,7 @@ func readSatelliteImagery(ctx ch.AOContext, assetName string) ([]*satelliteTile,
 		tile := &satelliteTile{
 			Contents: make([]int, 100),
 			Edges:    make([]int, 8),
-			Rdges:    make([]int, 4),
+			Rdges:    make([]int, 8),
 		}
 		fmt.Sscanf(lines[0], "Tile %d:", &tile.ID)
 		for i, l := range lines[1:11] {
@@ -488,21 +488,25 @@ func readSatelliteImagery(ctx ch.AOContext, assetName string) ([]*satelliteTile,
 			tile.Edges[0] = tile.Edges[0]<<1 | tile.Contents[i]
 			tile.Rdges[0] = tile.Rdges[0]<<1 | tile.Contents[9-i]
 			tile.Edges[4] = tile.Edges[4] | tile.Contents[i]<<i
+			tile.Rdges[4] = tile.Rdges[4] | tile.Contents[9-i]<<i
 
 			// right
 			tile.Edges[1] = tile.Edges[1]<<1 | tile.Contents[9+i*10]
-			tile.Rdges[3] = tile.Rdges[3]<<1 | tile.Contents[99-(10*i)]
+			tile.Rdges[1] = tile.Rdges[1]<<1 | tile.Contents[99-(10*i)]
 			tile.Edges[7] = tile.Edges[7] | tile.Contents[9+i*10]<<i
+			tile.Rdges[7] = tile.Rdges[7] | tile.Contents[99-(10*i)]<<i
 
 			// bottom
 			tile.Edges[2] = tile.Edges[2]<<1 | tile.Contents[99-i]
 			tile.Rdges[2] = tile.Rdges[2]<<1 | tile.Contents[90+i]
 			tile.Edges[6] = tile.Edges[6] | tile.Contents[99-i]<<i
+			tile.Rdges[6] = tile.Rdges[6] | tile.Contents[90+i]<<i
 
 			// left
 			tile.Edges[3] = tile.Edges[3]<<1 | tile.Contents[90-(10*i)]
-			tile.Rdges[1] = tile.Rdges[1]<<1 | tile.Contents[i*10]
+			tile.Rdges[3] = tile.Rdges[3]<<1 | tile.Contents[i*10]
 			tile.Edges[5] = tile.Edges[5] | tile.Contents[90-(10*i)]<<i
+			tile.Rdges[5] = tile.Rdges[5] | tile.Contents[i*10]<<i
 		}
 
 		rv = append(rv, tile)
