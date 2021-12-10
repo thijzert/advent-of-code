@@ -16,6 +16,14 @@ func signum(a int) int {
 	return 0
 }
 
+func sum(vals ...int) int {
+	rv := 0
+	for _, v := range vals {
+		rv += v
+	}
+	return rv
+}
+
 func min(vals ...int) int {
 	rv := vals[0]
 	for _, v := range vals {
