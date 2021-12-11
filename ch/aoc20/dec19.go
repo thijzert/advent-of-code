@@ -40,10 +40,7 @@ func Dec19b(ctx ch.AOContext) error {
 	if err != nil {
 		return err
 	}
-	ctx.Printf("Rules: (CNF: %v)", rset.IsChomskyNormalForm())
-	for id, rule := range rset {
-		ctx.Printf("   %3d : %v", id, rule)
-	}
+	ctx.Print(rset)
 
 	for _, s := range []string{"aabbb", "abb", "bbb", "abba", "aabba", "abbbb"} {
 		ctx.Printf("Matches '%s': %v", s, rset.CYKMatch(s, 0))
@@ -85,7 +82,24 @@ type grammarLexeme struct {
 	RuleID  int
 }
 
+func (l grammarLexeme) String() string {
+	if l.Literal != "" {
+		return "\"" + l.Literal + "\""
+	}
+	return strconv.Itoa(l.RuleID)
+}
+
 type grammarRule []grammarLexeme
+
+func (g grammarRule) String() string {
+	rv := ""
+	sep := ""
+	for _, l := range g {
+		rv += sep + l.String()
+		sep = " "
+	}
+	return rv
+}
 
 type grammarRuleSet map[int][]grammarRule
 
@@ -144,6 +158,20 @@ func parseRuleSet(rules []string) (grammarRuleSet, error) {
 	}
 
 	return rv, nil
+}
+
+func (rset grammarRuleSet) String() string {
+	rv := fmt.Sprintf("Rules: (CNF: %v)", rset.IsChomskyNormalForm())
+
+	for id, rules := range rset {
+		rv += fmt.Sprintf("\n   %3d", id)
+		sep := " : "
+		for _, rule := range rules {
+			rv += sep + rule.String()
+			sep = " | "
+		}
+	}
+	return rv
 }
 
 func (rset grammarRuleSet) IsChomskyNormalForm() bool {
