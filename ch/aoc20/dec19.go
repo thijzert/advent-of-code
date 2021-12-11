@@ -1,7 +1,6 @@
 package aoc20
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -32,23 +31,7 @@ func Dec19a(ctx ch.AOContext) error {
 }
 
 func Dec19b(ctx ch.AOContext) error {
-	rset, err := parseRuleSet([]string{
-		"0: 1 2",
-		"1: 2 2 | \"a\"",
-		"2: 1 2 | \"b\"",
-	})
-	if err != nil {
-		return err
-	}
-	ctx.Print(rset)
-
-	for _, s := range []string{"aabbb", "abb", "bbb", "abba", "aabba", "abbbb"} {
-		ctx.Printf("Matches '%s': %v", s, rset.CYKMatch(s, 0))
-	}
-
-	return fmt.Errorf("stopping here for now")
-
-	rset, lines, err := readRuleSet(ctx, "inputs/2020/dec19b.txt")
+	rset, lines, err := readRuleSet(ctx, "inputs/2020/dec19.txt")
 	if err != nil {
 		return err
 	}
@@ -61,20 +44,22 @@ func Dec19b(ctx ch.AOContext) error {
 		{grammarLexeme{RuleID: 42}, grammarLexeme{RuleID: 11}, grammarLexeme{RuleID: 31}},
 		{grammarLexeme{RuleID: 42}, grammarLexeme{RuleID: 31}},
 	}
+	rset.ChomskyNormalForm()
+	ctx.Print(rset)
 
 	rv := 0
 	for i, line := range lines {
 		if line == "" {
 			continue
 		}
-		if rset.Match(line, 0) {
+		if rset.CYKMatch(line, 0) {
 			ctx.Printf("%3d: match  %s", i+1, line)
 			rv++
 		}
 	}
 
 	ctx.FinalAnswer.Print(rv)
-	return errors.New("not implemented")
+	return nil
 }
 
 type grammarLexeme struct {
@@ -196,6 +181,60 @@ func (rset grammarRuleSet) IsChomskyNormalForm() bool {
 		}
 	}
 	return true
+}
+
+func (rset grammarRuleSet) ChomskyNormalForm() error {
+	nextID := 0
+	for id := range rset {
+		if id >= nextID {
+			nextID = id + 1
+		}
+	}
+	nextID += 1000
+
+	changed := true
+	for changed {
+		changed = false
+
+		for id, options := range rset {
+			for i, opt := range options {
+				if len(opt) == 0 {
+					return fmt.Errorf("calculating the CNF of non-λ-free languages is not implemented")
+				} else if len(opt) == 1 && opt[0].Literal == "" {
+					// Pass-through all productions of the other rule
+					for j, oopt := range rset[opt[0].RuleID] {
+						if j == 0 {
+							rset[id][i] = oopt
+						} else {
+							rset[id] = append(rset[id], oopt)
+						}
+					}
+					changed = true
+				} else if len(opt) > 2 {
+					// Split this option into the first lexeme, and a new symbol with 2-n
+					newProduction := make(grammarRule, len(opt)-1)
+					copy(newProduction, opt[1:])
+					rset[nextID] = []grammarRule{newProduction}
+					rset[id][i] = opt[0:2]
+					rset[id][i][1] = grammarLexeme{RuleID: nextID}
+					nextID++
+					changed = true
+				} else if len(opt) == 2 {
+					// Check if both lexemes aren't literals
+					for j, l := range opt {
+						if l.Literal != "" {
+							rset[nextID] = []grammarRule{{l}}
+							rset[id][i][j] = grammarLexeme{RuleID: nextID}
+							nextID++
+							changed = true
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func (rset grammarRuleSet) Match(str string, initial int) bool {
