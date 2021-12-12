@@ -38,7 +38,7 @@ func Dec12b(ctx ch.AOContext) error {
 	cave := parseCaveSystem(lines)
 
 	ctx.FinalAnswer.Print(cave.NPathsTo("end", 1))
-	return errNotImplemented
+	return nil
 }
 
 func dec12ExampleCaves() (*subcave, *subcave, *subcave) {
