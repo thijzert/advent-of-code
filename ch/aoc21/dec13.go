@@ -17,7 +17,7 @@ func Dec13a(ctx ch.AOContext) error {
 	rv := 0
 	for y := 0; y < img.Height; y++ {
 		for x := 0; x < img.Width; x++ {
-			if img.Get(x, y) == 1 {
+			if img.At(x, y) == 1 {
 				rv++
 			}
 		}
@@ -47,11 +47,9 @@ func foldTransparentPaper(ctx ch.AOContext, dotCoords, foldInstrs []string) *ima
 	}
 
 	img := &image{
-		Width:         w,
-		Height:        h,
-		DisplayWidth:  w,
-		DisplayHeight: h,
-		Contents:      make([]int, w*h),
+		Width:    w,
+		Height:   h,
+		Contents: make([]int, w*h),
 	}
 
 	for _, l := range dotCoords {
@@ -62,29 +60,31 @@ func foldTransparentPaper(ctx ch.AOContext, dotCoords, foldInstrs []string) *ima
 
 	//ctx.Printf("Initial image:\n%s", img)
 
+	newW, newH := w, h
+
 	for _, fi := range foldInstrs {
 		var axis rune
 		var coord int
 
 		fmt.Sscanf(fi, "fold along %c=%d", &axis, &coord)
 		if axis == 'x' {
-			img.DisplayWidth = coord
+			newW = coord
 		} else if axis == 'y' {
-			img.DisplayHeight = coord
+			newH = coord
 		}
 
 		for y := 0; y < h; y++ {
 			b := y
-			if y > img.DisplayHeight {
-				b = 2*img.DisplayHeight - b
+			if y > newH {
+				b = 2*newH - b
 			}
 			for x := 0; x < w; x++ {
 				a := x
-				if x > img.DisplayWidth {
-					a = 2*img.DisplayWidth - a
+				if x > newW {
+					a = 2*newW - a
 				}
 				if x != a || y != b {
-					if img.Get(x, y) == 1 {
+					if img.At(x, y) == 1 {
 						img.Set(a, b, 1)
 						img.Set(x, y, 0)
 					}
@@ -95,73 +95,17 @@ func foldTransparentPaper(ctx ch.AOContext, dotCoords, foldInstrs []string) *ima
 		//ctx.Printf("folded along %c = %d:\n%s", axis, coord, img)
 	}
 
-	return img
-}
-
-type image struct {
-	Width, Height               int
-	DisplayWidth, DisplayHeight int
-	Contents                    []int
-}
-
-func readImage(lines []string, one rune) *image {
 	rv := &image{
-		Height:        len(lines),
-		Width:         len(lines[0]),
-		DisplayHeight: len(lines),
-		DisplayWidth:  len(lines[0]),
-		Contents:      make([]int, len(lines)*len(lines[0])),
+		Width:    newW,
+		Height:   newH,
+		Contents: make([]int, newW*newH),
 	}
 
-	for y, l := range lines {
-		for x, c := range l {
-			if c == one {
-				rv.Contents[rv.Width*y+x] = 1
-			}
+	for y := 0; y < newH; y++ {
+		for x := 0; x < newW; x++ {
+			rv.Set(x, y, img.At(x, y))
 		}
 	}
 
 	return rv
-}
-
-func (i *image) String() string {
-	w, h := i.Width, i.Height
-	if i.DisplayHeight != 0 {
-		h = i.DisplayHeight
-	}
-	if i.DisplayWidth != 0 {
-		w = i.DisplayWidth
-	}
-
-	rv := ""
-	for y := 0; y < h; y++ {
-		if y > 0 {
-			rv += "\n"
-		}
-		for x := 0; x < w; x++ {
-			c := i.Contents[i.Width*y+x]
-			if c == 0 {
-				rv += "."
-			} else {
-				rv += "#"
-			}
-		}
-	}
-	return rv
-}
-
-func (i *image) Get(x, y int) int {
-	if x < 0 || x >= i.Width || y < 0 || y > i.Height {
-		return 0
-	}
-
-	return i.Contents[i.Width*y+x]
-}
-
-func (i *image) Set(x, y, v int) {
-	if x < 0 || x >= i.Width || y < 0 || y > i.Height {
-		return
-	}
-
-	i.Contents[i.Width*y+x] = v
 }
