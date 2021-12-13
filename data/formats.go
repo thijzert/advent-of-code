@@ -32,3 +32,17 @@ func GetInts(assetName string) ([]int, error) {
 
 	return rv, nil
 }
+
+func CSVInts(lines []string) [][]int {
+	var rv [][]int
+	for _, line := range lines {
+		var iln []int
+		for _, s := range strings.Split(line, ",") {
+			n, _ := strconv.Atoi(s)
+			iln = append(iln, n)
+		}
+		rv = append(rv, iln)
+	}
+
+	return rv
+}
