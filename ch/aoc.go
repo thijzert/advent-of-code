@@ -25,6 +25,32 @@ func (ctx AOContext) DataLines(assetName string) ([]string, error) {
 	return ctx.Args, nil
 }
 
+func (ctx AOContext) DataSections(assetName string) ([][]string, error) {
+	lines := ctx.Args
+	if len(ctx.Args) == 0 {
+		var err error
+		lines, err = data.GetLines(assetName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	rv := make([][]string, 1)
+	for _, l := range lines {
+		if l == "" {
+			rv = append(rv, []string{})
+		} else {
+			rv[len(rv)-1] = append(rv[len(rv)-1], l)
+		}
+	}
+
+	if len(rv[len(rv)-1]) == 0 {
+		rv = rv[:len(rv)-1]
+	}
+
+	return rv, nil
+}
+
 func (ctx AOContext) DataAsInts(assetName string) ([]int, error) {
 	if len(ctx.Args) == 0 {
 		return data.GetInts(assetName)
