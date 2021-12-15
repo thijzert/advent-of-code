@@ -17,6 +17,8 @@ var allFuncs []ch.AdventFunc
 
 func init() {
 	allFuncs = []ch.AdventFunc{
+		aoc20.Dec10a,
+		aoc20.Dec10b,
 		aoc20.Dec11a,
 		aoc20.Dec11b,
 		aoc20.Dec12a,
@@ -46,6 +48,7 @@ func init() {
 		aoc20.Dec24a,
 		aoc20.Dec24b,
 		aoc20.Dec25a,
+
 		aoc21.Dec01a,
 		aoc21.Dec01b,
 		aoc21.Dec02a,
