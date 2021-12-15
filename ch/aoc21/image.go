@@ -54,7 +54,7 @@ func (i *image) At(x, y int) int {
 }
 
 func (i *image) Set(x, y, v int) {
-	if x < 0 || x >= i.Width || y < 0 || y > i.Height {
+	if x < 0 || x >= i.Width || y < 0 || y >= i.Height {
 		return
 	}
 
