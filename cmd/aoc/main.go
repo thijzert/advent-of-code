@@ -83,6 +83,8 @@ func init() {
 		aoc21.Dec14b,
 		aoc21.Dec15a,
 		aoc21.Dec15b,
+		aoc21.Dec16a,
+		aoc21.Dec16b,
 	}
 }
 
