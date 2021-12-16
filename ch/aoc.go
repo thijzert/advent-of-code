@@ -2,7 +2,6 @@ package ch
 
 import (
 	"context"
-	"errors"
 	"log"
 	"strconv"
 	"strings"
@@ -99,8 +98,36 @@ func (ctx AOContext) Printf(format string, v ...interface{}) {
 
 type AdventFunc func(AOContext) error
 
-var errNotImplemented = errors.New("not implemented")
+type Advent [50]AdventFunc
 
-func ExampleChallenge(ctx AOContext) error {
-	return errNotImplemented
+func (ad Advent) Stars(ctx AOContext, onError func(error)) string {
+	rv := ""
+
+	for i := 0; i < 50; i += 2 {
+		published := false
+		n := 0
+		for j := 0; j < 2; j++ {
+			if ad[i+j] == nil {
+				continue
+			}
+			published = true
+			err := ad[i+j](ctx)
+			if err != nil {
+				onError(err)
+			} else {
+				n++
+			}
+		}
+		if !published {
+			rv += " "
+		} else if n == 2 {
+			rv += "\x1b[38;5;226m*\x1b[0m"
+		} else if n == 1 {
+			rv += "\x1b[38;5;252m*\x1b[0m"
+		} else {
+			rv += "\x1b[38;5;238m*\x1b[0m"
+		}
+	}
+
+	return "[" + rv + "]"
 }

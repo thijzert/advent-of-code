@@ -68,5 +68,5 @@ func Dec02b(ctx ch.AOContext) error {
 	}
 
 	ctx.FinalAnswer.Print(validPasswords)
-	return errNotImplemented
+	return nil
 }

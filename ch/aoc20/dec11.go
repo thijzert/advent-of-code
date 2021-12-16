@@ -52,7 +52,7 @@ func Dec11a(ctx ch.AOContext) error {
 	ctx.Printf("In the final data, %d seats are occupied", rv)
 
 	ctx.FinalAnswer.Print(rv)
-	return errNotImplemented
+	return nil
 }
 
 func Dec11b(ctx ch.AOContext) error {
@@ -101,7 +101,7 @@ func Dec11b(ctx ch.AOContext) error {
 	ctx.Printf("In the final data, %d seats are occupied", rv)
 
 	ctx.FinalAnswer.Print(rv)
-	return errNotImplemented
+	return nil
 }
 
 func fillSeatsStep(img *image, maxDist int, occupancyTolerance int) int {

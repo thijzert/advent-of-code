@@ -53,7 +53,7 @@ func Dec12b(ctx ch.AOContext) error {
 
 	ctx.Printf("Ship's position: %d,%d", x, y)
 	ctx.FinalAnswer.Print(abs(x) + abs(y))
-	return errNotImplemented
+	return nil
 }
 
 func navigateShip(instructions []string) (x, y, dir int, err error) {

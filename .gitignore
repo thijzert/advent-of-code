@@ -1,2 +1,5 @@
 /build
 assets.go
+/data/inputs/*/dec*a.txt
+/data/inputs/*/dec*b.txt
+/data/inputs/*/dec*c.txt

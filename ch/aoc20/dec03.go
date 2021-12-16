@@ -55,5 +55,5 @@ func Dec03b(ctx ch.AOContext) error {
 	}
 
 	ctx.FinalAnswer.Print(rv)
-	return errNotImplemented
+	return nil
 }

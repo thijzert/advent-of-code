@@ -93,7 +93,7 @@ func Dec04b(ctx ch.AOContext) error {
 	}
 
 	ctx.FinalAnswer.Print(rv)
-	return errNotImplemented
+	return nil
 }
 
 func readPassports(ctx ch.AOContext, assetName string) ([]map[string]string, error) {

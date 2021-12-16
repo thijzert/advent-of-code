@@ -1,7 +1,6 @@
 package aoc21
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 
@@ -22,7 +21,7 @@ func Dec09a(ctx ch.AOContext) error {
 	}
 
 	ctx.FinalAnswer.Print(rv)
-	return errors.New("not implemented")
+	return nil
 }
 
 func Dec09b(ctx ch.AOContext) error {
@@ -42,7 +41,7 @@ func Dec09b(ctx ch.AOContext) error {
 
 	sort.Ints(basins)
 
-	ctx.FinalAnswer.Print(basins)
+	ctx.Print(basins)
 	rv := 1
 	for _, sz := range basins[len(basins)-3:] {
 		rv *= sz

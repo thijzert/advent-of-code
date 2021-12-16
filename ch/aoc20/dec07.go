@@ -36,7 +36,7 @@ func Dec07b(ctx ch.AOContext) error {
 	trans := totalBagSize(bgr)
 
 	ctx.FinalAnswer.Print(trans["shiny gold"])
-	return errNotImplemented
+	return nil
 }
 
 type bagRule struct {
