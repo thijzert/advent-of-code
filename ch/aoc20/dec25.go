@@ -58,5 +58,6 @@ func transform(subject, loopSize, modulus int) int {
 }
 
 func Dec25b(ctx ch.AOContext) error {
-	return errors.New("not implemented")
+	ctx.FinalAnswer.Print("¯\\_(ツ)_/¯")
+	return nil
 }
