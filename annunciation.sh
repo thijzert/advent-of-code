@@ -60,7 +60,8 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-var Dec${i}a, Dec${i}b ch.AdventFunc = nil, nil
+var Dec${i}a ch.AdventFunc = nil
+var Dec${i}b ch.AdventFunc = nil
 
 // func Dec${i}a(ctx ch.AOContext) error {
 // 	sections, err := ctx.DataSections("inputs/${YEAR}/dec${i}a.txt")

@@ -125,3 +125,21 @@ func blocks(t, b int) string {
 		return " "
 	}
 }
+
+type point struct {
+	X, Y int
+}
+
+func (p point) Add(b point) point {
+	p.X += b.X
+	p.Y += b.Y
+	return p
+}
+
+type rect struct {
+	Min, Max point
+}
+
+func (r rect) Contains(p point) bool {
+	return p.X >= r.Min.X && p.X <= r.Max.X && p.Y >= r.Min.Y && p.Y <= r.Max.Y
+}

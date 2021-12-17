@@ -70,13 +70,3 @@ func dec05(ctx ch.AOContext, includeDiagonalVents bool) (int, error) {
 
 	return rv, nil
 }
-
-type point struct {
-	X, Y int
-}
-
-func (p point) Add(b point) point {
-	p.X += b.X
-	p.Y += b.Y
-	return p
-}
