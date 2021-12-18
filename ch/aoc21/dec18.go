@@ -6,8 +6,6 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-var Dec18b ch.AdventFunc = nil
-
 func Dec18a(ctx ch.AOContext) error {
 	lines := []string{
 		"[1,2]",
@@ -83,12 +81,37 @@ func Dec18a(ctx ch.AOContext) error {
 
 	ctx.Printf("snailfish sum: %s", sn)
 	ctx.FinalAnswer.Print(sn.Magnitude())
-	return errNotImplemented
+	return nil
 }
 
-// func Dec18b(ctx ch.AOContext) error {
-// 	return errNotImplemented
-// }
+func Dec18b(ctx ch.AOContext) error {
+	lines, err := ctx.DataLines("inputs/2021/dec18.txt")
+	if err != nil {
+		return err
+	}
+
+	mmax := 0
+
+	for _, left := range lines {
+		for _, right := range lines {
+			if left == right || left == "" || right == "" {
+				continue
+			}
+
+			a, _, _ := parseSnailfishNumber(left)
+			b, _, _ := parseSnailfishNumber(right)
+
+			a.Add(b)
+			m := a.Magnitude()
+			if m > mmax {
+				mmax = m
+			}
+		}
+	}
+
+	ctx.FinalAnswer.Print(mmax)
+	return nil
+}
 
 type snailfish struct {
 	N    int
