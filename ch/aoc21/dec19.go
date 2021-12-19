@@ -99,14 +99,11 @@ func findScannerPositionsFromCommonBeacons(ctx ch.AOContext, scanners [][]point3
 	changed := true
 	for changed {
 		changed = false
-		weGotEm := false
 		for i, points := range scanners {
 			if _, ok := scannerPos[i]; ok {
 				continue
 			}
-			if weGotEm {
-				break
-			}
+			weGotEm := false
 
 			for j, sp := range scannerPos {
 				if weGotEm {
@@ -139,7 +136,10 @@ func findScannerPositionsFromCommonBeacons(ctx ch.AOContext, scanners [][]point3
 							}
 
 							match := 0
-							for _, c := range points {
+							for k, c := range points {
+								if match+len(points)-k < 12 {
+									break
+								}
 								for _, d := range jPoints {
 									if sp.Abs(d) == iPos.Abs(c) {
 										match++
