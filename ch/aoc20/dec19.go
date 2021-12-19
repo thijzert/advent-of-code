@@ -35,12 +35,13 @@ func Dec19b(ctx ch.AOContext) error {
 	if err != nil {
 		return err
 	}
+	ctx.Printf("%d rules, %d strings to match", len(rset.Rules), len(lines))
 
-	rset[8] = []grammarRule{
+	rset.Rules[8] = []grammarRule{
 		{grammarLexeme{RuleID: 42}, grammarLexeme{RuleID: 8}},
 		{grammarLexeme{RuleID: 42}},
 	}
-	rset[11] = []grammarRule{
+	rset.Rules[11] = []grammarRule{
 		{grammarLexeme{RuleID: 42}, grammarLexeme{RuleID: 11}, grammarLexeme{RuleID: 31}},
 		{grammarLexeme{RuleID: 42}, grammarLexeme{RuleID: 31}},
 	}
@@ -86,9 +87,22 @@ func (g grammarRule) String() string {
 	return rv
 }
 
-type grammarRuleSet map[int][]grammarRule
+type invRule struct {
+	Left, Right int
+}
 
-func readRuleSet(ctx ch.AOContext, assetName string) (grammarRuleSet, []string, error) {
+type grammarRuleSet struct {
+	Rules   map[int][]grammarRule
+	inverse map[invRule][]int
+}
+
+func newGrammarRuleSet() *grammarRuleSet {
+	return &grammarRuleSet{
+		Rules: make(map[int][]grammarRule),
+	}
+}
+
+func readRuleSet(ctx ch.AOContext, assetName string) (*grammarRuleSet, []string, error) {
 	lines, err := ctx.DataLines(assetName)
 	if err != nil {
 		return nil, nil, err
@@ -109,8 +123,8 @@ func readRuleSet(ctx ch.AOContext, assetName string) (grammarRuleSet, []string, 
 	return rv, rest, err
 }
 
-func parseRuleSet(rules []string) (grammarRuleSet, error) {
-	rv := make(grammarRuleSet)
+func parseRuleSet(rules []string) (*grammarRuleSet, error) {
+	rv := newGrammarRuleSet()
 
 	for i, l := range rules {
 		if l == "" {
@@ -138,17 +152,38 @@ func parseRuleSet(rules []string) (grammarRuleSet, error) {
 					rule = append(rule, grammarLexeme{RuleID: n})
 				}
 			}
-			rv[id] = append(rv[id], rule)
+			rv.Rules[id] = append(rv.Rules[id], rule)
 		}
 	}
+
+	rv.recreateInverses()
 
 	return rv, nil
 }
 
-func (rset grammarRuleSet) String() string {
+func (rset *grammarRuleSet) recreateInverses() int {
+	rset.inverse = make(map[invRule][]int)
+	for id, opts := range rset.Rules {
+		for _, opt := range opts {
+			if len(opt) == 2 && opt[0].Literal == "" && opt[1].Literal == "" {
+				j := invRule{opt[0].RuleID, opt[1].RuleID}
+				rset.inverse[j] = append(rset.inverse[j], id)
+			}
+		}
+	}
+	rv := 0
+	for _, ids := range rset.inverse {
+		if len(ids) > 1 {
+			rv++
+		}
+	}
+	return rv
+}
+
+func (rset *grammarRuleSet) String() string {
 	rv := fmt.Sprintf("Rules: (CNF: %v)", rset.IsChomskyNormalForm())
 
-	for id, rules := range rset {
+	for id, rules := range rset.Rules {
 		rv += fmt.Sprintf("\n   %3d", id)
 		sep := " : "
 		for _, rule := range rules {
@@ -159,8 +194,8 @@ func (rset grammarRuleSet) String() string {
 	return rv
 }
 
-func (rset grammarRuleSet) IsChomskyNormalForm() bool {
-	for _, options := range rset {
+func (rset *grammarRuleSet) IsChomskyNormalForm() bool {
+	for _, options := range rset.Rules {
 		for _, opt := range options {
 			if len(opt) == 0 {
 				return false
@@ -172,7 +207,7 @@ func (rset grammarRuleSet) IsChomskyNormalForm() bool {
 				if opt[0].Literal != "" || opt[1].Literal != "" {
 					return false
 				}
-				if len(rset[opt[0].RuleID]) == 0 || len(rset[opt[1].RuleID]) == 0 {
+				if len(rset.Rules[opt[0].RuleID]) == 0 || len(rset.Rules[opt[1].RuleID]) == 0 {
 					return false
 				}
 			} else {
@@ -183,9 +218,9 @@ func (rset grammarRuleSet) IsChomskyNormalForm() bool {
 	return true
 }
 
-func (rset grammarRuleSet) ChomskyNormalForm() error {
+func (rset *grammarRuleSet) ChomskyNormalForm() error {
 	nextID := 0
-	for id := range rset {
+	for id := range rset.Rules {
 		if id >= nextID {
 			nextID = id + 1
 		}
@@ -196,17 +231,17 @@ func (rset grammarRuleSet) ChomskyNormalForm() error {
 	for changed {
 		changed = false
 
-		for id, options := range rset {
+		for id, options := range rset.Rules {
 			for i, opt := range options {
 				if len(opt) == 0 {
 					return fmt.Errorf("calculating the CNF of non-λ-free languages is not implemented")
 				} else if len(opt) == 1 && opt[0].Literal == "" {
 					// Pass-through all productions of the other rule
-					for j, oopt := range rset[opt[0].RuleID] {
+					for j, oopt := range rset.Rules[opt[0].RuleID] {
 						if j == 0 {
-							rset[id][i] = oopt
+							rset.Rules[id][i] = oopt
 						} else {
-							rset[id] = append(rset[id], oopt)
+							rset.Rules[id] = append(rset.Rules[id], oopt)
 						}
 					}
 					changed = true
@@ -214,17 +249,17 @@ func (rset grammarRuleSet) ChomskyNormalForm() error {
 					// Split this option into the first lexeme, and a new symbol with 2-n
 					newProduction := make(grammarRule, len(opt)-1)
 					copy(newProduction, opt[1:])
-					rset[nextID] = []grammarRule{newProduction}
-					rset[id][i] = opt[0:2]
-					rset[id][i][1] = grammarLexeme{RuleID: nextID}
+					rset.Rules[nextID] = []grammarRule{newProduction}
+					rset.Rules[id][i] = opt[0:2]
+					rset.Rules[id][i][1] = grammarLexeme{RuleID: nextID}
 					nextID++
 					changed = true
 				} else if len(opt) == 2 {
 					// Check if both lexemes aren't literals
 					for j, l := range opt {
 						if l.Literal != "" {
-							rset[nextID] = []grammarRule{{l}}
-							rset[id][i][j] = grammarLexeme{RuleID: nextID}
+							rset.Rules[nextID] = []grammarRule{{l}}
+							rset.Rules[id][i][j] = grammarLexeme{RuleID: nextID}
 							nextID++
 							changed = true
 						}
@@ -233,6 +268,8 @@ func (rset grammarRuleSet) ChomskyNormalForm() error {
 			}
 		}
 	}
+
+	rset.recreateInverses()
 
 	return nil
 }
@@ -247,7 +284,7 @@ func (rset grammarRuleSet) matchRule(str string, offset int, ruleID int, depth i
 		return 0, false
 	}
 
-	options := rset[ruleID]
+	options := rset.Rules[ruleID]
 	for _, opt := range options {
 		suboff := offset
 		matches := true
@@ -283,7 +320,7 @@ func (rset grammarRuleSet) CYKMatch(str string, initial int) bool {
 		if l == 0 {
 			for i, c := range str {
 				V[l][i] = make(map[int]bool)
-				for id, opts := range rset {
+				for id, opts := range rset.Rules {
 					for _, option := range opts {
 						if len(option) == 1 && len(option[0].Literal) == 1 && rune(option[0].Literal[0]) == c {
 							V[l][i][id] = true
@@ -301,30 +338,15 @@ func (rset grammarRuleSet) CYKMatch(str string, initial int) bool {
 					mm := V[l-d-1][j+d+1]
 					for left := range m {
 						for right := range mm {
-							for id, opts := range rset {
-								for _, option := range opts {
-									if len(option) == 2 && option[0].Literal == "" && option[1].Literal == "" && option[0].RuleID == left && option[1].RuleID == right {
-										V[l][j][id] = true
-									}
-								}
+							invI := invRule{left, right}
+							for _, id := range rset.inverse[invI] {
+								V[l][j][id] = true
 							}
 						}
 					}
 				}
 			}
 		}
-
-		// fmt.Printf("  [")
-		// for _, m := range V[l] {
-		// 	fmt.Printf(" {")
-		// 	sep := ""
-		// 	for id := range m {
-		// 		fmt.Printf("%s%d", sep, id)
-		// 		sep = " "
-		// 	}
-		// 	fmt.Printf("}")
-		// }
-		// fmt.Printf(" ]\n")
 	}
 
 	return V[len(str)-1][0][initial]
