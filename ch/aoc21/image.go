@@ -175,6 +175,13 @@ func (p point3) Add(b point3) point3 {
 	return p
 }
 
+func (p point3) Sub(b point3) point3 {
+	p.X -= b.X
+	p.Y -= b.Y
+	p.Z -= b.Z
+	return p
+}
+
 func (p point3) Tr(o orientation) point3 {
 	p.X, p.Y, p.Z = o.Tr(p.X, p.Y, p.Z)
 	return p
