@@ -6,12 +6,73 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-var Dec19b ch.AdventFunc = nil
-
 func Dec19a(ctx ch.AOContext) error {
-	sections, err := ctx.DataSections("inputs/2021/dec19.txt")
+	scanners, err := readScannerBeacons(ctx, "inputs/2021/dec19.txt")
 	if err != nil {
 		return err
+	}
+	scannerPos, err := findScannerPositionsFromCommonBeacons(ctx, scanners)
+	if err != nil {
+		return err
+	}
+
+	allBeacons := make(map[point3]bool)
+
+	for i, points := range scanners {
+		sp, ok := scannerPos[i]
+		if !ok {
+			return fmt.Errorf("failed to find a position for scanner %d", i)
+		}
+
+		for _, pt := range points {
+			allBeacons[sp.Abs(pt)] = true
+		}
+	}
+
+	ctx.FinalAnswer.Print(len(allBeacons))
+	return nil
+}
+
+func Dec19b(ctx ch.AOContext) error {
+	scanners, err := readScannerBeacons(ctx, "inputs/2021/dec19.txt")
+	if err != nil {
+		return err
+	}
+	scannerPos, err := findScannerPositionsFromCommonBeacons(ctx, scanners)
+	if err != nil {
+		return err
+	}
+
+	maxD := 0
+
+	for _, spA := range scannerPos {
+		for _, spB := range scannerPos {
+			mhd := abs(spA.Position.X-spB.Position.X) + abs(spA.Position.Y-spB.Position.Y) + abs(spA.Position.Z-spB.Position.Z)
+			if mhd > maxD {
+				maxD = mhd
+			}
+		}
+	}
+
+	ctx.FinalAnswer.Print(maxD)
+	return nil
+}
+
+type scannerPosition struct {
+	Position    point3
+	Orientation orientation
+}
+
+func (sp scannerPosition) Abs(relative point3) point3 {
+	relative = relative.Tr(sp.Orientation)
+	relative = relative.Add(sp.Position)
+	return relative
+}
+
+func readScannerBeacons(ctx ch.AOContext, assetName string) ([][]point3, error) {
+	sections, err := ctx.DataSections(assetName)
+	if err != nil {
+		return nil, err
 	}
 
 	var scanners [][]point3
@@ -23,32 +84,52 @@ func Dec19a(ctx ch.AOContext) error {
 			}
 			_, err := fmt.Sscanf(l, "%d,%d,%d", &scanners[i][j-1].X, &scanners[i][j-1].Y, &scanners[i][j-1].Z)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
+	return scanners, nil
+}
+
+func findScannerPositionsFromCommonBeacons(ctx ch.AOContext, scanners [][]point3) (map[int]scannerPosition, error) {
 	scannerPos := make(map[int]scannerPosition)
 	scannerPos[0] = scannerPosition{}
 
 	changed := true
 	for changed {
 		changed = false
+		weGotEm := false
 		for i, points := range scanners {
 			if _, ok := scannerPos[i]; ok {
 				continue
 			}
+			if weGotEm {
+				break
+			}
 
 			for j, sp := range scannerPos {
+				if weGotEm {
+					break
+				}
 				if j == i {
 					continue
 				}
 				jPoints := scanners[j]
 
 				for _, ptA := range points[:len(points)-12] {
+					if weGotEm {
+						break
+					}
 					for o := orientation(0); o < 24; o++ {
+						if weGotEm {
+							break
+						}
 						aabs := ptA.Tr(o)
 						for _, ptB := range jPoints[:len(jPoints)-12] {
+							if weGotEm {
+								break
+							}
 							// Count overlap between scanner i and j,
 							// assuming point A in orientation o is point B
 							babs := sp.Abs(ptB)
@@ -70,6 +151,7 @@ func Dec19a(ctx ch.AOContext) error {
 								ctx.Printf("Scanners %d position: %d; orientation %d", i, iPos.Position, iPos.Orientation)
 								scannerPos[i] = iPos
 								changed = true
+								weGotEm = true
 								break
 							}
 						}
@@ -79,34 +161,11 @@ func Dec19a(ctx ch.AOContext) error {
 		}
 	}
 
-	allBeacons := make(map[point3]bool)
-
-	for i, points := range scanners {
-		sp, ok := scannerPos[i]
-		if !ok {
-			return fmt.Errorf("failed to find a position for scanner %d", i)
-		}
-
-		for _, pt := range points {
-			allBeacons[sp.Abs(pt)] = true
+	for i := range scanners {
+		if _, ok := scannerPos[i]; !ok {
+			return nil, fmt.Errorf("failed to find a position for scanner %d", i)
 		}
 	}
 
-	ctx.FinalAnswer.Print(len(allBeacons))
-	return nil
-}
-
-// func Dec19b(ctx ch.AOContext) error {
-// 	return errNotImplemented
-// }
-
-type scannerPosition struct {
-	Position    point3
-	Orientation orientation
-}
-
-func (sp scannerPosition) Abs(relative point3) point3 {
-	relative = relative.Tr(sp.Orientation)
-	relative = relative.Add(sp.Position)
-	return relative
+	return scannerPos, nil
 }
