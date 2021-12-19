@@ -11,7 +11,14 @@ func GetLines(assetName string) ([]string, error) {
 		return nil, err
 	}
 
-	return strings.Split(string(buf), "\n"), nil
+	rv := strings.Split(string(buf), "\n")
+
+	// Remove trailing newline
+	if len(rv) > 0 && rv[len(rv)-1] == "" {
+		rv = rv[:len(rv)-1]
+	}
+
+	return rv, nil
 }
 
 func GetInts(assetName string) ([]int, error) {
