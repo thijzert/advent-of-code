@@ -1,11 +1,31 @@
 package aoc21
 
+type runemap func(rune) int
+
+type imageFunc func(int, int) int
+
 type image struct {
 	Width, Height int
 	Contents      []int
 }
 
-type runemap func(rune) int
+func newImage(width, height int, f imageFunc) *image {
+	rv := &image{
+		Height:   height,
+		Width:    width,
+		Contents: make([]int, height*width),
+	}
+
+	if f != nil {
+		for y := 0; y < height; y++ {
+			for x := 0; x < width; x++ {
+				rv.Contents[rv.Width*y+x] = f(x, y)
+			}
+		}
+	}
+
+	return rv
+}
 
 func readImage(lines []string, f runemap) *image {
 	rv := &image{
@@ -142,4 +162,82 @@ type rect struct {
 
 func (r rect) Contains(p point) bool {
 	return p.X >= r.Min.X && p.X <= r.Max.X && p.Y >= r.Min.Y && p.Y <= r.Max.Y
+}
+
+type point3 struct {
+	X, Y, Z int
+}
+
+func (p point3) Add(b point3) point3 {
+	p.X += b.X
+	p.Y += b.Y
+	p.Z += b.Z
+	return p
+}
+
+func (p point3) Tr(o orientation) point3 {
+	p.X, p.Y, p.Z = o.Tr(p.X, p.Y, p.Z)
+	return p
+}
+
+type orientation uint16
+
+func (o orientation) Tr(x, y, z int) (int, int, int) {
+	o = o % 24
+	switch o {
+	// Facing negative Z
+	case 1:
+		return y, -x, z
+	case 2:
+		return -x, -y, z
+	case 3:
+		return -y, x, z
+	// Facing positive Z
+	case 4:
+		return -x, y, -z
+	case 5:
+		return y, x, -z
+	case 6:
+		return x, -y, -z
+	case 7:
+		return -y, -x, -z
+	// Facing negative Y
+	case 8:
+		return -x, z, y
+	case 9:
+		return -z, -x, y
+	case 10:
+		return x, -z, y
+	case 11:
+		return z, x, y
+	// Facing positive Y
+	case 12:
+		return -x, -z, -y
+	case 13:
+		return z, -x, -y
+	case 14:
+		return x, z, -y
+	case 15:
+		return -z, x, -y
+	// Facing negative X
+	case 16:
+		return z, -y, x
+	case 17:
+		return y, z, x
+	case 18:
+		return -z, y, x
+	case 19:
+		return -y, -z, x
+	// Facing positive X
+	case 20:
+		return -z, -y, -x
+	case 21:
+		return y, -z, -x
+	case 22:
+		return z, y, -x
+	case 23:
+		return -y, z, -x
+	default:
+		return x, y, z
+	}
 }
