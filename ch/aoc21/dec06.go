@@ -14,7 +14,7 @@ func Dec06a(ctx ch.AOContext) error {
 	_, ex2 := fibonacciSimulate([]int{3, 4, 3, 1, 2}, 8, 6, 80)
 	ctx.Printf("In the example, after 18 days, there are a total of %d fish. After 80 days, there would be a total of %d.", ex1, ex2)
 
-	histogram, rv := fibonacciSimulate(lanternfish[0], 8, 6, 256)
+	histogram, rv := fibonacciSimulate(lanternfish[0], 8, 6, 80)
 	ctx.Print(histogram)
 	ctx.FinalAnswer.Print(rv)
 	return nil
