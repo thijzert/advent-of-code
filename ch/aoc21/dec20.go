@@ -4,8 +4,6 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-var Dec20b ch.AdventFunc = nil
-
 func Dec20a(ctx ch.AOContext) error {
 	sections, err := ctx.DataSections("inputs/2021/dec20.txt")
 	if err != nil {
@@ -17,7 +15,27 @@ func Dec20a(ctx ch.AOContext) error {
 
 	img := readImage(sections[1], octothorpe)
 
-	for i := 0; i < 2; i++ {
+	img = zoomInAndEnhance(img, enhance, 2)
+
+	ctx.FinalAnswer.Print(sum(img.Contents...))
+	return nil
+}
+
+func Dec20b(ctx ch.AOContext) error {
+	sections, err := ctx.DataSections("inputs/2021/dec20.txt")
+	if err != nil {
+		return err
+	}
+
+	img := readImage(sections[1], octothorpe)
+	img = zoomInAndEnhance(img, sections[0][0], 50)
+
+	ctx.FinalAnswer.Print(sum(img.Contents...))
+	return nil
+}
+
+func zoomInAndEnhance(img *image, enhance string, count int) *image {
+	for i := 0; i < count; i++ {
 		//ctx.Printf("input image:\n%s", img)
 
 		nextImg := newImage(img.Width+2, img.Height+2, nil)
@@ -40,14 +58,5 @@ func Dec20a(ctx ch.AOContext) error {
 	}
 
 	//ctx.Printf("final image:\n%s", img)
-
-	ctx.FinalAnswer.Print(sum(img.Contents...))
-	return nil
+	return img
 }
-
-// 5363: too high (?)
-// 5826: too high
-
-// func Dec20b(ctx ch.AOContext) error {
-// 	return errNotImplemented
-// }
