@@ -7,6 +7,7 @@ type imageFunc func(int, int) int
 type image struct {
 	Width, Height int
 	Contents      []int
+	Default       int
 }
 
 func newImage(width, height int, f imageFunc) *image {
@@ -67,7 +68,7 @@ func (i *image) String() string {
 
 func (i *image) At(x, y int) int {
 	if x < 0 || x >= i.Width || y < 0 || y >= i.Height {
-		return 0
+		return i.Default
 	}
 
 	return i.Contents[i.Width*y+x]
