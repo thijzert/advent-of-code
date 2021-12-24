@@ -6,8 +6,6 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-var Dec24b ch.AdventFunc = nil
-
 func Dec24a(ctx ch.AOContext) error {
 	program, err := ctx.DataLines("inputs/2021/dec24.txt")
 	if err != nil {
@@ -43,9 +41,33 @@ func Dec24a(ctx ch.AOContext) error {
 	return nil
 }
 
-// func Dec24b(ctx ch.AOContext) error {
-// 	return errNotImplemented
-// }
+func Dec24b(ctx ch.AOContext) error {
+	program, err := ctx.DataLines("inputs/2021/dec24.txt")
+	if err != nil {
+		return err
+	}
+
+	alu := &monadALU{}
+	// Again, paper
+	modno := []int{6, 2, 9, 1, 1, 9, 4, 1, 7, 1, 6, 1, 1, 1}
+	err = alu.Run(program, modno)
+	if err != nil {
+		return err
+	}
+	ctx.Print(alu.Z, alu.Z == 0)
+
+	if alu.Z != 0 {
+		return errFailed
+	}
+
+	rv := 0
+	for _, i := range modno {
+		rv *= 10
+		rv += i
+	}
+	ctx.FinalAnswer.Print(rv)
+	return nil
+}
 
 type monadALU struct {
 	EIP        int
