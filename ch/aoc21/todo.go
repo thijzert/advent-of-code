@@ -7,6 +7,7 @@ import (
 )
 
 var errNotImplemented = errors.New("not implemented")
+var errFailed = errors.New("failed to find an answer")
 
 func ExampleChallengeA(ctx ch.AOContext) error {
 	lines, err := ctx.DataLines("inputs/2021/example.txt")
