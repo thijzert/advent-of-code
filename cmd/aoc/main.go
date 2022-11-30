@@ -9,13 +9,15 @@ import (
 	"os"
 
 	"github.com/thijzert/advent-of-code/ch"
+	"github.com/thijzert/advent-of-code/ch/aoc19"
 	"github.com/thijzert/advent-of-code/ch/aoc20"
 	"github.com/thijzert/advent-of-code/ch/aoc21"
 )
 
 func main() {
-	minYear := 2020
+	minYear := 2019
 	allYears := []ch.Advent{
+		aoc19.Advent,
 		aoc20.Advent,
 		aoc21.Advent,
 	}
