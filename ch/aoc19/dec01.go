@@ -15,7 +15,7 @@ func Dec01a(ctx ch.AOContext) error {
 		s += (m / 3) - 2
 	}
 
-	ctx.Print(s)
+	ctx.FinalAnswer.Print(s)
 	return nil
 }
 
@@ -35,6 +35,6 @@ func Dec01b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.Print(s)
+	ctx.FinalAnswer.Print(s)
 	return errNotImplemented
 }
