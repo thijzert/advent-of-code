@@ -12,6 +12,7 @@ import (
 	"github.com/thijzert/advent-of-code/ch/aoc19"
 	"github.com/thijzert/advent-of-code/ch/aoc20"
 	"github.com/thijzert/advent-of-code/ch/aoc21"
+	"github.com/thijzert/advent-of-code/ch/aoc22"
 )
 
 func main() {
@@ -20,6 +21,7 @@ func main() {
 		aoc19.Advent,
 		aoc20.Advent,
 		aoc21.Advent,
+		aoc22.Advent,
 	}
 
 	var yearParam int = -1
