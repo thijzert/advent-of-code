@@ -101,52 +101,31 @@ func (p pos2d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 	}
 
 	return &pos2diter{
-		pos: p,
-		b:   bb,
+		positions: [4]pos2d{
+			bb.posAt(p.X+1, p.Y, p.Keys),
+			bb.posAt(p.X, p.Y+1, p.Keys),
+			bb.posAt(p.X-1, p.Y, p.Keys),
+			bb.posAt(p.X, p.Y-1, p.Keys),
+		},
 		idx: 0,
+		b:   bb,
 	}
 }
 
 type pos2diter struct {
-	pos pos2d
-	b   tractorMaze
-	idx int
+	positions [4]pos2d
+	idx       int
+	b         tractorMaze
 }
 
 func (pdi *pos2diter) Next() (dijkstra.Position, int) {
-	pdi.idx++
-	found := 0
-
-	rv := pdi.b.posAt(pdi.pos.X+1, pdi.pos.Y, pdi.pos.Keys)
-	if pdi.isOk(rv) {
-		found++
-		if found == pdi.idx {
+	for pdi.idx < len(pdi.positions) {
+		if pdi.isOk(pdi.positions[pdi.idx]) {
+			rv := pdi.positions[pdi.idx]
+			pdi.idx++
 			return rv, 1
 		}
-	}
-
-	rv = pdi.b.posAt(pdi.pos.X, pdi.pos.Y+1, pdi.pos.Keys)
-	if pdi.isOk(rv) {
-		found++
-		if found == pdi.idx {
-			return rv, 1
-		}
-	}
-
-	rv = pdi.b.posAt(pdi.pos.X-1, pdi.pos.Y, pdi.pos.Keys)
-	if pdi.isOk(rv) {
-		found++
-		if found == pdi.idx {
-			return rv, 1
-		}
-	}
-
-	rv = pdi.b.posAt(pdi.pos.X, pdi.pos.Y-1, pdi.pos.Keys)
-	if pdi.isOk(rv) {
-		found++
-		if found == pdi.idx {
-			return rv, 1
-		}
+		pdi.idx++
 	}
 
 	return nil, 0
