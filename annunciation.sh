@@ -61,8 +61,6 @@ import (
 )
 
 var Dec${i}a ch.AdventFunc = nil
-var Dec${i}b ch.AdventFunc = nil
-
 // func Dec${i}a(ctx ch.AOContext) error {
 // 	sections, err := ctx.DataSections("inputs/${YEAR}/dec${i}a.txt")
 // 	if err != nil {
@@ -72,7 +70,8 @@ var Dec${i}b ch.AdventFunc = nil
 // 	ctx.Print(len(sections))
 // 	return errNotImplemented
 // }
-//
+
+var Dec${i}b ch.AdventFunc = nil
 // func Dec${i}b(ctx ch.AOContext) error {
 // 	return errNotImplemented
 // }
