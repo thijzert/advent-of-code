@@ -16,7 +16,7 @@ func Dec18a(ctx ch.AOContext) error {
 	}
 
 	for _, lines := range sections {
-		tm := &tractorMaze{Lines: lines}
+		tm := tractorMaze{Lines: lines}
 		kreq := make([]byte, 26)
 		kl := 0
 		for _, l := range lines {
@@ -48,7 +48,7 @@ type tractorMaze struct {
 	KeyRequirement string
 }
 
-func (b *tractorMaze) StartingPositions() []dijkstra.Position {
+func (b tractorMaze) StartingPositions() []dijkstra.Position {
 	defaultKeys := strings.Repeat(" ", len(b.KeyRequirement))
 	rv := []dijkstra.Position{}
 	for y, l := range b.Lines {
@@ -61,7 +61,7 @@ func (b *tractorMaze) StartingPositions() []dijkstra.Position {
 	return rv
 }
 
-func (b *tractorMaze) charAt(x, y int) rune {
+func (b tractorMaze) charAt(x, y int) rune {
 	if y >= 0 && y < len(b.Lines) {
 		if x >= 0 && x < len(b.Lines[y]) {
 			return rune(b.Lines[y][x])
@@ -70,7 +70,7 @@ func (b *tractorMaze) charAt(x, y int) rune {
 	return '#'
 }
 
-func (b *tractorMaze) posAt(x, y int, currentKeys string) pos2d {
+func (b tractorMaze) posAt(x, y int, currentKeys string) pos2d {
 	c := b.charAt(x, y)
 	if c >= 'a' && c <= 'z' {
 		i := int(c - 'a')
@@ -87,7 +87,7 @@ type pos2d struct {
 }
 
 func (p pos2d) Final(b dijkstra.Board) bool {
-	bb, ok := b.(*tractorMaze)
+	bb, ok := b.(tractorMaze)
 	if !ok {
 		return false
 	}
@@ -95,7 +95,7 @@ func (p pos2d) Final(b dijkstra.Board) bool {
 	return p.Keys == bb.KeyRequirement
 }
 func (p pos2d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
-	bb, ok := b.(*tractorMaze)
+	bb, ok := b.(tractorMaze)
 	if !ok {
 		return nil
 	}
@@ -115,7 +115,7 @@ func (p pos2d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 type pos2diter struct {
 	positions [4]pos2d
 	idx       int
-	b         *tractorMaze
+	b         tractorMaze
 }
 
 func (pdi *pos2diter) Next() (dijkstra.Position, int) {
