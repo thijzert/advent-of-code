@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/thijzert/advent-of-code/ch"
+	"github.com/thijzert/advent-of-code/lib/cube"
 )
 
 func Dec04a(ctx ch.AOContext) error {
@@ -14,9 +15,9 @@ func Dec04a(ctx ch.AOContext) error {
 
 	fullyContain := 0
 	for _, ivp := range pairs {
-		if ivp.P.Contains(ivp.Q) {
+		if ivp.P.FullyContains(ivp.Q) {
 			fullyContain++
-		} else if ivp.Q.Contains(ivp.P) {
+		} else if ivp.Q.FullyContains(ivp.P) {
 			fullyContain++
 		}
 	}
@@ -39,12 +40,12 @@ func Dec04b(ctx ch.AOContext) error {
 	}
 
 	ctx.FinalAnswer.Print(overlap)
-	return errNotImplemented
+	return nil
 }
 
 // IVP is an interval pair
 type IVP struct {
-	P, Q Interval
+	P, Q cube.Interval
 }
 
 func dataAsIVPs(ctx ch.AOContext, filename string) ([]IVP, error) {
@@ -65,32 +66,4 @@ func dataAsIVPs(ctx ch.AOContext, filename string) ([]IVP, error) {
 		rv = append(rv, ivp)
 	}
 	return rv, nil
-}
-
-// Interval represent an inclusive integer interval, with A <= B
-type Interval struct {
-	A, B int
-}
-
-func (a Interval) Overlap(b Interval) (Interval, bool) {
-	if b.A >= a.A && b.A <= a.B {
-		if b.B < a.B {
-			return Interval{b.A, b.B}, true
-		} else {
-			return Interval{b.A, a.B}, true
-		}
-	} else if b.B >= a.A && b.B <= a.B {
-		if a.A < b.A {
-			return b, true
-		} else {
-			return Interval{a.A, b.B}, true
-		}
-	} else if b.A <= a.A && b.B >= a.B {
-		return a, true
-	}
-	return Interval{}, false
-}
-
-func (a Interval) Contains(b Interval) bool {
-	return b.A >= a.A && b.A <= a.B && b.B >= a.A && b.B <= a.B
 }
