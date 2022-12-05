@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/thijzert/advent-of-code/ch"
 	"github.com/thijzert/advent-of-code/ch/aoc19"
@@ -89,9 +90,14 @@ func main() {
 		}
 		os.Exit(exitStatus)
 	} else {
+		t0 := time.Now()
 		err := allYears[yearIdx][funcIdx](ctx)
+		d := time.Since(t0)
 		if err != nil {
 			log.Fatal(err)
+		}
+		if d >= 1*time.Second {
+			ctx.Printf("duration: %v", d)
 		}
 	}
 }
