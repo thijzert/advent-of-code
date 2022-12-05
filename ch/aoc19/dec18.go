@@ -1,8 +1,6 @@
 package aoc19
 
 import (
-	"strings"
-
 	"github.com/thijzert/advent-of-code/ch"
 	"github.com/thijzert/advent-of-code/lib/dijkstra"
 )
@@ -16,23 +14,8 @@ func Dec18a(ctx ch.AOContext) error {
 	}
 
 	for _, lines := range sections {
-		tm := tractorMaze{Lines: lines}
-		kreq := make([]byte, 26)
-		kl := 0
-		for _, l := range lines {
-			for _, c := range l {
-				if c >= 'a' && c <= 'z' {
-					cc := int(c - 'a')
-					if kl <= cc {
-						kl = cc + 1
-					}
-					kreq[cc] = byte(c)
-				}
-			}
-		}
-		tm.KeyRequirement = string(kreq[:kl])
-
-		ctx.Printf("[%s]", tm.KeyRequirement)
+		tm := readTractorMaze(lines)
+		ctx.Printf("[%26b]", tm.KeyRequirement)
 
 		_, cost, err := dijkstra.ShortestPath(tm)
 		if err != nil {
@@ -45,16 +28,27 @@ func Dec18a(ctx ch.AOContext) error {
 
 type tractorMaze struct {
 	Lines          []string
-	KeyRequirement string
+	KeyRequirement uint32
+}
+
+func readTractorMaze(lines []string) tractorMaze {
+	tm := tractorMaze{Lines: lines}
+	for _, l := range lines {
+		for _, c := range l {
+			if c >= 'a' && c <= 'z' {
+				tm.KeyRequirement = tm.KeyRequirement | (1 << int(c-'a'))
+			}
+		}
+	}
+	return tm
 }
 
 func (b tractorMaze) StartingPositions() []dijkstra.Position {
-	defaultKeys := strings.Repeat(" ", len(b.KeyRequirement))
 	rv := []dijkstra.Position{}
 	for y, l := range b.Lines {
 		for x, c := range l {
 			if c == '@' {
-				rv = append(rv, pos2d{x, y, defaultKeys})
+				rv = append(rv, pos2d{x, y, 0})
 			}
 		}
 	}
@@ -70,20 +64,20 @@ func (b tractorMaze) charAt(x, y int) rune {
 	return '#'
 }
 
-func (b tractorMaze) posAt(x, y int, currentKeys string) pos2d {
+func (b tractorMaze) updatedKeys(x, y int, currentKeys uint32) uint32 {
 	c := b.charAt(x, y)
 	if c >= 'a' && c <= 'z' {
-		i := int(c - 'a')
-		if currentKeys[i] != byte(c) {
-			currentKeys = currentKeys[:i] + string(c) + currentKeys[i+1:]
-		}
+		currentKeys = currentKeys | (1 << int(c-'a'))
 	}
-	return pos2d{x, y, currentKeys}
+	return currentKeys
+}
+func (b tractorMaze) posAt(x, y int, currentKeys uint32) pos2d {
+	return pos2d{x, y, b.updatedKeys(x, y, currentKeys)}
 }
 
 type pos2d struct {
 	X, Y int
-	Keys string
+	Keys uint32
 }
 
 func (p pos2d) Final(b dijkstra.Board) bool {

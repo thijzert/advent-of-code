@@ -32,6 +32,7 @@ func ShortestPath(b Board) ([]Position, int, error) {
 		})
 	}
 
+	//log.Printf("Step 0; heads: %v", dijk.Heads)
 	for i := 1; i < 10000; i++ {
 		dijk.Step()
 		//log.Printf("Step %d; heads: %v", i, dijk.Heads)
