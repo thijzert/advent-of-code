@@ -4,20 +4,57 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-var Dec06a ch.AdventFunc = nil
-var Dec06b ch.AdventFunc = nil
+func Dec06a(ctx ch.AOContext) error {
+	lines, err := ctx.DataLines("inputs/2022/dec06.txt")
+	if err != nil {
+		return err
+	}
+	//lines = []string{
+	//	"mjqjpqmgbljsphdztnvjfqwrcgsmlb",
+	//	"bvwbjplbgvbhsrlpgdmjqwftvncz",
+	//	"nppdvjthqldpwncqszvftbrmjlhg",
+	//	"nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg",
+	//	"zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw",
+	//}
 
-// func Dec06a(ctx ch.AOContext) error {
-// 	sections, err := ctx.DataSections("inputs/2022/dec06a.txt")
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	ctx.Print(len(sections))
-// 	return errNotImplemented
-// }
-//
-// func Dec06b(ctx ch.AOContext) error {
-// 	return errNotImplemented
-// }
+	for _, line := range lines {
+		var i int
+		for i = range line[4:] {
+			seen := make(map[rune]bool)
+			for _, c := range line[i : i+4] {
+				seen[c] = true
+			}
+			if len(seen) == 4 {
+				break
+			}
+			i = -1
+		}
+		ctx.FinalAnswer.Print(i + 4)
+	}
 
+	return nil
+}
+
+func Dec06b(ctx ch.AOContext) error {
+	lines, err := ctx.DataLines("inputs/2022/dec06.txt")
+	if err != nil {
+		return err
+	}
+
+	for _, line := range lines {
+		var i int
+		for i = range line[14:] {
+			seen := make(map[rune]bool)
+			for _, c := range line[i : i+14] {
+				seen[c] = true
+			}
+			if len(seen) == 14 {
+				break
+			}
+			i = -1
+		}
+		ctx.FinalAnswer.Print(i + 14)
+	}
+
+	return nil
+}

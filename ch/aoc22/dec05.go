@@ -59,7 +59,7 @@ func Dec05b(ctx ch.AOContext) error {
 	}
 
 	ctx.FinalAnswer.Print(string(rv))
-	return errNotImplemented
+	return nil
 }
 
 func readStacks(ctx ch.AOContext, name string) ([][]byte, [][3]int, error) {
