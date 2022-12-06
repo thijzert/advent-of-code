@@ -10,12 +10,38 @@ type Board interface {
 }
 
 type Position interface {
-	Final(b Board) bool
+	Final(b Board, totalCost int) bool
 	Adjacent(b Board) AdjacencyIterator
 }
 
 type AdjacencyIterator interface {
 	Next() (Position, int)
+}
+
+type Adj struct {
+	Position Position
+	Cost     int
+}
+
+type adjList struct {
+	Positions []Adj
+	Idx       int
+}
+
+func (al *adjList) Next() (Position, int) {
+	if al.Idx >= len(al.Positions) {
+		return nil, 0
+	}
+	rv := al.Positions[al.Idx]
+	al.Idx++
+	return rv.Position, rv.Cost
+}
+
+func AdjacencyList(positions []Adj) AdjacencyIterator {
+	return &adjList{
+		Positions: positions,
+		Idx:       0,
+	}
 }
 
 func ShortestPath(b Board) ([]Position, int, error) {
@@ -97,7 +123,7 @@ func (d *dijkstra) Step() {
 				}
 			}
 
-			if n.Final(d.Board) {
+			if n.Final(d.Board, newCost) {
 				if d.Shortest.Position == nil || d.Shortest.TotalCost < newCost {
 					d.Shortest.Position = n
 					d.Shortest.TotalCost = newCost

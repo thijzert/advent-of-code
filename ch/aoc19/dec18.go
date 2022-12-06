@@ -84,7 +84,7 @@ type pos2d struct {
 	Keys uint32
 }
 
-func (p pos2d) Final(b dijkstra.Board) bool {
+func (p pos2d) Final(b dijkstra.Board, totalCost int) bool {
 	bb, ok := b.(tractorMaze)
 	if !ok {
 		return false
@@ -98,48 +98,28 @@ func (p pos2d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 		return nil
 	}
 
-	return &pos2diter{
-		positions: [4]pos2d{
-			bb.posAt(p.X+1, p.Y, p.Keys),
-			bb.posAt(p.X, p.Y+1, p.Keys),
-			bb.posAt(p.X-1, p.Y, p.Keys),
-			bb.posAt(p.X, p.Y-1, p.Keys),
-		},
-		idx: 0,
-		b:   bb,
+	var rv []dijkstra.Adj
+	positions := [4]pos2d{
+		bb.posAt(p.X+1, p.Y, p.Keys),
+		bb.posAt(p.X, p.Y+1, p.Keys),
+		bb.posAt(p.X-1, p.Y, p.Keys),
+		bb.posAt(p.X, p.Y-1, p.Keys),
 	}
-}
-
-type pos2diter struct {
-	positions [4]pos2d
-	idx       int
-	b         tractorMaze
-}
-
-func (pdi *pos2diter) Next() (dijkstra.Position, int) {
-	for pdi.idx < len(pdi.positions) {
-		if pdi.isOk(pdi.positions[pdi.idx]) {
-			rv := pdi.positions[pdi.idx]
-			pdi.idx++
-			return rv, 1
+	for _, pos := range positions {
+		c := bb.charAt(pos.X, pos.Y)
+		if c == '#' || c == '%' {
+			continue
 		}
-		pdi.idx++
+
+		if c >= 'A' && c <= 'Z' {
+			if (p.Keys>>int(c-'A'))&1 != 1 {
+				continue
+			}
+		}
+		rv = append(rv, dijkstra.Adj{pos, 1})
 	}
 
-	return nil, 0
-}
-
-func (pdi *pos2diter) isOk(p pos2d) bool {
-	c := pdi.b.charAt(p.X, p.Y)
-	if c == '#' || c == '%' {
-		return false
-	}
-
-	if c >= 'A' && c <= 'Z' {
-		return (p.Keys>>int(c-'A'))&1 == 1
-	}
-
-	return true
+	return dijkstra.AdjacencyList(rv)
 }
 
 func Dec18b(ctx ch.AOContext) error {
@@ -189,7 +169,7 @@ type pos4d struct {
 	Keys   uint32
 }
 
-func (p pos4d) Final(b dijkstra.Board) bool {
+func (p pos4d) Final(b dijkstra.Board, totalCost int) bool {
 	bb, ok := b.(tractorMaze)
 	if !ok {
 		return false
