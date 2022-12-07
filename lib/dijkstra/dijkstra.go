@@ -71,9 +71,19 @@ func ShortestPath(b Board) ([]Position, int, error) {
 		return nil, 0, errors.New("Failed to find the shortest path")
 	}
 
-	// TODO: return list of steps
+	// Create list of steps
+	rv := []Position{}
+	end := dijk.Shortest.Position
+	for end != nil {
+		rv = append(rv, end)
+		end = dijk.Visited[end].Position
+	}
+	l := len(rv)
+	for i := range rv[:l/2] {
+		rv[i], rv[l-i-1] = rv[l-i-1], rv[i]
+	}
 
-	return nil, dijk.Shortest.TotalCost, nil
+	return rv, dijk.Shortest.TotalCost, nil
 }
 
 type dijkHead struct {
