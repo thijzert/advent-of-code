@@ -124,7 +124,7 @@ func (d *dijkstra) Step() {
 			}
 
 			if n.Final(d.Board, newCost) {
-				if d.Shortest.Position == nil || d.Shortest.TotalCost < newCost {
+				if d.Shortest.Position == nil || d.Shortest.TotalCost > newCost {
 					d.Shortest.Position = n
 					d.Shortest.TotalCost = newCost
 				}
