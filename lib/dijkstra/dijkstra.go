@@ -18,6 +18,16 @@ type AdjacencyIterator interface {
 	Next() (Position, int)
 }
 
+type deadEndIter struct{}
+
+func (deadEndIter) Next() (Position, int) {
+	return nil, 0
+}
+
+func DeadEnd() AdjacencyIterator {
+	return deadEndIter{}
+}
+
 type Adj struct {
 	Position Position
 	Cost     int
@@ -56,6 +66,10 @@ func ShortestPath(b Board) ([]Position, int, error) {
 			Position:  pos,
 			TotalCost: 0,
 		})
+		dijk.Visited[pos] = dijkHead{
+			Position:  nil,
+			TotalCost: 0,
+		}
 	}
 
 	//log.Printf("Step 0; heads: %v", dijk.Heads)
