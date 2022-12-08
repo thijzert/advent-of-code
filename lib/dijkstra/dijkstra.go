@@ -16,13 +16,13 @@ type Board interface {
 // across a bridge. (Or none of the above.)
 type Position interface {
 	// Final reports whether or not a path can end in this particular
-	// configuration. The length of the path that led here is passed in the
-	// second argument
-	Final(b Board, totalCost int) bool
+	// configuration.
+	Final(b Board) bool
 
 	// Adjacent returns an iterator with all positions that can be reached
-	// directly from this position
-	Adjacent(b Board) AdjacencyIterator
+	// directly from this position. The total cost of the path that led here is
+	// passed in the second parameter
+	Adjacent(b Board, totalCost int) AdjacencyIterator
 }
 
 // An AdjacencyIterator is an abstraction over an Adjacency slice that can be
@@ -138,7 +138,7 @@ func (d *dijkstra) Step() {
 	newHeads := []dijkHead{}
 
 	for i, h := range d.Heads {
-		it := h.Position.Adjacent(d.Board)
+		it := h.Position.Adjacent(d.Board, h.TotalCost)
 		first := true
 		for {
 			n, cost := it.Next()
@@ -169,7 +169,7 @@ func (d *dijkstra) Step() {
 				}
 			}
 
-			if n.Final(d.Board, newCost) {
+			if n.Final(d.Board) {
 				if d.Shortest.Position == nil || d.Shortest.TotalCost > newCost {
 					d.Shortest.Position = n
 					d.Shortest.TotalCost = newCost

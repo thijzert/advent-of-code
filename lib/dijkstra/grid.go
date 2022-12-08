@@ -1,8 +1,8 @@
 package dijkstra
 
 type bff struct {
-	valid func(int, int) bool
-	final func(int, int, int) bool
+	valid func(int, int, int) bool
+	final func(int, int) bool
 }
 
 type gridPoint struct {
@@ -17,17 +17,17 @@ type gridPoint struct {
 // checking if each resulting position is valid using the valid() func provided
 // in the first parameter. In the same vein, the final() func in the second
 // parameter returns true if the x,y coordinate is a valid end state.
-func GridWalker(valid func(x, y int) bool, final func(x, y, cost int) bool, xy ...int) []Position {
+func GridWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, xy ...int) []Position {
 	return getGridWalker(valid, final, false, xy...)
 }
 
 // DiagonalWalker is the same as GridWalker, only diagonal steps are also
 // allowed. Diagonal steps also have length 1.
-func DiagonalWalker(valid func(x, y int) bool, final func(x, y, cost int) bool, xy ...int) []Position {
+func DiagonalWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, xy ...int) []Position {
 	return getGridWalker(valid, final, true, xy...)
 }
 
-func getGridWalker(valid func(x, y int) bool, final func(x, y, cost int) bool, diagonal bool, xy ...int) []Position {
+func getGridWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, diagonal bool, xy ...int) []Position {
 	f := bff{
 		valid: valid,
 		final: final,
@@ -47,10 +47,10 @@ func getGridWalker(valid func(x, y int) bool, final func(x, y, cost int) bool, d
 	return rv
 }
 
-func (p gridPoint) Final(b Board, totalCost int) bool {
-	return p.F.final(p.X, p.Y, totalCost)
+func (p gridPoint) Final(b Board) bool {
+	return p.F.final(p.X, p.Y)
 }
-func (p gridPoint) Adjacent(b Board) AdjacencyIterator {
+func (p gridPoint) Adjacent(b Board, totalCost int) AdjacencyIterator {
 	var rv []Adj
 
 	if p.Diagonal {
@@ -65,7 +65,7 @@ func (p gridPoint) Adjacent(b Board) AdjacencyIterator {
 			gridPoint{p.X - 1, p.Y + 1, p.Diagonal, p.F},
 		}
 		for _, pos := range positions {
-			if p.F.valid(pos.X, pos.Y) {
+			if p.F.valid(pos.X, pos.Y, totalCost+1) {
 				rv = append(rv, Adj{pos, 1})
 			}
 		}
@@ -77,7 +77,7 @@ func (p gridPoint) Adjacent(b Board) AdjacencyIterator {
 			gridPoint{p.X, p.Y - 1, p.Diagonal, p.F},
 		}
 		for _, pos := range positions {
-			if p.F.valid(pos.X, pos.Y) {
+			if p.F.valid(pos.X, pos.Y, totalCost+1) {
 				rv = append(rv, Adj{pos, 1})
 			}
 		}

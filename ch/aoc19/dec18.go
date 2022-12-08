@@ -109,28 +109,28 @@ func (bb tractorMaze) distanceToKeys(pos pos2d) map[cube.Point]int {
 	// We fill it from the final() function
 	keydist := make(map[cube.Point]int)
 
-	valid := func(x, y int) bool {
+	valid := func(x, y, totalCost int) bool {
 		c := bb.charAt(x, y)
 		if c == '#' || c == '%' {
 			return false
-		}
-		if c >= 'A' && c <= 'Z' {
+		} else if c >= 'A' && c <= 'Z' {
 			return (pos.Keys>>int(c-'A'))&1 == 1
+		} else if c >= 'a' && c <= 'z' {
+			if ((pos.Keys >> int(c-'a')) & 1) == 1 {
+				// We already have this key
+				return true
+			}
+			cp := cube.Point{x, y}
+			if d, ok := keydist[cp]; !ok || d > totalCost {
+				keydist[cp] = totalCost
+			}
+			// This key is new, so don't continue. We can't return a dead end,
+			// so let's just pretend this tile wasn't valid either
+			return false
 		}
 		return true
 	}
-	final := func(x, y, totalCost int) bool {
-		c := bb.charAt(x, y)
-		if c < 'a' || c > 'z' {
-			return false
-		} else if ((pos.Keys >> int(c-'a')) & 1) == 1 {
-			// We already have this key
-			return false
-		}
-		cp := cube.Point{x, y}
-		if d, ok := keydist[cp]; !ok || d > totalCost {
-			keydist[cp] = totalCost
-		}
+	final := func(x, y int) bool {
 		return false
 	}
 	mtm := metaTractorMaze{
@@ -189,7 +189,7 @@ func (p pos2d) GetKeys() uint32 {
 	return p.Keys
 }
 
-func (p pos2d) Final(b dijkstra.Board, totalCost int) bool {
+func (p pos2d) Final(b dijkstra.Board) bool {
 	bb, ok := b.(tractorMaze)
 	if !ok {
 		return false
@@ -197,7 +197,7 @@ func (p pos2d) Final(b dijkstra.Board, totalCost int) bool {
 
 	return p.Keys == bb.KeyRequirement
 }
-func (pos pos2d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
+func (pos pos2d) Adjacent(b dijkstra.Board, totalCost int) dijkstra.AdjacencyIterator {
 	bb, ok := b.(tractorMaze)
 	if !ok {
 		return nil
@@ -266,7 +266,7 @@ func (p pos4d) GetKeys() uint32 {
 	return p.Keys
 }
 
-func (p pos4d) Final(b dijkstra.Board, totalCost int) bool {
+func (p pos4d) Final(b dijkstra.Board) bool {
 	bb, ok := b.(tractorMaze)
 	if !ok {
 		return false
@@ -274,7 +274,7 @@ func (p pos4d) Final(b dijkstra.Board, totalCost int) bool {
 
 	return p.Keys == bb.KeyRequirement
 }
-func (p pos4d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
+func (p pos4d) Adjacent(b dijkstra.Board, totalCost int) dijkstra.AdjacencyIterator {
 	bb, ok := b.(tractorMaze)
 	if !ok {
 		return nil
@@ -302,11 +302,11 @@ func (p pos4d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 func (p pos4d) WithUpdatedMask(b tractorMaze) pos4d {
 	for i, pos := range p.Robots {
 		p.KeyDoorMask[i] = 0
-		valid := func(x, y int) bool {
+		valid := func(x, y, totalCost int) bool {
 			c := b.charAt(x, y)
 			return c != '#' && c != '%'
 		}
-		final := func(x, y, totalCost int) bool {
+		final := func(x, y int) bool {
 			c := b.charAt(x, y)
 			if c >= 'A' && c <= 'Z' {
 				p.KeyDoorMask[i] = p.KeyDoorMask[i] | (1 << int(c-'A'))
