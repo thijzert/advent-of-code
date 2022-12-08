@@ -63,15 +63,16 @@ func (b tractorMaze) StartingPositions() []dijkstra.Position {
 			if c == '@' {
 				rv = append(rv, pos2d{x, y, 0})
 			} else if c == '%' {
-				rv = append(rv, pos4d{
+				pos := pos4d{
 					Robots: [4]cube.Point{
-						{x + 1, y + 1},
+						{x - 1, y - 1},
 						{x + 1, y - 1},
 						{x - 1, y + 1},
-						{x - 1, y - 1},
+						{x + 1, y + 1},
 					},
 					Keys: 0,
-				})
+				}
+				rv = append(rv, pos.WithUpdatedMask(b))
 			}
 		}
 	}
@@ -260,7 +261,7 @@ func (pos pos2d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 }
 
 func Dec18b(ctx ch.AOContext) error {
-	sections, err := ctx.DataSections("inputs/2019/dec18b.txt")
+	sections, err := ctx.DataSections("inputs/2019/dec18.txt")
 	if err != nil {
 		return err
 	}
@@ -300,7 +301,10 @@ func Dec18b(ctx ch.AOContext) error {
 
 type pos4d struct {
 	Robots [4]cube.Point
-	Keys   uint32
+	// KeyDoorMask contains a bit mask for all doors and keys a particular robot can potentially encounter.
+	// Any state changes not in this mask will be of no consequence to possible next steps for this robot, and can be ignored.
+	KeyDoorMask [4]uint32
+	Keys        uint32
 }
 
 func (p pos4d) GetKeys() uint32 {
@@ -324,7 +328,7 @@ func (p pos4d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 	var rv []dijkstra.Adj
 
 	for i, pos := range p.Robots {
-		keydist := bb.distanceToKeys(pos2d{pos.X, pos.Y, p.Keys})
+		keydist := bb.distanceToKeys(pos2d{pos.X, pos.Y, p.Keys & p.KeyDoorMask[i]})
 		for q, tc := range keydist {
 			var np pos4d = p
 			np.Robots[i] = q
@@ -337,4 +341,28 @@ func (p pos4d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 	}
 
 	return dijkstra.AdjacencyList(rv)
+}
+
+// WithUpdatedMask returns a copy of p with the key/door masks set to the correct value for this board
+func (p pos4d) WithUpdatedMask(b tractorMaze) pos4d {
+	for i, pos := range p.Robots {
+		p.KeyDoorMask[i] = 0
+		f := func(q gridPoint, totalCost int) bool {
+			c := b.charAt(q.X, q.Y)
+			if c >= 'A' && c <= 'Z' {
+				p.KeyDoorMask[i] = p.KeyDoorMask[i] | (1 << int(c-'A'))
+			} else if c >= 'a' && c <= 'z' {
+				p.KeyDoorMask[i] = p.KeyDoorMask[i] | (1 << int(c-'a'))
+			}
+			return false
+		}
+		bff := BFF{f}
+		mtm := metaTractorMaze{
+			b:     b,
+			start: gridPoint{pos.X, pos.Y, &bff},
+			keys:  0xffffffff,
+		}
+		dijkstra.ShortestPath(mtm)
+	}
+	return p
 }
