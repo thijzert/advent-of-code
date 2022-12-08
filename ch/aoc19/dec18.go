@@ -293,7 +293,6 @@ func Dec18b(ctx ch.AOContext) error {
 		ctx.FinalAnswer.Print(cost)
 	}
 
-	return errNotImplemented
 	return nil
 }
 
