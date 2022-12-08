@@ -2,6 +2,7 @@ package aoc22
 
 import (
 	"github.com/thijzert/advent-of-code/ch"
+	"github.com/thijzert/advent-of-code/lib/cube"
 )
 
 func Dec08a(ctx ch.AOContext) error {
@@ -9,31 +10,21 @@ func Dec08a(ctx ch.AOContext) error {
 	if err != nil {
 		return err
 	}
+	bounds := cube.Square{cube.Interval{0, len(forest[0]) - 1}, cube.Interval{0, len(forest) - 1}}
 
 	visibleTrees := 0
 	for y := range forest {
 		for x, height := range forest[y] {
-			visTop, visBottom, visLeft, visRight := true, true, true, true
-			for i, h := range forest[y] {
-				if h >= height {
-					if i > x {
-						visRight = false
-					} else if i < x {
-						visLeft = false
-					}
-				}
+			p := cube.Point{x, y}
+			visible := false
+			for _, dir := range cube.Cardinal2D {
+				_, invisible := cube.Walk(p.Add(dir), dir, bounds, func(q cube.Point) bool {
+					return rune(forest[q.Y][q.X]) >= height
+				})
+				visible = visible || (!invisible)
 			}
-			for i := range forest {
-				h := rune(forest[i][x])
-				if h >= height && i != y {
-					if i > y {
-						visBottom = false
-					} else if i < y {
-						visTop = false
-					}
-				}
-			}
-			if visTop || visBottom || visLeft || visRight {
+
+			if visible {
 				visibleTrees++
 			}
 		}
@@ -49,6 +40,7 @@ func Dec08b(ctx ch.AOContext) error {
 		return err
 	}
 	//forest = []string{"30373", "25512", "65332", "33549", "35390"}
+	bounds := cube.Square{cube.Interval{0, len(forest[0]) - 1}, cube.Interval{0, len(forest) - 1}}
 
 	bestTree := 0
 
@@ -56,59 +48,18 @@ func Dec08b(ctx ch.AOContext) error {
 		if y == 0 || y == len(forest)-1 {
 			continue
 		}
-		for x := range forest[y] {
+		for x, height := range forest[y] {
 			if x == 0 || x == len(forest[y])-1 {
 				continue
 			}
-			height := forest[y][x]
+			p := cube.Point{x, y}
 			scenicScore := 1
 
-			obstructed := false
-			for i := 1; (x - i) >= 0; i++ {
-				if forest[y][x-i] >= height {
-					obstructed = true
-					scenicScore *= i
-					break
-				}
-			}
-			if !obstructed {
-				scenicScore *= x
-			}
-
-			obstructed = false
-			for i := 1; (x + i) < len(forest[y]); i++ {
-				if forest[y][x+i] >= height {
-					obstructed = true
-					scenicScore *= i
-					break
-				}
-			}
-			if !obstructed {
-				scenicScore *= len(forest[y]) - x - 1
-			}
-
-			obstructed = false
-			for i := 1; (y - i) >= 0; i++ {
-				if forest[y-i][x] >= height {
-					obstructed = true
-					scenicScore *= i
-					break
-				}
-			}
-			if !obstructed {
-				scenicScore *= y
-			}
-
-			obstructed = false
-			for i := 1; (y + i) < len(forest); i++ {
-				if forest[y+i][x] >= height {
-					obstructed = true
-					scenicScore *= i
-					break
-				}
-			}
-			if !obstructed {
-				scenicScore *= len(forest) - y - 1
+			for _, dir := range cube.Cardinal2D {
+				steps, _ := cube.Walk(p.Add(dir), dir, bounds, func(q cube.Point) bool {
+					return rune(forest[q.Y][q.X]) >= height
+				})
+				scenicScore *= (steps + 1)
 			}
 
 			//ctx.Printf("Scenic score: %d", scenicScore)
