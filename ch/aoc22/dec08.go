@@ -9,7 +9,6 @@ func Dec08a(ctx ch.AOContext) error {
 	if err != nil {
 		return err
 	}
-	//forest = []string{"30373", "25512", "65332", "33549", "35390"}
 
 	visibleTrees := 0
 	for y := range forest {
@@ -41,11 +40,84 @@ func Dec08a(ctx ch.AOContext) error {
 	}
 
 	ctx.FinalAnswer.Print(visibleTrees)
-	return errNotImplemented
+	return nil
 }
 
-var Dec08b ch.AdventFunc = nil
+func Dec08b(ctx ch.AOContext) error {
+	forest, err := ctx.DataLines("inputs/2022/dec08.txt")
+	if err != nil {
+		return err
+	}
+	//forest = []string{"30373", "25512", "65332", "33549", "35390"}
 
-// func Dec08b(ctx ch.AOContext) error {
-// 	return errNotImplemented
-// }
+	bestTree := 0
+
+	for y := range forest {
+		if y == 0 || y == len(forest)-1 {
+			continue
+		}
+		for x := range forest[y] {
+			if x == 0 || x == len(forest[y])-1 {
+				continue
+			}
+			height := forest[y][x]
+			scenicScore := 1
+
+			obstructed := false
+			for i := 1; (x - i) >= 0; i++ {
+				if forest[y][x-i] >= height {
+					obstructed = true
+					scenicScore *= i
+					break
+				}
+			}
+			if !obstructed {
+				scenicScore *= x
+			}
+
+			obstructed = false
+			for i := 1; (x + i) < len(forest[y]); i++ {
+				if forest[y][x+i] >= height {
+					obstructed = true
+					scenicScore *= i
+					break
+				}
+			}
+			if !obstructed {
+				scenicScore *= len(forest[y]) - x - 1
+			}
+
+			obstructed = false
+			for i := 1; (y - i) >= 0; i++ {
+				if forest[y-i][x] >= height {
+					obstructed = true
+					scenicScore *= i
+					break
+				}
+			}
+			if !obstructed {
+				scenicScore *= y
+			}
+
+			obstructed = false
+			for i := 1; (y + i) < len(forest); i++ {
+				if forest[y+i][x] >= height {
+					obstructed = true
+					scenicScore *= i
+					break
+				}
+			}
+			if !obstructed {
+				scenicScore *= len(forest) - y - 1
+			}
+
+			//ctx.Printf("Scenic score: %d", scenicScore)
+			if scenicScore > bestTree {
+				bestTree = scenicScore
+			}
+		}
+	}
+
+	ctx.FinalAnswer.Print(bestTree)
+	return nil
+}
