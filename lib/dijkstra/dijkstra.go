@@ -4,17 +4,34 @@ import (
 	"errors"
 )
 
+// A Board represents the space through which we'd like to find short paths.
 type Board interface {
 	// StartingPositions returns all possible starting positions from which to find the shortest path
 	StartingPositions() []Position
 }
 
+// A Position encompasses the state of an agent en route. Typically this boils
+// down to a grid position, but it can also encode the state of the agent's
+// inventory, for instance if the agent is carrying a carrot, rabbit, or fox
+// across a bridge. (Or none of the above.)
 type Position interface {
+	// Final reports whether or not a path can end in this particular
+	// configuration. The length of the path that led here is passed in the
+	// second argument
 	Final(b Board, totalCost int) bool
+
+	// Adjacent returns an iterator with all positions that can be reached
+	// directly from this position
 	Adjacent(b Board) AdjacencyIterator
 }
 
+// An AdjacencyIterator is an abstraction over an Adjacency slice that can be
+// ranged over. This allows one to generate infinitely many adjacent tiles
+// without allocating all the RAM in the known universe.
 type AdjacencyIterator interface {
+	// Next advances the iterator and returns the next Position in the series,
+	// as well as the distance from the previous position. If there are no more
+	// Positions, Next should return nil.
 	Next() (Position, int)
 }
 
@@ -24,10 +41,12 @@ func (deadEndIter) Next() (Position, int) {
 	return nil, 0
 }
 
+// DeadEnd returns an empty iterator with no neighbouring Positions.
 func DeadEnd() AdjacencyIterator {
 	return deadEndIter{}
 }
 
+// An Adj represents an adjacent Position along with its step size
 type Adj struct {
 	Position Position
 	Cost     int
@@ -47,6 +66,7 @@ func (al *adjList) Next() (Position, int) {
 	return rv.Position, rv.Cost
 }
 
+// AdjacencyList turns a list of adjacent positions into an AdjacencyIterator
 func AdjacencyList(positions []Adj) AdjacencyIterator {
 	return &adjList{
 		Positions: positions,
@@ -54,6 +74,10 @@ func AdjacencyList(positions []Adj) AdjacencyIterator {
 	}
 }
 
+// ShortestPath calculates the shortest path (i.e., the path with the lowest
+// overall cost) from any of the Board's starting positions to any Positions
+// that are Final. It returns the list of steps taken, along with the total
+// cost for this path, or an error.
 func ShortestPath(b Board) ([]Position, int, error) {
 	starts := b.StartingPositions()
 

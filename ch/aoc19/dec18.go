@@ -105,25 +105,37 @@ func (bb tractorMaze) distanceToKeys(pos pos2d) map[cube.Point]int {
 		return rv
 	}
 
+	// This map contains the distance to all reachable keys.
+	// We fill it from the final() function
 	keydist := make(map[cube.Point]int)
-	f := func(p gridPoint, totalCost int) bool {
-		c := bb.charAt(p.X, p.Y)
+
+	valid := func(x, y int) bool {
+		c := bb.charAt(x, y)
+		if c == '#' || c == '%' {
+			return false
+		}
+		if c >= 'A' && c <= 'Z' {
+			return (pos.Keys>>int(c-'A'))&1 == 1
+		}
+		return true
+	}
+	final := func(x, y, totalCost int) bool {
+		c := bb.charAt(x, y)
 		if c < 'a' || c > 'z' {
 			return false
 		} else if ((pos.Keys >> int(c-'a')) & 1) == 1 {
 			// We already have this key
 			return false
 		}
-		cp := cube.Point{p.X, p.Y}
+		cp := cube.Point{x, y}
 		if d, ok := keydist[cp]; !ok || d > totalCost {
 			keydist[cp] = totalCost
 		}
 		return false
 	}
-	bff := BFF{f}
 	mtm := metaTractorMaze{
 		b:     bb,
-		start: gridPoint{pos.X, pos.Y, &bff},
+		start: dijkstra.GridWalker(valid, final, pos.X, pos.Y),
 		keys:  pos.Keys,
 	}
 	dijkstra.ShortestPath(mtm)
@@ -134,66 +146,12 @@ func (bb tractorMaze) distanceToKeys(pos pos2d) map[cube.Point]int {
 
 type metaTractorMaze struct {
 	b     tractorMaze
-	start gridPoint
+	start []dijkstra.Position
 	keys  uint32
 }
 
 func (b metaTractorMaze) StartingPositions() []dijkstra.Position {
-	return []dijkstra.Position{b.start}
-}
-
-type BFF struct {
-	F func(gridPoint, int) bool
-}
-
-type gridPoint struct {
-	X, Y int
-	F    *BFF
-}
-
-func (p gridPoint) HashCode() uint64 {
-	return (uint64(uint32(p.X)) << 32) | uint64(uint32(p.Y))
-}
-
-func (p gridPoint) Final(b dijkstra.Board, totalCost int) bool {
-	return p.F.F(p, totalCost)
-}
-func (p gridPoint) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
-	bb, ok := b.(metaTractorMaze)
-	if !ok {
-		return nil
-	}
-
-	c := bb.b.charAt(p.X, p.Y)
-	if c >= 'a' && c <= 'z' {
-		if (bb.keys>>int(c-'a'))&1 != 1 {
-			// We don't have this key yet
-			return dijkstra.DeadEnd()
-		}
-	}
-
-	var rv []dijkstra.Adj
-	positions := [4]gridPoint{
-		gridPoint{p.X + 1, p.Y, p.F},
-		gridPoint{p.X, p.Y + 1, p.F},
-		gridPoint{p.X - 1, p.Y, p.F},
-		gridPoint{p.X, p.Y - 1, p.F},
-	}
-	for _, pos := range positions {
-		c := bb.b.charAt(pos.X, pos.Y)
-		if c == '#' || c == '%' {
-			continue
-		}
-
-		if c >= 'A' && c <= 'Z' {
-			if (bb.keys>>int(c-'A'))&1 != 1 {
-				continue
-			}
-		}
-		rv = append(rv, dijkstra.Adj{pos, 1})
-	}
-
-	return dijkstra.AdjacencyList(rv)
+	return b.start
 }
 
 type Keyer interface {
@@ -344,8 +302,12 @@ func (p pos4d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 func (p pos4d) WithUpdatedMask(b tractorMaze) pos4d {
 	for i, pos := range p.Robots {
 		p.KeyDoorMask[i] = 0
-		f := func(q gridPoint, totalCost int) bool {
-			c := b.charAt(q.X, q.Y)
+		valid := func(x, y int) bool {
+			c := b.charAt(x, y)
+			return c != '#' && c != '%'
+		}
+		final := func(x, y, totalCost int) bool {
+			c := b.charAt(x, y)
 			if c >= 'A' && c <= 'Z' {
 				p.KeyDoorMask[i] = p.KeyDoorMask[i] | (1 << int(c-'A'))
 			} else if c >= 'a' && c <= 'z' {
@@ -353,10 +315,9 @@ func (p pos4d) WithUpdatedMask(b tractorMaze) pos4d {
 			}
 			return false
 		}
-		bff := BFF{f}
 		mtm := metaTractorMaze{
 			b:     b,
-			start: gridPoint{pos.X, pos.Y, &bff},
+			start: dijkstra.GridWalker(valid, final, pos.X, pos.Y),
 			keys:  0xffffffff,
 		}
 		dijkstra.ShortestPath(mtm)
