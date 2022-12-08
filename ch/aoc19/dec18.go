@@ -15,9 +15,16 @@ func Dec18a(ctx ch.AOContext) error {
 		tm := readTractorMaze(lines)
 		ctx.Printf("[%26b]", tm.KeyRequirement)
 
-		_, cost, err := dijkstra.ShortestPath(tm)
+		steps, cost, err := dijkstra.ShortestPath(tm)
 		if err != nil {
 			return err
+		}
+		for _, p := range steps {
+			if pp, ok := p.(pos2d); ok {
+				ctx.Printf("   step: %v '%c'", pp, tm.charAt(pp.X, pp.Y))
+			} else {
+				ctx.Printf("   step: %v", p)
+			}
 		}
 		ctx.FinalAnswer.Print(cost)
 	}
@@ -40,6 +47,8 @@ func readTractorMaze(lines []string) tractorMaze {
 	}
 	return tm
 }
+
+func (tractorMaze) NoYesIAmVeryVerboseThankYouForAsking() {}
 
 func (b tractorMaze) StartingPositions() []dijkstra.Position {
 	rv := []dijkstra.Position{}
@@ -79,6 +88,70 @@ func (b tractorMaze) posAt(x, y int, currentKeys uint32) pos2d {
 	return pos2d{x, y, b.updatedKeys(x, y, currentKeys)}
 }
 
+type metaTractorMaze struct {
+	b     tractorMaze
+	start gridPoint
+	keys  uint32
+}
+
+func (b metaTractorMaze) StartingPositions() []dijkstra.Position {
+	return []dijkstra.Position{b.start}
+}
+
+type BFF struct {
+	F func(gridPoint, int) bool
+}
+
+type gridPoint struct {
+	X, Y int
+	F    *BFF
+}
+
+func (p gridPoint) HashCode() uint64 {
+	return (uint64(uint32(p.X)) << 32) | uint64(uint32(p.Y))
+}
+
+func (p gridPoint) Final(b dijkstra.Board, totalCost int) bool {
+	return p.F.F(p, totalCost)
+}
+func (p gridPoint) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
+	bb, ok := b.(metaTractorMaze)
+	if !ok {
+		return nil
+	}
+
+	c := bb.b.charAt(p.X, p.Y)
+	if c >= 'a' && c <= 'z' {
+		if (bb.keys>>int(c-'a'))&1 != 1 {
+			// We don't have this key yet
+			return dijkstra.DeadEnd()
+		}
+	}
+
+	var rv []dijkstra.Adj
+	positions := [4]gridPoint{
+		gridPoint{p.X + 1, p.Y, p.F},
+		gridPoint{p.X, p.Y + 1, p.F},
+		gridPoint{p.X - 1, p.Y, p.F},
+		gridPoint{p.X, p.Y - 1, p.F},
+	}
+	for _, pos := range positions {
+		c := bb.b.charAt(pos.X, pos.Y)
+		if c == '#' || c == '%' {
+			continue
+		}
+
+		if c >= 'A' && c <= 'Z' {
+			if (bb.keys>>int(c-'A'))&1 != 1 {
+				continue
+			}
+		}
+		rv = append(rv, dijkstra.Adj{pos, 1})
+	}
+
+	return dijkstra.AdjacencyList(rv)
+}
+
 type pos2d struct {
 	X, Y int
 	Keys uint32
@@ -92,31 +165,45 @@ func (p pos2d) Final(b dijkstra.Board, totalCost int) bool {
 
 	return p.Keys == bb.KeyRequirement
 }
-func (p pos2d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
+func (pos pos2d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 	bb, ok := b.(tractorMaze)
 	if !ok {
 		return nil
 	}
 
 	var rv []dijkstra.Adj
-	positions := [4]pos2d{
-		bb.posAt(p.X+1, p.Y, p.Keys),
-		bb.posAt(p.X, p.Y+1, p.Keys),
-		bb.posAt(p.X-1, p.Y, p.Keys),
-		bb.posAt(p.X, p.Y-1, p.Keys),
-	}
-	for _, pos := range positions {
-		c := bb.charAt(pos.X, pos.Y)
-		if c == '#' || c == '%' {
-			continue
-		}
 
-		if c >= 'A' && c <= 'Z' {
-			if (p.Keys>>int(c-'A'))&1 != 1 {
-				continue
-			}
+	keydist := make(map[gridPoint]int)
+	f := func(p gridPoint, totalCost int) bool {
+		c := bb.charAt(p.X, p.Y)
+		if c < 'a' || c > 'z' {
+			return false
+		} else if ((pos.Keys >> int(c-'a')) & 1) == 1 {
+			// We already have this key
+			return false
 		}
-		rv = append(rv, dijkstra.Adj{pos, 1})
+		if d, ok := keydist[p]; !ok || d > totalCost {
+			keydist[p] = totalCost
+		}
+		return false
+	}
+	bff := BFF{f}
+	mtm := metaTractorMaze{
+		b:     bb,
+		start: gridPoint{pos.X, pos.Y, &bff},
+		keys:  pos.Keys,
+	}
+	dijkstra.ShortestPath(mtm)
+
+	c := bb.charAt(pos.X, pos.Y)
+	for q, tc := range keydist {
+		if c == 'c' {
+			//log.Printf("Distance from %c to %c with keys %x: %d", c, bb.charAt(q.X, q.Y), pos.Keys, tc)
+		}
+		rv = append(rv, dijkstra.Adj{
+			Position: bb.posAt(q.X, q.Y, pos.Keys),
+			Cost:     tc,
+		})
 	}
 
 	return dijkstra.AdjacencyList(rv)
