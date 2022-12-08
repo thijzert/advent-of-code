@@ -2,6 +2,7 @@ package aoc19
 
 import (
 	"github.com/thijzert/advent-of-code/ch"
+	"github.com/thijzert/advent-of-code/lib/cube"
 	"github.com/thijzert/advent-of-code/lib/dijkstra"
 )
 
@@ -13,19 +14,20 @@ func Dec18a(ctx ch.AOContext) error {
 
 	for _, lines := range sections {
 		tm := readTractorMaze(lines)
-		ctx.Printf("[%26b]", tm.KeyRequirement)
 
 		steps, cost, err := dijkstra.ShortestPath(tm)
 		if err != nil {
 			return err
 		}
+		path := make([]byte, 0, len(steps)-1)
+		var prev dijkstra.Position = nil
 		for _, p := range steps {
-			if pp, ok := p.(pos2d); ok {
-				ctx.Printf("   step: %v '%c'", pp, tm.charAt(pp.X, pp.Y))
-			} else {
-				ctx.Printf("   step: %v", p)
+			if prev != nil {
+				path = append(path, keyDiff(prev, p))
 			}
+			prev = p
 		}
+		ctx.Printf("Path taken: %s", path)
 		ctx.FinalAnswer.Print(cost)
 	}
 	return nil
@@ -34,10 +36,14 @@ func Dec18a(ctx ch.AOContext) error {
 type tractorMaze struct {
 	Lines          []string
 	KeyRequirement uint32
+	d2kCache       map[pos2d]map[cube.Point]int
 }
 
 func readTractorMaze(lines []string) tractorMaze {
-	tm := tractorMaze{Lines: lines}
+	tm := tractorMaze{
+		Lines:    lines,
+		d2kCache: make(map[pos2d]map[cube.Point]int),
+	}
 	for _, l := range lines {
 		for _, c := range l {
 			if c >= 'a' && c <= 'z' {
@@ -86,6 +92,38 @@ func (b tractorMaze) updatedKeys(x, y int, currentKeys uint32) uint32 {
 }
 func (b tractorMaze) posAt(x, y int, currentKeys uint32) pos2d {
 	return pos2d{x, y, b.updatedKeys(x, y, currentKeys)}
+}
+
+func (bb tractorMaze) distanceToKeys(pos pos2d) map[cube.Point]int {
+	if rv, ok := bb.d2kCache[pos]; ok {
+		return rv
+	}
+
+	keydist := make(map[cube.Point]int)
+	f := func(p gridPoint, totalCost int) bool {
+		c := bb.charAt(p.X, p.Y)
+		if c < 'a' || c > 'z' {
+			return false
+		} else if ((pos.Keys >> int(c-'a')) & 1) == 1 {
+			// We already have this key
+			return false
+		}
+		cp := cube.Point{p.X, p.Y}
+		if d, ok := keydist[cp]; !ok || d > totalCost {
+			keydist[cp] = totalCost
+		}
+		return false
+	}
+	bff := BFF{f}
+	mtm := metaTractorMaze{
+		b:     bb,
+		start: gridPoint{pos.X, pos.Y, &bff},
+		keys:  pos.Keys,
+	}
+	dijkstra.ShortestPath(mtm)
+
+	bb.d2kCache[pos] = keydist
+	return keydist
 }
 
 type metaTractorMaze struct {
@@ -152,9 +190,39 @@ func (p gridPoint) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 	return dijkstra.AdjacencyList(rv)
 }
 
+type Keyer interface {
+	GetKeys() uint32
+}
+
+func keyDiff(a, b dijkstra.Position) byte {
+	var p, q Keyer
+	var ok bool
+	if p, ok = a.(Keyer); !ok {
+		return ' '
+	}
+	if q, ok = b.(Keyer); !ok {
+		return ' '
+	}
+
+	diff := p.GetKeys() ^ q.GetKeys()
+	if diff == 0 {
+		return '-'
+	}
+	for c := byte('a'); c <= 'z'; c++ {
+		if (diff >> int(c-'a')) == 1 {
+			return c
+		}
+	}
+	return '?'
+}
+
 type pos2d struct {
 	X, Y int
 	Keys uint32
+}
+
+func (p pos2d) GetKeys() uint32 {
+	return p.Keys
 }
 
 func (p pos2d) Final(b dijkstra.Board, totalCost int) bool {
@@ -173,33 +241,8 @@ func (pos pos2d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 
 	var rv []dijkstra.Adj
 
-	keydist := make(map[gridPoint]int)
-	f := func(p gridPoint, totalCost int) bool {
-		c := bb.charAt(p.X, p.Y)
-		if c < 'a' || c > 'z' {
-			return false
-		} else if ((pos.Keys >> int(c-'a')) & 1) == 1 {
-			// We already have this key
-			return false
-		}
-		if d, ok := keydist[p]; !ok || d > totalCost {
-			keydist[p] = totalCost
-		}
-		return false
-	}
-	bff := BFF{f}
-	mtm := metaTractorMaze{
-		b:     bb,
-		start: gridPoint{pos.X, pos.Y, &bff},
-		keys:  pos.Keys,
-	}
-	dijkstra.ShortestPath(mtm)
-
-	c := bb.charAt(pos.X, pos.Y)
+	keydist := bb.distanceToKeys(pos)
 	for q, tc := range keydist {
-		if c == 'c' {
-			//log.Printf("Distance from %c to %c with keys %x: %d", c, bb.charAt(q.X, q.Y), pos.Keys, tc)
-		}
 		rv = append(rv, dijkstra.Adj{
 			Position: bb.posAt(q.X, q.Y, pos.Keys),
 			Cost:     tc,
@@ -254,6 +297,10 @@ type pos4d struct {
 	X3, Y3 int8
 	X4, Y4 int8
 	Keys   uint32
+}
+
+func (p pos4d) GetKeys() uint32 {
+	return p.Keys
 }
 
 func (p pos4d) Final(b dijkstra.Board, totalCost int) bool {
