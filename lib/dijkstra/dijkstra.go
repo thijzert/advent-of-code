@@ -2,7 +2,6 @@ package dijkstra
 
 import (
 	"errors"
-	"log"
 )
 
 type Board interface {
@@ -55,10 +54,6 @@ func AdjacencyList(positions []Adj) AdjacencyIterator {
 	}
 }
 
-type ChattyBoi interface {
-	YesIAmVeryVerboseThankYouForAsking()
-}
-
 func ShortestPath(b Board) ([]Position, int, error) {
 	starts := b.StartingPositions()
 
@@ -77,14 +72,8 @@ func ShortestPath(b Board) ([]Position, int, error) {
 		}
 	}
 
-	if _, ok := b.(ChattyBoi); ok {
-		log.Printf("Step 0; heads: %v", dijk.Heads)
-	}
 	for i := 1; i < 10000; i++ {
 		dijk.Step()
-		if _, ok := b.(ChattyBoi); ok {
-			log.Printf("Step %d; heads: %v", i, dijk.Heads)
-		}
 		if len(dijk.Heads) == 0 {
 			break
 		}

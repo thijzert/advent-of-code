@@ -54,8 +54,6 @@ func readTractorMaze(lines []string) tractorMaze {
 	return tm
 }
 
-func (tractorMaze) NoYesIAmVeryVerboseThankYouForAsking() {}
-
 func (b tractorMaze) StartingPositions() []dijkstra.Position {
 	rv := []dijkstra.Position{}
 	for y, l := range b.Lines {
