@@ -63,8 +63,15 @@ func (b tractorMaze) StartingPositions() []dijkstra.Position {
 			if c == '@' {
 				rv = append(rv, pos2d{x, y, 0})
 			} else if c == '%' {
-				rv = append(rv, pos4d{int8(x + 1), int8(y + 1), int8(x + 1), int8(y - 1), int8(x - 1), int8(y + 1), int8(x - 1), int8(y - 1), 0})
-
+				rv = append(rv, pos4d{
+					Robots: [4]cube.Point{
+						{x + 1, y + 1},
+						{x + 1, y - 1},
+						{x - 1, y + 1},
+						{x - 1, y - 1},
+					},
+					Keys: 0,
+				})
 			}
 		}
 	}
@@ -253,7 +260,7 @@ func (pos pos2d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 }
 
 func Dec18b(ctx ch.AOContext) error {
-	sections, err := ctx.DataSections("inputs/2019/dec18.txt")
+	sections, err := ctx.DataSections("inputs/2019/dec18b.txt")
 	if err != nil {
 		return err
 	}
@@ -292,10 +299,7 @@ func Dec18b(ctx ch.AOContext) error {
 }
 
 type pos4d struct {
-	X1, Y1 int8
-	X2, Y2 int8
-	X3, Y3 int8
-	X4, Y4 int8
+	Robots [4]cube.Point
 	Keys   uint32
 }
 
@@ -317,68 +321,20 @@ func (p pos4d) Adjacent(b dijkstra.Board) dijkstra.AdjacencyIterator {
 		return nil
 	}
 
-	return &pos4diter{
-		positions: [16]pos4d{
-			pos4d{p.X1 + 1, p.Y1, p.X2, p.Y2, p.X3, p.Y3, p.X4, p.Y4, bb.updatedKeys8(p.X1+1, p.Y1, p.Keys)},
-			pos4d{p.X1, p.Y1 + 1, p.X2, p.Y2, p.X3, p.Y3, p.X4, p.Y4, bb.updatedKeys8(p.X1, p.Y1+1, p.Keys)},
-			pos4d{p.X1 - 1, p.Y1, p.X2, p.Y2, p.X3, p.Y3, p.X4, p.Y4, bb.updatedKeys8(p.X1-1, p.Y1, p.Keys)},
-			pos4d{p.X1, p.Y1 - 1, p.X2, p.Y2, p.X3, p.Y3, p.X4, p.Y4, bb.updatedKeys8(p.X1, p.Y1-1, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2 + 1, p.Y2, p.X3, p.Y3, p.X4, p.Y4, bb.updatedKeys8(p.X2+1, p.Y2, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2, p.Y2 + 1, p.X3, p.Y3, p.X4, p.Y4, bb.updatedKeys8(p.X2, p.Y2+1, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2 - 1, p.Y2, p.X3, p.Y3, p.X4, p.Y4, bb.updatedKeys8(p.X2-1, p.Y2, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2, p.Y2 - 1, p.X3, p.Y3, p.X4, p.Y4, bb.updatedKeys8(p.X2, p.Y2-1, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2, p.Y2, p.X3 + 1, p.Y3, p.X4, p.Y4, bb.updatedKeys8(p.X3+1, p.Y3, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2, p.Y2, p.X3, p.Y3 + 1, p.X4, p.Y4, bb.updatedKeys8(p.X3, p.Y3+1, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2, p.Y2, p.X3 - 1, p.Y3, p.X4, p.Y4, bb.updatedKeys8(p.X3-1, p.Y3, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2, p.Y2, p.X3, p.Y3 - 1, p.X4, p.Y4, bb.updatedKeys8(p.X3, p.Y3-1, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2, p.Y2, p.X3, p.Y3, p.X4 + 1, p.Y4, bb.updatedKeys8(p.X4+1, p.Y4, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2, p.Y2, p.X3, p.Y3, p.X4, p.Y4 + 1, bb.updatedKeys8(p.X4, p.Y4+1, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2, p.Y2, p.X3, p.Y3, p.X4 - 1, p.Y4, bb.updatedKeys8(p.X4-1, p.Y4, p.Keys)},
-			pos4d{p.X1, p.Y1, p.X2, p.Y2, p.X3, p.Y3, p.X4, p.Y4 - 1, bb.updatedKeys8(p.X4, p.Y4-1, p.Keys)},
-		},
-		idx: 0,
-		b:   bb,
-	}
-}
+	var rv []dijkstra.Adj
 
-type pos4diter struct {
-	positions [16]pos4d
-	idx       int
-	b         tractorMaze
-}
-
-func (pdi *pos4diter) Next() (dijkstra.Position, int) {
-	for pdi.idx < len(pdi.positions) {
-		if pdi.isOk(pdi.positions[pdi.idx]) {
-			rv := pdi.positions[pdi.idx]
-			pdi.idx++
-			return rv, 1
-		}
-		pdi.idx++
-	}
-
-	return nil, 0
-}
-
-func (pdi *pos4diter) isOk(p pos4d) bool {
-	toCheck := [4][2]int{
-		{int(p.X1), int(p.Y1)},
-		{int(p.X2), int(p.Y2)},
-		{int(p.X3), int(p.Y3)},
-		{int(p.X4), int(p.Y4)},
-	}
-	for _, pos := range toCheck {
-		c := pdi.b.charAt(pos[0], pos[1])
-		if c == '#' || c == '%' {
-			return false
-		}
-
-		if c >= 'A' && c <= 'Z' {
-			if (p.Keys>>int(c-'A'))&1 != 1 {
-				return false
-			}
+	for i, pos := range p.Robots {
+		keydist := bb.distanceToKeys(pos2d{pos.X, pos.Y, p.Keys})
+		for q, tc := range keydist {
+			var np pos4d = p
+			np.Robots[i] = q
+			np.Keys = bb.updatedKeys(q.X, q.Y, p.Keys)
+			rv = append(rv, dijkstra.Adj{
+				Position: np,
+				Cost:     tc,
+			})
 		}
 	}
 
-	return true
+	return dijkstra.AdjacencyList(rv)
 }
