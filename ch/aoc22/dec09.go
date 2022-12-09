@@ -14,22 +14,16 @@ func Dec09a(ctx ch.AOContext) error {
 	}
 	//lines = []string{"R 4", "U 4", "L 3", "D 1", "R 4", "D 1", "L 5", "R 2"}
 
-	dirs := map[rune]cube.Point{
-		'R': cube.Cardinal2D[0],
-		'U': cube.Cardinal2D[1],
-		'L': cube.Cardinal2D[2],
-		'D': cube.Cardinal2D[3],
-	}
 	head, tail := cube.Point{0, 0}, cube.Point{0, 0}
 	visited := make(map[cube.Point]bool)
 	for _, line := range lines {
-		var a rune
+		var a string
 		var l int
-		_, err = fmt.Sscanf(line, "%c %d", &a, &l)
+		_, err = fmt.Sscanf(line, "%s %d", &a, &l)
 		if err != nil {
 			return err
 		}
-		dir, ok := dirs[a]
+		dir, ok := cube.ParseDirection2D(a)
 		if !ok {
 			return fmt.Errorf("unknown direction '%c'", a)
 		}
@@ -86,23 +80,16 @@ func Dec09b(ctx ch.AOContext) error {
 	//lines = []string{"R 5", "U 8", "L 8", "D 3", "R 17", "D 10", "L 25", "U 20"}
 	//bounds := cube.Square{cube.Interval{-11, 14}, cube.Interval{-5, 15}}
 
-	dirs := map[rune]cube.Point{
-		'R': cube.Cardinal2D[0],
-		'U': cube.Cardinal2D[1],
-		'L': cube.Cardinal2D[2],
-		'D': cube.Cardinal2D[3],
-	}
-
 	rope := make([]cube.Point, 10)
 	visited := make(map[cube.Point]bool)
 	for _, line := range lines {
-		var a rune
+		var a string
 		var l int
-		_, err = fmt.Sscanf(line, "%c %d", &a, &l)
+		_, err = fmt.Sscanf(line, "%s %d", &a, &l)
 		if err != nil {
 			return err
 		}
-		dir, ok := dirs[a]
+		dir, ok := cube.ParseDirection2D(a)
 		if !ok {
 			return fmt.Errorf("unknown direction '%c'", a)
 		}

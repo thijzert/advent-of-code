@@ -1,10 +1,24 @@
 package cube
 
+import "strings"
+
 // Cardinal2D contains all cardinal directions in 2D space (right, up, left, down)
 var Cardinal2D [4]Point = [4]Point{{1, 0}, {0, 1}, {-1, 0}, {0, -1}}
 
 // Cardinal2Diag contains all unit directions in 2D space, including diagonals
 var Cardinal2Diag [8]Point = [8]Point{{1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1}}
+
+// ParseDirection2D returns a direction vector from a named direction, such as "L" or "DR"
+func ParseDirection2D(dir string) (Point, bool) {
+	dir = strings.ToUpper(dir)
+	names := [16]string{"R", "UR", "U", "UL", "L", "DL", "D", "DR", "RIGHT", "RU", "UP", "LU", "LEFT", "LD", "DOWN", "RD"}
+	for i, s := range names {
+		if s == dir {
+			return Cardinal2Diag[i%len(Cardinal2Diag)], true
+		}
+	}
+	return Point{1, 0}, false
+}
 
 // A Walker represents a callback function to be passed to Walk(). If the
 // Walker returns true, the Walk is aborted before reaching the boundaries
