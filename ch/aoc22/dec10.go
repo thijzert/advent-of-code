@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/thijzert/advent-of-code/ch"
+	"github.com/thijzert/advent-of-code/lib/image"
 )
 
 func Dec10a(ctx ch.AOContext) error {
@@ -50,19 +51,16 @@ func Dec10b(ctx ch.AOContext) error {
 		return err
 	}
 
+	img := image.NewImage(40, 6, nil)
+
 	x := 1
 	cycleCount := 0
-	scanline := make([]byte, 40)
 	tick := func() {
 		i := cycleCount % 40
+		j := cycleCount / 40
 		cycleCount++
 		if x >= i-1 && x <= i+1 {
-			scanline[i] = '#'
-		} else {
-			scanline[i] = ' '
-		}
-		if i == 39 {
-			ctx.Printf("%s", scanline)
+			img.Set(i, j, 1)
 		}
 	}
 
@@ -80,6 +78,7 @@ func Dec10b(ctx ch.AOContext) error {
 		}
 	}
 
+	ctx.Printf("\n%s", img)
 	ctx.FinalAnswer.Print("(Maybe I should implement OCR at some point)")
 	return nil
 }
