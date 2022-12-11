@@ -23,7 +23,10 @@ func Dec18a(ctx ch.AOContext) error {
 		var prev dijkstra.Position = nil
 		for _, p := range steps {
 			if prev != nil {
-				path = append(path, keyDiff(prev, p))
+				c := keyDiff(prev, p)
+				if c != '-' {
+					path = append(path, c)
+				}
 			}
 			prev = p
 		}
@@ -86,18 +89,12 @@ func (b tractorMaze) charAt(x, y int) rune {
 	return '#'
 }
 
-func (b tractorMaze) updatedKeys8(x, y int8, currentKeys uint32) uint32 {
-	return b.updatedKeys(int(x), int(y), currentKeys)
-}
 func (b tractorMaze) updatedKeys(x, y int, currentKeys uint32) uint32 {
 	c := b.charAt(x, y)
 	if c >= 'a' && c <= 'z' {
 		currentKeys = currentKeys | (1 << int(c-'a'))
 	}
 	return currentKeys
-}
-func (b tractorMaze) posAt(x, y int, currentKeys uint32) pos2d {
-	return pos2d{x, y, b.updatedKeys(x, y, currentKeys)}
 }
 
 func (bb tractorMaze) distanceToKeys(pos pos2d) map[cube.Point]int {
@@ -204,13 +201,19 @@ func (pos pos2d) Adjacent(b dijkstra.Board, totalCost int) dijkstra.AdjacencyIte
 	}
 
 	var rv []dijkstra.Adj
+	for _, dir := range cube.Cardinal2D {
+		x, y := pos.X+dir.X, pos.Y+dir.Y
+		c := bb.charAt(x, y)
+		if c == '#' || c == '%' {
+			continue
+		} else if c >= 'A' && c <= 'Z' {
+			if (pos.Keys>>int(c-'A'))&1 != 1 {
+				continue
+			}
+		}
 
-	keydist := bb.distanceToKeys(pos)
-	for q, tc := range keydist {
-		rv = append(rv, dijkstra.Adj{
-			Position: bb.posAt(q.X, q.Y, pos.Keys),
-			Cost:     tc,
-		})
+		p := pos2d{x, y, bb.updatedKeys(x, y, pos.Keys)}
+		rv = append(rv, dijkstra.Adj{p, 1})
 	}
 
 	return dijkstra.AdjacencyList(rv)
