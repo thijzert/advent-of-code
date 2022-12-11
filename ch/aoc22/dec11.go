@@ -2,6 +2,7 @@ package aoc22
 
 import (
 	"fmt"
+	"math/big"
 	"sort"
 	"strconv"
 	"strings"
@@ -11,27 +12,27 @@ import (
 )
 
 type worryMonkey struct {
-	Items        []int
+	Items        []*big.Int
 	Operation    rune
 	OperandOld   bool
-	Operand      int
-	Divisibility int
+	Operand      *big.Int
+	Divisibility *big.Int
 	NextMonkey   [2]int
 }
 
-func (m worryMonkey) ApplyOperation(v int) int {
+func (m worryMonkey) ApplyOperation(v *big.Int) *big.Int {
 	b := m.Operand
 	if m.OperandOld {
 		b = v
 	}
 
 	if m.Operation == '+' {
-		return v + b
+		return v.Add(v, b)
 	} else if m.Operation == '*' {
-		return v * b
+		return v.Mul(v, b)
 	}
 	panic("invalid operation")
-	return 0
+	return big.NewInt(0)
 }
 
 func readWorryMonkeys(ctx ch.AOContext, filename string) ([]worryMonkey, error) {
@@ -59,7 +60,7 @@ func readWorryMonkeys(ctx ch.AOContext, filename string) ([]worryMonkey, error) 
 			if err != nil {
 				return nil, fmt.Errorf("invalid format: starting item '%s'", item)
 			}
-			monkey.Items = append(monkey.Items, j)
+			monkey.Items = append(monkey.Items, big.NewInt(int64(j)))
 		}
 
 		if len(sect[2]) < 26 || sect[2][:23] != "  Operation: new = old " {
@@ -76,10 +77,11 @@ func readWorryMonkeys(ctx ch.AOContext, filename string) ([]worryMonkey, error) 
 			if err != nil {
 				return nil, fmt.Errorf("invalid format: operand '%s'", sect[2][25:])
 			}
-			monkey.Operand = j
+			monkey.Operand = big.NewInt(int64(j))
 		}
 
-		_, err := fmt.Sscanf(sect[3], "  Test: divisible by %d", &monkey.Divisibility)
+		monkey.Divisibility = big.NewInt(1)
+		_, err := fmt.Sscanf(sect[3], "  Test: divisible by %d", monkey.Divisibility)
 		if err != nil {
 			return nil, errors.Wrapf(err, "invalid format: divisibility '%s'", sect[3])
 		}
@@ -105,14 +107,18 @@ func Dec11a(ctx ch.AOContext) error {
 		return err
 	}
 
+	three := big.NewInt(3)
+
 	inspectedItem := make([]int, len(monkeys))
 	for round := 0; round < 20; round++ {
 		for i, monkey := range monkeys {
 			inspectedItem[i] += len(monkey.Items)
 			for _, item := range monkey.Items {
-				item = monkey.ApplyOperation(item) / 3
+				item = monkey.ApplyOperation(item)
+				item.Div(item, three)
 				j := monkey.NextMonkey[1]
-				if item%monkey.Divisibility == 0 {
+				rem := big.NewInt(0).Mod(item, monkey.Divisibility)
+				if rem.Int64() == 0 {
 					j = monkey.NextMonkey[0]
 				}
 				monkeys[j].Items = append(monkeys[j].Items, item)
@@ -133,8 +139,43 @@ func Dec11a(ctx ch.AOContext) error {
 	return nil
 }
 
-var Dec11b ch.AdventFunc = nil
+func Dec11b(ctx ch.AOContext) error {
+	monkeys, err := readWorryMonkeys(ctx, "inputs/2022/dec11.txt")
+	if err != nil {
+		return err
+	}
 
-// func Dec11b(ctx ch.AOContext) error {
-// 	return errNotImplemented
-// }
+	lcm := big.NewInt(1)
+	for _, monkey := range monkeys {
+		lcm.Mul(lcm, monkey.Divisibility)
+	}
+
+	inspectedItem := make([]int, len(monkeys))
+	for round := 0; round < 10000; round++ {
+		for i, monkey := range monkeys {
+			inspectedItem[i] += len(monkey.Items)
+			for _, item := range monkey.Items {
+				item = monkey.ApplyOperation(item)
+				item.Mod(item, lcm)
+				j := monkey.NextMonkey[1]
+				rem := big.NewInt(0).Mod(item, monkey.Divisibility)
+				if rem.Int64() == 0 {
+					j = monkey.NextMonkey[0]
+				}
+				monkeys[j].Items = append(monkeys[j].Items, item)
+			}
+			monkeys[i].Items = monkeys[i].Items[:0]
+		}
+	}
+
+	ctx.Print(inspectedItem)
+
+	monkeyBusiness := 1
+	sort.Ints(inspectedItem)
+	for _, mb := range inspectedItem[len(inspectedItem)-2:] {
+		monkeyBusiness *= mb
+	}
+
+	ctx.FinalAnswer.Print(monkeyBusiness)
+	return errNotImplemented
+}
