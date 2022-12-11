@@ -149,6 +149,7 @@ func Dec11b(ctx ch.AOContext) error {
 	for _, monkey := range monkeys {
 		lcm.Mul(lcm, monkey.Divisibility)
 	}
+	ctx.Printf("can this fit in an int64? %v", lcm.IsInt64())
 
 	inspectedItem := make([]int, len(monkeys))
 	for round := 0; round < 10000; round++ {
@@ -177,5 +178,5 @@ func Dec11b(ctx ch.AOContext) error {
 	}
 
 	ctx.FinalAnswer.Print(monkeyBusiness)
-	return errNotImplemented
+	return nil
 }
