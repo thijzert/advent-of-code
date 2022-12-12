@@ -56,7 +56,7 @@ func DiagonalWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, 
 func getGridWalker(f *bff, diagonal bool, xy ...int) []Position {
 	var rv []Position
 
-	for i := 0; (i + 1) < len(xy); i += 1 {
+	for i := 0; (i + 1) < len(xy); i += 2 {
 		rv = append(rv, gridPoint{
 			X:        xy[i],
 			Y:        xy[i+1],

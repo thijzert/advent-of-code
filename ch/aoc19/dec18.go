@@ -96,6 +96,9 @@ func (b tractorMaze) updatedKeys(x, y int, currentKeys uint32) uint32 {
 	}
 	return currentKeys
 }
+func (b tractorMaze) posAt(x, y int, currentKeys uint32) pos2d {
+	return pos2d{x, y, b.updatedKeys(x, y, currentKeys)}
+}
 
 func (bb tractorMaze) distanceToKeys(pos pos2d) map[cube.Point]int {
 	if rv, ok := bb.d2kCache[pos]; ok {
@@ -200,23 +203,69 @@ func (pos pos2d) Adjacent(b dijkstra.Board, totalCost int) dijkstra.AdjacencyIte
 		return nil
 	}
 
-	var rv []dijkstra.Adj
-	for _, dir := range cube.Cardinal2D {
-		x, y := pos.X+dir.X, pos.Y+dir.Y
-		c := bb.charAt(x, y)
-		if c == '#' || c == '%' {
-			continue
-		} else if c >= 'A' && c <= 'Z' {
-			if (pos.Keys>>int(c-'A'))&1 != 1 {
-				continue
-			}
-		}
+	return &pos2diter{
+		pos: pos,
+		b:   bb,
+		idx: 0,
+	}
+}
 
-		p := pos2d{x, y, bb.updatedKeys(x, y, pos.Keys)}
-		rv = append(rv, dijkstra.Adj{p, 1})
+type pos2diter struct {
+	pos pos2d
+	b   tractorMaze
+	idx int
+}
+
+func (pdi *pos2diter) Next() (dijkstra.Position, int) {
+	pdi.idx++
+	found := 0
+
+	rv := pdi.b.posAt(pdi.pos.X+1, pdi.pos.Y, pdi.pos.Keys)
+	if pdi.isOk(rv) {
+		found++
+		if found == pdi.idx {
+			return rv, 1
+		}
 	}
 
-	return dijkstra.AdjacencyList(rv)
+	rv = pdi.b.posAt(pdi.pos.X, pdi.pos.Y+1, pdi.pos.Keys)
+	if pdi.isOk(rv) {
+		found++
+		if found == pdi.idx {
+			return rv, 1
+		}
+	}
+
+	rv = pdi.b.posAt(pdi.pos.X-1, pdi.pos.Y, pdi.pos.Keys)
+	if pdi.isOk(rv) {
+		found++
+		if found == pdi.idx {
+			return rv, 1
+		}
+	}
+
+	rv = pdi.b.posAt(pdi.pos.X, pdi.pos.Y-1, pdi.pos.Keys)
+	if pdi.isOk(rv) {
+		found++
+		if found == pdi.idx {
+			return rv, 1
+		}
+	}
+
+	return nil, 0
+}
+
+func (pdi *pos2diter) isOk(p pos2d) bool {
+	c := pdi.b.charAt(p.X, p.Y)
+	if c == '#' {
+		return false
+	}
+
+	if c >= 'A' && c <= 'Z' {
+		return (p.Keys>>int(c-'A'))&1 == 1
+	}
+
+	return true
 }
 
 func Dec18b(ctx ch.AOContext) error {
