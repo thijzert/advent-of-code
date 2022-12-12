@@ -1,7 +1,7 @@
 package dijkstra
 
 type bff struct {
-	valid func(int, int, int) bool
+	valid func(int, int, int, int, int) bool
 	final func(int, int) bool
 }
 
@@ -18,21 +18,42 @@ type gridPoint struct {
 // in the first parameter. In the same vein, the final() func in the second
 // parameter returns true if the x,y coordinate is a valid end state.
 func GridWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, xy ...int) []Position {
-	return getGridWalker(valid, final, false, xy...)
+	f := bff{
+		valid: func(x0, y0, x1, y1, cost int) bool {
+			return valid(x1, y1, cost)
+		},
+		final: final,
+	}
+	return getGridWalker(&f, false, xy...)
+}
+
+// GridWalkerEx takes a list of integers, pairs them up into (x,y) coordinates,
+// and returns a list of Positions on a rectangular grid. From each grid
+// Position agents can take steps of length 1 in all 4 cardinal directions,
+// checking if each resulting position is valid using the valid() func provided
+// in the first parameter. In the same vein, the final() func in the second
+// parameter returns true if the x,y coordinate is a valid end state.
+func GridWalkerEx(valid func(x0, y0, x1, y1, cost int) bool, final func(x, y int) bool, xy ...int) []Position {
+	f := bff{
+		valid: valid,
+		final: final,
+	}
+	return getGridWalker(&f, false, xy...)
 }
 
 // DiagonalWalker is the same as GridWalker, only diagonal steps are also
 // allowed. Diagonal steps also have length 1.
 func DiagonalWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, xy ...int) []Position {
-	return getGridWalker(valid, final, true, xy...)
-}
-
-func getGridWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, diagonal bool, xy ...int) []Position {
 	f := bff{
-		valid: valid,
+		valid: func(x0, y0, x1, y1, cost int) bool {
+			return valid(x1, y1, cost)
+		},
 		final: final,
 	}
+	return getGridWalker(&f, true, xy...)
+}
 
+func getGridWalker(f *bff, diagonal bool, xy ...int) []Position {
 	var rv []Position
 
 	for i := 0; (i + 1) < len(xy); i += 1 {
@@ -40,7 +61,7 @@ func getGridWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, d
 			X:        xy[i],
 			Y:        xy[i+1],
 			Diagonal: diagonal,
-			F:        &f,
+			F:        f,
 		})
 	}
 
@@ -65,7 +86,7 @@ func (p gridPoint) Adjacent(b Board, totalCost int) AdjacencyIterator {
 			gridPoint{p.X - 1, p.Y + 1, p.Diagonal, p.F},
 		}
 		for _, pos := range positions {
-			if p.F.valid(pos.X, pos.Y, totalCost+1) {
+			if p.F.valid(p.X, p.Y, pos.X, pos.Y, totalCost+1) {
 				rv = append(rv, Adj{pos, 1})
 			}
 		}
@@ -77,7 +98,7 @@ func (p gridPoint) Adjacent(b Board, totalCost int) AdjacencyIterator {
 			gridPoint{p.X, p.Y - 1, p.Diagonal, p.F},
 		}
 		for _, pos := range positions {
-			if p.F.valid(pos.X, pos.Y, totalCost+1) {
+			if p.F.valid(p.X, p.Y, pos.X, pos.Y, totalCost+1) {
 				rv = append(rv, Adj{pos, 1})
 			}
 		}
