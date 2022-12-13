@@ -2,7 +2,6 @@ package aoc22
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/thijzert/advent-of-code/ch"
 )
@@ -63,7 +62,7 @@ func (p distressPacket) String() string {
 var indent = ""
 
 func (p distressPacket) compare(q distressPacket) int {
-	log.Printf("%sCompare %s and %s", indent, p, q)
+	//log.Printf("%sCompare %s and %s", indent, p, q)
 	if p.List == nil && q.List == nil {
 		if p.Int > q.Int {
 			return 1
@@ -75,7 +74,7 @@ func (p distressPacket) compare(q distressPacket) int {
 	if p.List != nil && q.List != nil {
 		for i, n := range p.List {
 			if len(q.List) <= i {
-				log.Printf("%s%s is shorter", indent, q)
+				//log.Printf("%s%s is shorter", indent, q)
 				return 1
 			}
 			indent = indent + "  "
@@ -127,8 +126,28 @@ func Dec13a(ctx ch.AOContext) error {
 	return nil
 }
 
-var Dec13b ch.AdventFunc = nil
+func Dec13b(ctx ch.AOContext) error {
+	pairs, err := ctx.DataSections("inputs/2022/dec13.txt")
+	if err != nil {
+		return err
+	}
 
-// func Dec13b(ctx ch.AOContext) error {
-// 	return errNotImplemented
-// }
+	idxA, idxB := 1, 2
+	sepA, _ := parseDistressPacket([]byte("[[2]]"))
+	sepB, _ := parseDistressPacket([]byte("[[6]]"))
+
+	for _, pair := range pairs {
+		for _, line := range pair {
+			pkt, _ := parseDistressPacket([]byte(line))
+			if pkt.compare(sepA) < 0 {
+				idxA++
+			}
+			if pkt.compare(sepB) < 0 {
+				idxB++
+			}
+		}
+	}
+
+	ctx.FinalAnswer.Print(idxA * idxB)
+	return nil
+}
