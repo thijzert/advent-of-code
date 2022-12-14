@@ -27,7 +27,7 @@ func Dec12a(ctx ch.AOContext) error {
 		}
 	}
 
-	_, totalCost, err := dijkstra.ShortestPath(dijkstra.GridWalkerEx(valid, final, start...))
+	_, totalCost, err := dijkstra.ShortestPath(dijkstra.GridWalker(valid, final, start...))
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func Dec12b(ctx ch.AOContext) error {
 		}
 	}
 
-	_, totalCost, err := dijkstra.ShortestPath(dijkstra.GridWalkerEx(valid, final, start...))
+	_, totalCost, err := dijkstra.ShortestPath(dijkstra.GridWalker(valid, final, start...))
 	if err != nil {
 		return err
 	}

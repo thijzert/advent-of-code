@@ -24,26 +24,10 @@ type gridPoint struct {
 // GridWalker takes a list of integers, pairs them up into (x,y) coordinates,
 // and returns a list of Positions on a rectangular grid. From each grid
 // Position agents can take steps of length 1 in all 4 cardinal directions,
-// checking if each resulting position is valid using the valid() func provided
+// checking if each step to take is a valid one using the valid() func provided
 // in the first parameter. In the same vein, the final() func in the second
 // parameter returns true if the x,y coordinate is a valid end state.
-func GridWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, xy ...int) Board {
-	f := bff{
-		valid: func(x0, y0, x1, y1, cost int) bool {
-			return valid(x1, y1, cost)
-		},
-		final: final,
-	}
-	return getGridWalker(&f, false, xy...)
-}
-
-// GridWalkerEx takes a list of integers, pairs them up into (x,y) coordinates,
-// and returns a list of Positions on a rectangular grid. From each grid
-// Position agents can take steps of length 1 in all 4 cardinal directions,
-// checking if each resulting position is valid using the valid() func provided
-// in the first parameter. In the same vein, the final() func in the second
-// parameter returns true if the x,y coordinate is a valid end state.
-func GridWalkerEx(valid func(x0, y0, x1, y1, cost int) bool, final func(x, y int) bool, xy ...int) Board {
+func GridWalker(valid func(x0, y0, x1, y1, cost int) bool, final func(x, y int) bool, xy ...int) Board {
 	f := bff{
 		valid: valid,
 		final: final,
@@ -53,11 +37,9 @@ func GridWalkerEx(valid func(x0, y0, x1, y1, cost int) bool, final func(x, y int
 
 // DiagonalWalker is the same as GridWalker, only diagonal steps are also
 // allowed. Diagonal steps also have length 1.
-func DiagonalWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, xy ...int) Board {
+func DiagonalWalker(valid func(x0, y0, x1, y1, cost int) bool, final func(x, y int) bool, xy ...int) Board {
 	f := bff{
-		valid: func(x0, y0, x1, y1, cost int) bool {
-			return valid(x1, y1, cost)
-		},
+		valid: valid,
 		final: final,
 	}
 	return getGridWalker(&f, true, xy...)

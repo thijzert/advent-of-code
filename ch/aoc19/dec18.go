@@ -109,7 +109,7 @@ func (bb tractorMaze) distanceToKeys(pos pos2d) map[cube.Point]int {
 	// We fill it from the final() function
 	keydist := make(map[cube.Point]int)
 
-	valid := func(x, y, totalCost int) bool {
+	valid := func(x0, y0, x, y, totalCost int) bool {
 		c := bb.charAt(x, y)
 		if c == '#' || c == '%' {
 			return false
@@ -339,7 +339,7 @@ func (p pos4d) Adjacent(b dijkstra.Board, totalCost int) dijkstra.AdjacencyItera
 func (p pos4d) WithUpdatedMask(b tractorMaze) pos4d {
 	for i, pos := range p.Robots {
 		p.KeyDoorMask[i] = 0
-		valid := func(x, y, totalCost int) bool {
+		valid := func(x0, y0, x, y, totalCost int) bool {
 			c := b.charAt(x, y)
 			return c != '#' && c != '%'
 		}
