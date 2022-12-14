@@ -10,14 +10,23 @@ import (
 )
 
 func Dec14a(ctx ch.AOContext) error {
+	return simulateSandCave(ctx, false)
+}
+
+func Dec14b(ctx ch.AOContext) error {
+	return simulateSandCave(ctx, true)
+}
+
+func simulateSandCave(ctx ch.AOContext, withFloor bool) error {
 	lines, err := ctx.DataLines("inputs/2022/dec14.txt")
 	if err != nil {
 		return err
 	}
 	//lines = []string{"498,4 -> 498,6 -> 496,6", "503,4 -> 502,4 -> 502,9 -> 494,9"}
 
-	offsetX := 440
-	cave := image.NewImage(200, 200, func(int, int) int { return 0 })
+	offsetX := 330
+	ymax := 2
+	cave := image.NewImage(360, 200, func(int, int) int { return 0 })
 
 	for _, line := range lines {
 		coords := strings.Split(line, " -> ")
@@ -26,6 +35,11 @@ func Dec14a(ctx ch.AOContext) error {
 			var p cube.Point
 			fmt.Sscanf(coord, "%d,%d", &p.X, &p.Y)
 			p.X -= offsetX
+
+			if p.Y > ymax {
+				ymax = p.Y
+			}
+
 			if i == 0 {
 				start = p
 				continue
@@ -48,6 +62,12 @@ func Dec14a(ctx ch.AOContext) error {
 			}
 
 			start = p
+		}
+	}
+
+	if withFloor {
+		for x := 0; x < cave.Width; x++ {
+			cave.Set(x, ymax+2, 1)
 		}
 	}
 
@@ -74,15 +94,12 @@ func Dec14a(ctx ch.AOContext) error {
 		}
 		grains++
 		cave.Set(grain.X, grain.Y, 5)
+		if grain.Y == 0 {
+			break
+		}
 	}
 
-	ctx.Printf("cave: %s", cave)
+	ctx.Printf("cave: \n%s", cave)
 	ctx.FinalAnswer.Print(grains)
-	return errNotImplemented
+	return nil
 }
-
-var Dec14b ch.AdventFunc = nil
-
-// func Dec14b(ctx ch.AOContext) error {
-// 	return errNotImplemented
-// }

@@ -26,23 +26,14 @@ func Dec12a(ctx ch.AOContext) error {
 			}
 		}
 	}
-	b := positionList{dijkstra.GridWalkerEx(valid, final, start...)}
 
-	_, totalCost, err := dijkstra.ShortestPath(b)
+	_, totalCost, err := dijkstra.ShortestPath(dijkstra.GridWalkerEx(valid, final, start...))
 	if err != nil {
 		return err
 	}
 
 	ctx.FinalAnswer.Print(totalCost)
 	return nil
-}
-
-type positionList struct {
-	start []dijkstra.Position
-}
-
-func (p positionList) StartingPositions() []dijkstra.Position {
-	return p.start
 }
 
 func validHikeStep(lines []string, x0, y0, x1, y1 int) bool {
@@ -86,9 +77,8 @@ func Dec12b(ctx ch.AOContext) error {
 			}
 		}
 	}
-	b := positionList{dijkstra.GridWalkerEx(valid, final, start...)}
 
-	_, totalCost, err := dijkstra.ShortestPath(b)
+	_, totalCost, err := dijkstra.ShortestPath(dijkstra.GridWalkerEx(valid, final, start...))
 	if err != nil {
 		return err
 	}

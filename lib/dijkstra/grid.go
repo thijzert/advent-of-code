@@ -5,6 +5,16 @@ type bff struct {
 	final func(int, int) bool
 }
 
+type gridBoard []gridPoint
+
+func (b gridBoard) StartingPositions() []Position {
+	rv := make([]Position, len(b))
+	for i, p := range b {
+		rv[i] = p
+	}
+	return rv
+}
+
 type gridPoint struct {
 	X, Y     int
 	Diagonal bool
@@ -17,7 +27,7 @@ type gridPoint struct {
 // checking if each resulting position is valid using the valid() func provided
 // in the first parameter. In the same vein, the final() func in the second
 // parameter returns true if the x,y coordinate is a valid end state.
-func GridWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, xy ...int) []Position {
+func GridWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, xy ...int) Board {
 	f := bff{
 		valid: func(x0, y0, x1, y1, cost int) bool {
 			return valid(x1, y1, cost)
@@ -33,7 +43,7 @@ func GridWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, xy .
 // checking if each resulting position is valid using the valid() func provided
 // in the first parameter. In the same vein, the final() func in the second
 // parameter returns true if the x,y coordinate is a valid end state.
-func GridWalkerEx(valid func(x0, y0, x1, y1, cost int) bool, final func(x, y int) bool, xy ...int) []Position {
+func GridWalkerEx(valid func(x0, y0, x1, y1, cost int) bool, final func(x, y int) bool, xy ...int) Board {
 	f := bff{
 		valid: valid,
 		final: final,
@@ -43,7 +53,7 @@ func GridWalkerEx(valid func(x0, y0, x1, y1, cost int) bool, final func(x, y int
 
 // DiagonalWalker is the same as GridWalker, only diagonal steps are also
 // allowed. Diagonal steps also have length 1.
-func DiagonalWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, xy ...int) []Position {
+func DiagonalWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, xy ...int) Board {
 	f := bff{
 		valid: func(x0, y0, x1, y1, cost int) bool {
 			return valid(x1, y1, cost)
@@ -53,8 +63,8 @@ func DiagonalWalker(valid func(x, y, cost int) bool, final func(x, y int) bool, 
 	return getGridWalker(&f, true, xy...)
 }
 
-func getGridWalker(f *bff, diagonal bool, xy ...int) []Position {
-	var rv []Position
+func getGridWalker(f *bff, diagonal bool, xy ...int) Board {
+	var rv gridBoard
 
 	for i := 0; (i + 1) < len(xy); i += 2 {
 		rv = append(rv, gridPoint{

@@ -133,25 +133,10 @@ func (bb tractorMaze) distanceToKeys(pos pos2d) map[cube.Point]int {
 	final := func(x, y int) bool {
 		return false
 	}
-	mtm := metaTractorMaze{
-		b:     bb,
-		start: dijkstra.GridWalker(valid, final, pos.X, pos.Y),
-		keys:  pos.Keys,
-	}
-	dijkstra.ShortestPath(mtm)
+	dijkstra.ShortestPath(dijkstra.GridWalker(valid, final, pos.X, pos.Y))
 
 	bb.d2kCache[pos] = keydist
 	return keydist
-}
-
-type metaTractorMaze struct {
-	b     tractorMaze
-	start []dijkstra.Position
-	keys  uint32
-}
-
-func (b metaTractorMaze) StartingPositions() []dijkstra.Position {
-	return b.start
 }
 
 type Keyer interface {
@@ -367,12 +352,7 @@ func (p pos4d) WithUpdatedMask(b tractorMaze) pos4d {
 			}
 			return false
 		}
-		mtm := metaTractorMaze{
-			b:     b,
-			start: dijkstra.GridWalker(valid, final, pos.X, pos.Y),
-			keys:  0xffffffff,
-		}
-		dijkstra.ShortestPath(mtm)
+		dijkstra.ShortestPath(dijkstra.GridWalker(valid, final, pos.X, pos.Y))
 	}
 	return p
 }
