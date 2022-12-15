@@ -4,10 +4,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec25a(ctx ch.AOContext) error {
+func Dec25a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2021/dec25.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	img := readImage(lines, seaCucumber)
 	ctx.Printf("ocean floor: (%d)\n%s", sum(img.Contents...), img)
@@ -22,13 +22,11 @@ func Dec25a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec25b(ctx ch.AOContext) error {
-	ctx.FinalAnswer.Print("merry christmas")
-	return nil
+func Dec25b(ctx ch.AOContext) (interface{}, error) {
+	return "Sleigh keys detected!", nil
 }
 
 const CUCUMBER_SOUTH int = 2

@@ -6,7 +6,7 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec10a(ctx ch.AOContext) error {
+func Dec10a(ctx ch.AOContext) (interface{}, error) {
 	inputs := []int{16, 10, 15, 5, 1, 11, 7, 19, 6, 12, 4}
 	d1, d3, _ := joltageDifferences(inputs)
 	ctx.Printf("Example data A: %d×%d = %d", d1, d3, d1*d3)
@@ -17,16 +17,15 @@ func Dec10a(ctx ch.AOContext) error {
 
 	inputs, err := ctx.DataAsInts("inputs/2020/dec10.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	d1, d3, _ = joltageDifferences(inputs)
 	ctx.Printf("Final data: %d×%d = %d, final voltage %d", d1, d3, d1*d3, inputs[len(inputs)-1]+3)
-	ctx.FinalAnswer.Print(d1 * d3)
-	return nil
+	return d1 * d3, nil
 }
 
-func Dec10b(ctx ch.AOContext) error {
+func Dec10b(ctx ch.AOContext) (interface{}, error) {
 	inputs := []int{16, 10, 15, 5, 1, 11, 7, 19, 6, 12, 4}
 	n := numArrangements(inputs, 0, 0, nil)
 	ctx.Printf("Example data A: can be arranged %d ways", n)
@@ -37,14 +36,13 @@ func Dec10b(ctx ch.AOContext) error {
 
 	inputs, err := ctx.DataAsInts("inputs/2020/dec10.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	n = numArrangements(inputs, 0, 0, nil)
 	ctx.Printf("Final data can be arranged %d ways", n)
 
-	ctx.FinalAnswer.Print(n)
-	return nil
+	return n, nil
 }
 
 func joltageDifferences(adapters []int) (diff1, diff3, deviceJoltage int) {

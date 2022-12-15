@@ -6,10 +6,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec25a(ctx ch.AOContext) error {
+func Dec25a(ctx ch.AOContext) (interface{}, error) {
 	pubs, err := ctx.DataAsInts("inputs/2020/dec25.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	modulus := 20201227
@@ -42,11 +42,10 @@ func Dec25a(ctx ch.AOContext) error {
 	b := transform(cardPub, doorPriv, modulus)
 	ctx.Debug.Print(a, b)
 	if a == b {
-		ctx.FinalAnswer.Print(a)
-		return nil
+		return a, nil
 	}
 
-	return errors.New("this failed")
+	return nil, errors.New("this failed")
 }
 
 func transform(subject, loopSize, modulus int) int {
@@ -57,7 +56,6 @@ func transform(subject, loopSize, modulus int) int {
 	return v
 }
 
-func Dec25b(ctx ch.AOContext) error {
-	ctx.FinalAnswer.Print("¯\\_(ツ)_/¯")
-	return nil
+func Dec25b(ctx ch.AOContext) (interface{}, error) {
+	return "Sorry for the trouble", nil
 }

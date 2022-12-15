@@ -55,8 +55,8 @@ func main() {
 		}
 	}
 
-	var answerOut io.Writer = os.Stdout
 	var debugOut io.Writer = os.Stdout
+	var answerOut io.Writer = os.Stdout
 	if quiet || veryQuiet {
 		debugOut = io.Discard
 	}
@@ -65,10 +65,9 @@ func main() {
 	}
 
 	ctx := ch.AOContext{
-		Ctx:         context.Background(),
-		Args:        flag.Args(),
-		Debug:       log.New(debugOut, "", log.Lshortfile),
-		FinalAnswer: log.New(answerOut, "final answer: ", log.Lshortfile),
+		Ctx:   context.Background(),
+		Args:  flag.Args(),
+		Debug: log.New(debugOut, "", log.Lshortfile),
 	}
 
 	if runAll {
@@ -79,22 +78,35 @@ func main() {
 
 		exitStatus := 0
 		for i, ann := range allYears {
+			year := minYear + i
 			if !veryQuiet {
-				fmt.Printf("%d: \n", minYear+i)
+				fmt.Printf("%d: \n", year)
 			}
-			st := ann.Stars(ctx, func(err error) {
+			st := ann.Stars(ctx, year, answerOut, func(err error) {
 				log.Print(err)
 				exitStatus = 1
 			})
-			fmt.Printf("%d: %s\n", minYear+i, st)
+			fmt.Printf("%d: %s\n", year, st)
 		}
 		os.Exit(exitStatus)
 	} else {
 		t0 := time.Now()
-		err := allYears[yearIdx][funcIdx](ctx)
+		ans, err := allYears[yearIdx][funcIdx](ctx)
 		d := time.Since(t0)
+		if ans != nil {
+			fmt.Printf("Final answer: %v\n", ans)
+			if aerr := ctx.CheckAnswer(minYear+yearIdx, funcIdx, ans); aerr != nil {
+				if err == nil {
+					err = aerr
+				} else {
+					log.Print(aerr)
+				}
+			}
+		}
 		if err != nil {
 			log.Fatal(err)
+		} else if ans == nil {
+			log.Fatal("did not find an answer")
 		}
 		if d >= 1*time.Second {
 			ctx.Printf("duration: %v", d)

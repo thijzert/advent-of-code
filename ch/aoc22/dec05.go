@@ -6,10 +6,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec05a(ctx ch.AOContext) error {
+func Dec05a(ctx ch.AOContext) (interface{}, error) {
 	stacks, moveinstrs, err := readStacks(ctx, "inputs/2022/dec05.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	//for i, st := range stacks {
@@ -35,14 +35,13 @@ func Dec05a(ctx ch.AOContext) error {
 		rv = append(rv, st[len(st)-1])
 	}
 
-	ctx.FinalAnswer.Print(string(rv))
-	return nil
+	return string(rv), nil
 }
 
-func Dec05b(ctx ch.AOContext) error {
+func Dec05b(ctx ch.AOContext) (interface{}, error) {
 	stacks, moveinstrs, err := readStacks(ctx, "inputs/2022/dec05.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, inst := range moveinstrs {
@@ -58,8 +57,7 @@ func Dec05b(ctx ch.AOContext) error {
 		rv = append(rv, st[len(st)-1])
 	}
 
-	ctx.FinalAnswer.Print(string(rv))
-	return nil
+	return string(rv), nil
 }
 
 func readStacks(ctx ch.AOContext, name string) ([][]byte, [][3]int, error) {

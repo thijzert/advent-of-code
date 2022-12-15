@@ -7,7 +7,7 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec23a(ctx ch.AOContext) error {
+func Dec23a(ctx ch.AOContext) (interface{}, error) {
 	input := "643719258"
 	if len(ctx.Args) > 0 {
 		input = ctx.Args[0]
@@ -18,8 +18,7 @@ func Dec23a(ctx ch.AOContext) error {
 		cc.Move(ctx.Debug)
 	}
 
-	ctx.FinalAnswer.Print(cc.Result())
-	return nil
+	return cc.Result(), nil
 }
 
 type crabCup struct {
@@ -110,7 +109,7 @@ func (cc *crabCup) Move(l *log.Logger) {
 	cc.Current = cc.Current.Next
 }
 
-func Dec23b(ctx ch.AOContext) error {
+func Dec23b(ctx ch.AOContext) (interface{}, error) {
 	input := "643719258"
 	if len(ctx.Args) > 0 {
 		input = ctx.Args[0]
@@ -130,8 +129,7 @@ func Dec23b(ctx ch.AOContext) error {
 	ctx.Debug.Printf("Value after 1:      %d", a)
 	ctx.Debug.Printf("The one after that: %d", b)
 
-	ctx.FinalAnswer.Print(a * b)
-	return nil
+	return a * b, nil
 }
 
 type krabbyNode struct {

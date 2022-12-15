@@ -2,32 +2,30 @@ package aoc20
 
 import "github.com/thijzert/advent-of-code/ch"
 
-func Dec09a(ctx ch.AOContext) error {
+func Dec09a(ctx ch.AOContext) (interface{}, error) {
 	inputs := []int{35, 20, 15, 25, 47, 40, 62, 55, 65, 95, 102, 117, 150, 182, 127, 219, 299, 277, 309, 576}
 	inv, _ := decodeXMASprotocol(inputs, 5)
 	ctx.Printf("Example data: first invalid is %d", inv)
 
 	inputs, err := ctx.DataAsInts("inputs/2020/dec09.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	inv, _ = decodeXMASprotocol(inputs, 25)
-	ctx.FinalAnswer.Print(inv)
-	return nil
+	return inv, nil
 }
 
-func Dec09b(ctx ch.AOContext) error {
+func Dec09b(ctx ch.AOContext) (interface{}, error) {
 	inputs := []int{35, 20, 15, 25, 47, 40, 62, 55, 65, 95, 102, 117, 150, 182, 127, 219, 299, 277, 309, 576}
 	_, weak := decodeXMASprotocol(inputs, 5)
 	ctx.Printf("Example data: cryptographic weakness: %d", weak)
 
 	inputs, err := ctx.DataAsInts("inputs/2020/dec09.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	_, weak = decodeXMASprotocol(inputs, 25)
-	ctx.FinalAnswer.Print(weak)
-	return nil
+	return weak, nil
 }
 
 func decodeXMASprotocol(inputs []int, preambleLength int) (firstInvalid, cryptographicWeakness int) {

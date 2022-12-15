@@ -9,7 +9,7 @@ const (
 	SEAT_OCCUPIED = 5
 )
 
-func Dec11a(ctx ch.AOContext) error {
+func Dec11a(ctx ch.AOContext) (interface{}, error) {
 	img := readImage([]string{
 		"L.LL.LL.LL",
 		"LLLLLLL.LL",
@@ -37,7 +37,7 @@ func Dec11a(ctx ch.AOContext) error {
 
 	lines, err := ctx.DataLines("inputs/2020/dec11.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	img = readImage(lines[:len(lines)-1], seatmap)
 
@@ -51,11 +51,10 @@ func Dec11a(ctx ch.AOContext) error {
 	rv = seatsOccupied(img)
 	ctx.Printf("In the final data, %d seats are occupied", rv)
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec11b(ctx ch.AOContext) error {
+func Dec11b(ctx ch.AOContext) (interface{}, error) {
 	img := readImage([]string{
 		"L.LL.LL.LL",
 		"LLLLLLL.LL",
@@ -84,7 +83,7 @@ func Dec11b(ctx ch.AOContext) error {
 
 	lines, err := ctx.DataLines("inputs/2020/dec11.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	img = readImage(lines[:len(lines)-1], seatmap)
 
@@ -100,8 +99,7 @@ func Dec11b(ctx ch.AOContext) error {
 	rv = seatsOccupied(img)
 	ctx.Printf("In the final data, %d seats are occupied", rv)
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 func fillSeatsStep(img *image, maxDist int, occupancyTolerance int) int {

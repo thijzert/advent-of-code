@@ -8,10 +8,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec04a(ctx ch.AOContext) error {
+func Dec04a(ctx ch.AOContext) (interface{}, error) {
 	passports, err := readPassports(ctx, "inputs/2020/dec04.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	requiredFields := []string{"byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"}
@@ -28,14 +28,13 @@ func Dec04a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec04b(ctx ch.AOContext) error {
+func Dec04b(ctx ch.AOContext) (interface{}, error) {
 	passports, err := readPassports(ctx, "inputs/2020/dec04.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	validators := map[string]func(string) bool{
@@ -92,8 +91,7 @@ func Dec04b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 func readPassports(ctx ch.AOContext, assetName string) ([]map[string]string, error) {

@@ -6,10 +6,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec11a(ctx ch.AOContext) error {
+func Dec11a(ctx ch.AOContext) (interface{}, error) {
 	octo, err := readOctopusImage(ctx, "inputs/2021/dec11.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ctx.Printf("Initial board: (%d×%d)\n%s", octo.Width, octo.Height, octo)
@@ -21,14 +21,13 @@ func Dec11a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec11b(ctx ch.AOContext) error {
+func Dec11b(ctx ch.AOContext) (interface{}, error) {
 	octo, err := readOctopusImage(ctx, "inputs/2021/dec11.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	prevprev := "(?)"
@@ -49,8 +48,7 @@ func Dec11b(ctx ch.AOContext) error {
 		prev = octo.String()
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 type octopusImage struct {

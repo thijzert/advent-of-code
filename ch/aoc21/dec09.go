@@ -7,10 +7,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec09a(ctx ch.AOContext) error {
+func Dec09a(ctx ch.AOContext) (interface{}, error) {
 	heights, err := getHeightmap(ctx, "inputs/2021/dec09.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rv := 0
@@ -20,14 +20,13 @@ func Dec09a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec09b(ctx ch.AOContext) error {
+func Dec09b(ctx ch.AOContext) (interface{}, error) {
 	heights, err := getHeightmap(ctx, "inputs/2021/dec09.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var basins []int
@@ -47,8 +46,7 @@ func Dec09b(ctx ch.AOContext) error {
 		rv *= sz
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 type heightmap struct {

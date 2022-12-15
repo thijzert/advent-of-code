@@ -4,10 +4,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec20a(ctx ch.AOContext) error {
+func Dec20a(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2021/dec20.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	enhance := sections[0][0]
@@ -17,21 +17,19 @@ func Dec20a(ctx ch.AOContext) error {
 
 	img = zoomInAndEnhance(img, enhance, 2)
 
-	ctx.FinalAnswer.Print(sum(img.Contents...))
-	return nil
+	return sum(img.Contents...), nil
 }
 
-func Dec20b(ctx ch.AOContext) error {
+func Dec20b(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2021/dec20.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	img := readImage(sections[1], octothorpe)
 	img = zoomInAndEnhance(img, sections[0][0], 50)
 
-	ctx.FinalAnswer.Print(sum(img.Contents...))
-	return nil
+	return sum(img.Contents...), nil
 }
 
 func zoomInAndEnhance(img *image, enhance string, count int) *image {

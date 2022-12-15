@@ -2,6 +2,8 @@ package ch
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"log"
 	"strconv"
 	"strings"
@@ -10,10 +12,9 @@ import (
 )
 
 type AOContext struct {
-	Ctx         context.Context
-	Args        []string
-	Debug       *log.Logger
-	FinalAnswer *log.Logger
+	Ctx   context.Context
+	Args  []string
+	Debug *log.Logger
 }
 
 func (ctx AOContext) DataLines(assetName string) ([]string, error) {
@@ -89,18 +90,84 @@ func (ctx AOContext) DataAsIntLists(assetName string) ([][]int, error) {
 }
 
 func (ctx AOContext) Print(v ...interface{}) {
-	ctx.Debug.Print(v...)
+	s := fmt.Sprint(v...)
+	ctx.Debug.Output(2, s)
 }
 
 func (ctx AOContext) Printf(format string, v ...interface{}) {
-	ctx.Debug.Printf(format, v...)
+	s := fmt.Sprintf(format, v...)
+	ctx.Debug.Output(2, s)
 }
 
-type AdventFunc func(AOContext) error
+var answersInData map[int][50]string
+
+func getAnswersInData(year int) [50]string {
+	if answersInData == nil {
+		answersInData = make(map[int][50]string)
+	}
+	var rv [50]string
+	var ok bool
+	if rv, ok = answersInData[year]; ok {
+		return rv
+	}
+
+	lines, err := data.GetLines("results.txt")
+	if err != nil {
+		log.Fatalf("Error opening \"results.txt\": %v", err)
+	}
+	for _, line := range lines {
+		var y, d int
+		var c rune
+		_, err := fmt.Sscanf(line, "%d %d-%c:", &y, &d, &c)
+		if err != nil || y != year || d < 1 || d > 25 {
+			continue
+		}
+		i := 2 * (d - 1)
+		if c == 'B' {
+			i++
+		}
+		j := strings.IndexByte(line, ':')
+		rv[i] = strings.TrimSpace(line[j+1:])
+	}
+
+	answersInData[year] = rv
+	return rv
+}
+
+func (ctx AOContext) CheckAnswer(year, challengeIndex int, ans interface{}) error {
+	if ans == nil {
+		return fmt.Errorf("empty answer")
+	}
+
+	answers := getAnswersInData(year)
+	ex := answers[challengeIndex]
+	if ex == "" {
+		// TBD
+		return nil
+	}
+	ob := fmt.Sprint(ans)
+	if ob != ex {
+		return errIncorrect{
+			Expected: ex,
+			Observed: ob,
+		}
+	}
+	return nil
+}
+
+type errIncorrect struct {
+	Expected, Observed string
+}
+
+func (e errIncorrect) Error() string {
+	return fmt.Sprintf("incorrect answer: expected '%s', got '%s'", e.Expected, e.Observed)
+}
+
+type AdventFunc func(AOContext) (interface{}, error)
 
 type Advent [50]AdventFunc
 
-func (ad Advent) Stars(ctx AOContext, onError func(error)) string {
+func (ad Advent) Stars(ctx AOContext, year int, answerOut io.Writer, onError func(error)) string {
 	rv := ""
 
 	for i := 0; i < 50; i += 2 {
@@ -111,11 +178,19 @@ func (ad Advent) Stars(ctx AOContext, onError func(error)) string {
 				continue
 			}
 			published = true
-			err := ad[i+j](ctx)
+			ans, err := ad[i+j](ctx)
+			if ans != nil {
+				fmt.Fprintf(answerOut, "%d-%d-%c: %v\n", year, 1+i/2, 'A'+rune(j), ans)
+			}
 			if err != nil {
 				onError(err)
 			} else {
-				n++
+				err = ctx.CheckAnswer(year, i+j, ans)
+				if err != nil {
+					onError(err)
+				} else {
+					n++
+				}
 			}
 		}
 		if !published {

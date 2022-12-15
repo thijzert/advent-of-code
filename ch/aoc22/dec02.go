@@ -4,10 +4,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec02a(ctx ch.AOContext) error {
+func Dec02a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2022/dec02.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//lines = []string{"A Y", "B X", "C Z"}
 
@@ -29,14 +29,13 @@ func Dec02a(ctx ch.AOContext) error {
 		totalScore += s
 	}
 
-	ctx.FinalAnswer.Print(totalScore)
-	return nil
+	return totalScore, nil
 }
 
-func Dec02b(ctx ch.AOContext) error {
+func Dec02b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2022/dec02.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// lines = []string{"A Y", "B X", "C Z"}
 
@@ -62,6 +61,5 @@ func Dec02b(ctx ch.AOContext) error {
 		totalScore += s
 	}
 
-	ctx.FinalAnswer.Print(totalScore)
-	return nil
+	return totalScore, nil
 }

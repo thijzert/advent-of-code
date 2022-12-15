@@ -6,10 +6,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec03a(ctx ch.AOContext) error {
+func Dec03a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2022/dec03.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sumPr := 0
@@ -19,21 +19,20 @@ func Dec03a(ctx ch.AOContext) error {
 
 		r, err := regexp.Compile("[" + front + "]")
 		if err != nil {
-			return err
+			return nil, err
 		}
 		m := r.FindString(back)
 		ctx.Printf("both compartments contain '%s'", m)
 		sumPr += rucksackPriority(m[0])
 	}
 
-	ctx.FinalAnswer.Print(sumPr)
-	return nil
+	return sumPr, nil
 }
 
-func Dec03b(ctx ch.AOContext) error {
+func Dec03b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2022/dec03.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sumPr := 0
@@ -60,8 +59,7 @@ func Dec03b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(sumPr)
-	return nil
+	return sumPr, nil
 }
 
 func rucksackPriority(b byte) int {

@@ -99,10 +99,10 @@ func (p distressPacket) compare(q distressPacket) int {
 	return 0
 }
 
-func Dec13a(ctx ch.AOContext) error {
+func Dec13a(ctx ch.AOContext) (interface{}, error) {
 	pairs, err := ctx.DataSections("inputs/2022/dec13.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ooo := 0
@@ -122,14 +122,13 @@ func Dec13a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(ooo)
-	return nil
+	return ooo, nil
 }
 
-func Dec13b(ctx ch.AOContext) error {
+func Dec13b(ctx ch.AOContext) (interface{}, error) {
 	pairs, err := ctx.DataSections("inputs/2022/dec13.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	idxA, idxB := 1, 2
@@ -148,6 +147,5 @@ func Dec13b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(idxA * idxB)
-	return nil
+	return idxA * idxB, nil
 }

@@ -8,10 +8,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec04a(ctx ch.AOContext) error {
+func Dec04a(ctx ch.AOContext) (interface{}, error) {
 	draw, sheets, err := setupSquidBingo(ctx, "inputs/2021/dec04.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ctx.Debug.Printf("Draw: %d", draw)
@@ -31,8 +31,7 @@ func Dec04a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(finalScore)
-	return nil
+	return finalScore, nil
 }
 
 func setupSquidBingo(ctx ch.AOContext, assetName string) (draw []int, sheets []bingoSheet, err error) {
@@ -146,10 +145,10 @@ func (bs bingoSheet) PlayBingo(draw []int) (moves, score int) {
 	return 0, 0
 }
 
-func Dec04b(ctx ch.AOContext) error {
+func Dec04b(ctx ch.AOContext) (interface{}, error) {
 	draw, sheets, err := setupSquidBingo(ctx, "inputs/2021/dec04.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ctx.Debug.Printf("Draw: %d", draw)
@@ -170,6 +169,5 @@ func Dec04b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(finalScore)
-	return nil
+	return finalScore, nil
 }

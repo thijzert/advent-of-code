@@ -7,10 +7,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec20a(ctx ch.AOContext) error {
+func Dec20a(ctx ch.AOContext) (interface{}, error) {
 	tiles, err := readSatelliteImagery(ctx, "inputs/2020/dec20.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ctx.Print(len(tiles))
@@ -48,14 +48,13 @@ func Dec20a(ctx ch.AOContext) error {
 		rv *= tile.ID
 	}
 	if len(twoNeighbours) != 4 {
-		return fmt.Errorf("could not find exactly 4 corner pieces")
+		return nil, fmt.Errorf("could not find exactly 4 corner pieces")
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec20b(ctx ch.AOContext) error {
+func Dec20b(ctx ch.AOContext) (interface{}, error) {
 	img, err := formSatelliteImage(ctx, "inputs/2020/dec20.txt")
 	if err != nil {
 		if img.Tiles != nil && len(img.Tiles) == img.Width*img.Width {
@@ -71,7 +70,7 @@ func Dec20b(ctx ch.AOContext) error {
 			}
 			ctx.Printf("Image: (%d×%d)\n%s", img.Width, img.Width, img.RenderWithBorders())
 		}
-		return err
+		return nil, err
 	}
 
 	hicSunt := readBasicImage([]string{
@@ -106,8 +105,7 @@ func Dec20b(ctx ch.AOContext) error {
 			}
 		}
 	}
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 type satelliteImage struct {

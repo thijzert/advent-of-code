@@ -9,18 +9,18 @@ import (
 	"github.com/thijzert/advent-of-code/lib/image"
 )
 
-func Dec14a(ctx ch.AOContext) error {
+func Dec14a(ctx ch.AOContext) (interface{}, error) {
 	return simulateSandCave(ctx, false)
 }
 
-func Dec14b(ctx ch.AOContext) error {
+func Dec14b(ctx ch.AOContext) (interface{}, error) {
 	return simulateSandCave(ctx, true)
 }
 
-func simulateSandCave(ctx ch.AOContext, withFloor bool) error {
+func simulateSandCave(ctx ch.AOContext, withFloor bool) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2022/dec14.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//lines = []string{"498,4 -> 498,6 -> 496,6", "503,4 -> 502,4 -> 502,9 -> 494,9"}
 
@@ -100,6 +100,5 @@ func simulateSandCave(ctx ch.AOContext, withFloor bool) error {
 	}
 
 	ctx.Printf("cave: \n%s", cave)
-	ctx.FinalAnswer.Print(grains)
-	return nil
+	return grains, nil
 }

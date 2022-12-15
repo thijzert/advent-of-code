@@ -4,7 +4,7 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec07a(ctx ch.AOContext) error {
+func Dec07a(ctx ch.AOContext) (interface{}, error) {
 	exampleCrabs := []int{16, 1, 2, 0, 4, 2, 7, 1, 2, 14}
 	best, dist := minimalMovementMean(exampleCrabs, abs)
 
@@ -12,14 +12,13 @@ func Dec07a(ctx ch.AOContext) error {
 
 	crabs, err := ctx.DataAsIntLists("inputs/2021/dec07.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	best, dist = minimalMovementMean(crabs[0], abs)
 	ctx.Printf("Actual data: move towards %d; this will cost %d fuel", best, dist)
 
-	ctx.FinalAnswer.Print(dist)
-	return nil
+	return dist, nil
 }
 
 func minimalMovementMean(crabs []int, f func(int) int) (int, int) {
@@ -41,7 +40,7 @@ func minimalMovementMean(crabs []int, f func(int) int) (int, int) {
 	return best, dist
 }
 
-func Dec07b(ctx ch.AOContext) error {
+func Dec07b(ctx ch.AOContext) (interface{}, error) {
 	f := func(n int) int {
 		n = abs(n)
 		return n * (n + 1) / 2
@@ -54,12 +53,11 @@ func Dec07b(ctx ch.AOContext) error {
 
 	crabs, err := ctx.DataAsIntLists("inputs/2021/dec07.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	best, dist = minimalMovementMean(crabs[0], f)
 	ctx.Printf("Actual data: move towards %d; this will cost %d fuel", best, dist)
 
-	ctx.FinalAnswer.Print(dist)
-	return nil
+	return dist, nil
 }

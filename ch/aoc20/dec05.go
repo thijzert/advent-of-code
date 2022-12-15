@@ -2,7 +2,7 @@ package aoc20
 
 import "github.com/thijzert/advent-of-code/ch"
 
-func Dec05a(ctx ch.AOContext) error {
+func Dec05a(ctx ch.AOContext) (interface{}, error) {
 	toTest := []struct {
 		BoardingPass string
 		SeatID       int
@@ -20,7 +20,7 @@ func Dec05a(ctx ch.AOContext) error {
 
 	lines, err := ctx.DataLines("inputs/2020/dec05.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	max := 0
 	for _, seat := range lines {
@@ -29,14 +29,13 @@ func Dec05a(ctx ch.AOContext) error {
 			max = id
 		}
 	}
-	ctx.FinalAnswer.Print(max)
-	return nil
+	return max, nil
 }
 
-func Dec05b(ctx ch.AOContext) error {
+func Dec05b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2020/dec05.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	seen := make([]bool, 128*8)
 	for _, seat := range lines {
@@ -54,8 +53,7 @@ func Dec05b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 func decodeSeatNumber(boardingPass string) int {

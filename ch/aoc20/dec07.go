@@ -7,10 +7,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec07a(ctx ch.AOContext) error {
+func Dec07a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2020/dec07.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	bgr := parseBagRules(lines)
@@ -22,21 +22,19 @@ func Dec07a(ctx ch.AOContext) error {
 			rv++
 		}
 	}
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec07b(ctx ch.AOContext) error {
+func Dec07b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2020/dec07.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	bgr := parseBagRules(lines)
 	trans := totalBagSize(bgr)
 
-	ctx.FinalAnswer.Print(trans["shiny gold"])
-	return nil
+	return trans["shiny gold"], nil
 }
 
 type bagRule struct {

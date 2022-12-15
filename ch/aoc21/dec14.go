@@ -7,10 +7,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec14a(ctx ch.AOContext) error {
+func Dec14a(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2021/dec14.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	template := readPolymer(sections[0][0])
@@ -27,14 +27,13 @@ func Dec14a(ctx ch.AOContext) error {
 	occ := template.Occurrences()
 	rv := occ[len(occ)-1] - occ[0]
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec14b(ctx ch.AOContext) error {
+func Dec14b(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2021/dec14.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	template := readPolymerHisto(sections[0][0])
@@ -47,8 +46,7 @@ func Dec14b(ctx ch.AOContext) error {
 	occ := template.Occurrences()
 	rv := occ[len(occ)-1] - occ[0]
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 type polymerInsertion struct {

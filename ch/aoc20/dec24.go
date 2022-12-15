@@ -4,18 +4,17 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec24a(ctx ch.AOContext) error {
+func Dec24a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2020/dec24.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	board := getHexBoard(lines, 0)
 	ctx.Debug.Printf("Board dimensions: %d×%d", len(board), len(board[0]))
 
 	// Pass 3: count everything
-	ctx.FinalAnswer.Print(board.Count())
-	return nil
+	return board.Count(), nil
 }
 
 type hexBoard [][]bool
@@ -135,10 +134,10 @@ func (board hexBoard) AdjacentBlack(x, y int) int {
 		b(board.At(y-1, x))
 }
 
-func Dec24b(ctx ch.AOContext) error {
+func Dec24b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2020/dec24.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	board := getHexBoard(lines, 100)
@@ -157,8 +156,7 @@ func Dec24b(ctx ch.AOContext) error {
 	}
 
 	// Pass 3: count everything
-	ctx.FinalAnswer.Print(board.Count())
-	return nil
+	return board.Count(), nil
 }
 
 func (currentBoard hexBoard) iterate(buf hexBoard) {

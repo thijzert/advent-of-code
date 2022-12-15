@@ -8,10 +8,10 @@ import (
 
 const U36BIT uint64 = 0xfffffffff
 
-func Dec14a(ctx ch.AOContext) error {
+func Dec14a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2020/dec14.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var maskOn, maskOff uint64
@@ -47,14 +47,13 @@ func Dec14a(ctx ch.AOContext) error {
 	for _, v := range mem {
 		rv += v
 	}
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec14b(ctx ch.AOContext) error {
+func Dec14b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2020/dec14.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var maskOn, maskOff uint64
@@ -100,8 +99,7 @@ func Dec14b(ctx ch.AOContext) error {
 	for _, v := range mem {
 		rv += v
 	}
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 func floatyBits(maskOn, maskOff uint64) (uint64, []uint64) {

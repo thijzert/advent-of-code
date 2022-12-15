@@ -5,10 +5,10 @@ import (
 	"github.com/thijzert/advent-of-code/lib/cube"
 )
 
-func Dec08a(ctx ch.AOContext) error {
+func Dec08a(ctx ch.AOContext) (interface{}, error) {
 	forest, err := ctx.DataLines("inputs/2022/dec08.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	bounds := cube.Square{cube.Interval{0, len(forest[0]) - 1}, cube.Interval{0, len(forest) - 1}}
 
@@ -30,14 +30,13 @@ func Dec08a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(visibleTrees)
-	return nil
+	return visibleTrees, nil
 }
 
-func Dec08b(ctx ch.AOContext) error {
+func Dec08b(ctx ch.AOContext) (interface{}, error) {
 	forest, err := ctx.DataLines("inputs/2022/dec08.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//forest = []string{"30373", "25512", "65332", "33549", "35390"}
 	bounds := cube.Square{cube.Interval{0, len(forest[0]) - 1}, cube.Interval{0, len(forest) - 1}}
@@ -69,6 +68,5 @@ func Dec08b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(bestTree)
-	return nil
+	return bestTree, nil
 }

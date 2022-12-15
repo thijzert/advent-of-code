@@ -7,10 +7,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec22a(ctx ch.AOContext) error {
+func Dec22a(ctx ch.AOContext) (interface{}, error) {
 	decks, err := ctx.DataAsInts("inputs/2020/dec22.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	playerA := make([]int, len(decks)/2, len(decks))
@@ -42,8 +42,7 @@ func Dec22a(ctx ch.AOContext) error {
 
 	score := combatScore(playerA) + combatScore(playerB)
 
-	ctx.FinalAnswer.Print(score)
-	return nil
+	return score, nil
 }
 
 func takeTopCard(deck *[]int) int {
@@ -63,10 +62,10 @@ func combatScore(deck []int) int {
 	return score
 }
 
-func Dec22b(ctx ch.AOContext) error {
+func Dec22b(ctx ch.AOContext) (interface{}, error) {
 	decks, err := ctx.DataAsInts("inputs/2020/dec22.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cutoff := len(decks) / 2
@@ -78,8 +77,7 @@ func Dec22b(ctx ch.AOContext) error {
 
 	_, score := rkk.Combat(decks[:cutoff], decks[cutoff:])
 
-	ctx.FinalAnswer.Print(score)
-	return nil
+	return score, nil
 }
 
 type recursiveKrabKombat struct {

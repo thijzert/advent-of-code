@@ -4,10 +4,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec06a(ctx ch.AOContext) error {
+func Dec06a(ctx ch.AOContext) (interface{}, error) {
 	lanternfish, err := ctx.DataAsIntLists("inputs/2021/dec06.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_, ex1 := fibonacciSimulate([]int{3, 4, 3, 1, 2}, 8, 6, 18)
@@ -16,14 +16,13 @@ func Dec06a(ctx ch.AOContext) error {
 
 	histogram, rv := fibonacciSimulate(lanternfish[0], 8, 6, 80)
 	ctx.Print(histogram)
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec06b(ctx ch.AOContext) error {
+func Dec06b(ctx ch.AOContext) (interface{}, error) {
 	lanternfish, err := ctx.DataAsIntLists("inputs/2021/dec06.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_, ex := fibonacciSimulate([]int{3, 4, 3, 1, 2}, 8, 6, 256)
@@ -31,8 +30,7 @@ func Dec06b(ctx ch.AOContext) error {
 
 	histogram, rv := fibonacciSimulate(lanternfish[0], 8, 6, 256)
 	ctx.Print(histogram)
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 func fibonacciSimulate(ages []int, initialAge, reproductionInterval, duration int) ([]int, int) {

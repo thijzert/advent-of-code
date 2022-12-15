@@ -7,24 +7,22 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec01a(ctx ch.AOContext) error {
+func Dec01a(ctx ch.AOContext) (interface{}, error) {
 	elves, err := elfCalories(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ctx.FinalAnswer.Print(elves[len(elves)-1])
-	return nil
+	return elves[len(elves)-1], nil
 }
 
-func Dec01b(ctx ch.AOContext) error {
+func Dec01b(ctx ch.AOContext) (interface{}, error) {
 	elves, err := elfCalories(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ctx.FinalAnswer.Print(elves[len(elves)-1] + elves[len(elves)-2] + elves[len(elves)-3])
-	return nil
+	return elves[len(elves)-1] + elves[len(elves)-2] + elves[len(elves)-3], nil
 }
 
 func elfCalories(ctx ch.AOContext) ([]int, error) {

@@ -101,10 +101,10 @@ func readWorryMonkeys(ctx ch.AOContext, filename string) ([]worryMonkey, error) 
 	return rv, nil
 }
 
-func Dec11a(ctx ch.AOContext) error {
+func Dec11a(ctx ch.AOContext) (interface{}, error) {
 	monkeys, err := readWorryMonkeys(ctx, "inputs/2022/dec11.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	three := big.NewInt(3)
@@ -135,14 +135,13 @@ func Dec11a(ctx ch.AOContext) error {
 		monkeyBusiness *= mb
 	}
 
-	ctx.FinalAnswer.Print(monkeyBusiness)
-	return nil
+	return monkeyBusiness, nil
 }
 
-func Dec11b(ctx ch.AOContext) error {
+func Dec11b(ctx ch.AOContext) (interface{}, error) {
 	monkeys, err := readWorryMonkeys(ctx, "inputs/2022/dec11.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	lcm := big.NewInt(1)
@@ -177,6 +176,5 @@ func Dec11b(ctx ch.AOContext) error {
 		monkeyBusiness *= mb
 	}
 
-	ctx.FinalAnswer.Print(monkeyBusiness)
-	return nil
+	return monkeyBusiness, nil
 }

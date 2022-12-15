@@ -7,10 +7,10 @@ import (
 	"github.com/thijzert/advent-of-code/lib/image"
 )
 
-func Dec10a(ctx ch.AOContext) error {
+func Dec10a(ctx ch.AOContext) (interface{}, error) {
 	program, err := ctx.DataLines("inputs/2022/dec10.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	signalStrength := 0
@@ -31,24 +31,23 @@ func Dec10a(ctx ch.AOContext) error {
 			var operand int
 			_, err := fmt.Sscanf(instr, "addx %d", &operand)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			tick()
 			tick()
 			x += operand
 		} else {
-			return fmt.Errorf("unknown instruction '%s'", instr)
+			return nil, fmt.Errorf("unknown instruction '%s'", instr)
 		}
 	}
 
-	ctx.FinalAnswer.Print(signalStrength)
-	return nil
+	return signalStrength, nil
 }
 
-func Dec10b(ctx ch.AOContext) error {
+func Dec10b(ctx ch.AOContext) (interface{}, error) {
 	program, err := ctx.DataLines("inputs/2022/dec10.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	img := image.NewImage(40, 6, nil)
@@ -74,11 +73,10 @@ func Dec10b(ctx ch.AOContext) error {
 			tick()
 			x += operand
 		} else {
-			return fmt.Errorf("unknown instruction '%s'", instr)
+			return nil, fmt.Errorf("unknown instruction '%s'", instr)
 		}
 	}
 
 	ctx.Printf("\n%s", img)
-	ctx.FinalAnswer.Print("(Maybe I should implement OCR at some point)")
-	return nil
+	return "(Maybe I should implement OCR at some point)", nil
 }
