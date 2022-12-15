@@ -90,11 +90,13 @@ func (ctx AOContext) DataAsIntLists(assetName string) ([][]int, error) {
 }
 
 func (ctx AOContext) Print(v ...interface{}) {
-	ctx.Debug.Print(v...)
+	s := fmt.Sprint(v...)
+	ctx.Debug.Output(2, s)
 }
 
 func (ctx AOContext) Printf(format string, v ...interface{}) {
-	ctx.Debug.Printf(format, v...)
+	s := fmt.Sprintf(format, v...)
+	ctx.Debug.Output(2, s)
 }
 
 var answersInData map[int][50]string
