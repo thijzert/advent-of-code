@@ -50,22 +50,32 @@ func readCaveSensors(ctx ch.AOContext) ([]caveSensor, error) {
 }
 
 func beaconFreeSpots(ctx ch.AOContext, sensors []caveSensor, y int) int {
-	rv := make(map[int]bool)
+	ivs := cube.NewIntervalSet()
 	for _, s := range sensors {
 		dy := y - s.Position.Y
 		if dy < 0 {
 			dy = -dy
 		}
 		dx := s.Dist - dy
-
-		for x := -dx; x <= dx; x++ {
-			rv[s.Position.X+x] = true
+		if dx < 0 {
+			continue
 		}
+		// ctx.Printf("add %v", cube.Interval{s.Position.X - dx, s.Position.X + dx})
+		ivs.Add(cube.Interval{s.Position.X - dx, s.Position.X + dx})
 	}
+
+	ctx.Printf("intervalset %s", ivs)
+
+	rv := 0
+	for _, iv := range ivs.I {
+		rv += iv.B - iv.A + 1
+	}
+
+	beacons := make(map[int]bool)
 	for _, s := range sensors {
 		if s.Beacon.Y == y {
-			delete(rv, s.Beacon.X)
+			beacons[s.Beacon.X] = true
 		}
 	}
-	return len(rv)
+	return rv - len(beacons)
 }
