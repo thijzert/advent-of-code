@@ -57,5 +57,5 @@ func transform(subject, loopSize, modulus int) int {
 }
 
 func Dec25b(ctx ch.AOContext) (interface{}, error) {
-	return "¯\\_(ツ)_/¯", nil
+	return "Sorry for the trouble", nil
 }

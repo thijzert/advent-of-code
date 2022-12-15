@@ -80,6 +80,7 @@ func compile(ctx context.Context, conf compileConfig) error {
 	emb.Debug = conf.Development
 	emb.AssetPaths = []string{
 		"inputs",
+		"results.txt",
 	}
 	if err := emb.Run(); err != nil {
 		return errors.WithMessage(err, "error running 'resemble'")

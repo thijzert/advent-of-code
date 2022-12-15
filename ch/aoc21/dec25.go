@@ -26,7 +26,7 @@ func Dec25a(ctx ch.AOContext) (interface{}, error) {
 }
 
 func Dec25b(ctx ch.AOContext) (interface{}, error) {
-	return "merry christmas", nil
+	return "Sleigh keys detected!", nil
 }
 
 const CUCUMBER_SOUTH int = 2

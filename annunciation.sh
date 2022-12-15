@@ -14,6 +14,7 @@ then
 	YEAR=$(date +%Y)
 fi
 
+echo >> data/results.txt
 mkdir "ch/$PKG"
 
 cat >"ch/$PKG/todo.go" <<EOF
@@ -77,6 +78,9 @@ var Dec${i}b ch.AdventFunc = nil
 // }
 
 EOF
+
+	echo "${YEAR} ${i}-A: " >> data/results.txt
+	echo "${YEAR} ${i}-B: " >> data/results.txt
 
 done
 
