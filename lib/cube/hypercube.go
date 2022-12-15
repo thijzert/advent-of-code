@@ -4,6 +4,10 @@ type Point4 struct {
 	X, Y, Z, W int
 }
 
+// Manhattan returns the Manhattan length of the vector
+func (p Point4) Manhattan() int {
+	return iabs(p.X) + iabs(p.Y) + iabs(p.Z) + iabs(p.W)
+}
 func (p Point4) Add(b Point4) Point4 {
 	return Point4{
 		p.X + b.X,

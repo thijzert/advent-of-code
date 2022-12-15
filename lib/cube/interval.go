@@ -31,3 +31,10 @@ func (a Interval) Overlap(b Interval) (Interval, bool) {
 func (a Interval) FullyContains(b Interval) bool {
 	return b.A >= a.A && b.A <= a.B && b.B >= a.A && b.B <= a.B
 }
+
+func iabs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
