@@ -60,22 +60,20 @@ func beaconFreeSpots(ctx ch.AOContext, sensors []caveSensor, y int) int {
 		if dx < 0 {
 			continue
 		}
-		// ctx.Printf("add %v", cube.Interval{s.Position.X - dx, s.Position.X + dx})
-		ivs.Add(cube.Interval{s.Position.X - dx, s.Position.X + dx})
+		iv := cube.Interval{s.Position.X - dx, s.Position.X + dx}
+		if s.Beacon.Y == y {
+			if iv.A == s.Beacon.X {
+				iv.A++
+			} else if iv.B == s.Beacon.X {
+				iv.B--
+			} else {
+				panic("so where _is_ this beacon?")
+			}
+		}
+		ivs.Add(iv)
 	}
 
 	ctx.Printf("intervalset %s", ivs)
 
-	rv := 0
-	for _, iv := range ivs.I {
-		rv += iv.B - iv.A + 1
-	}
-
-	beacons := make(map[int]bool)
-	for _, s := range sensors {
-		if s.Beacon.Y == y {
-			beacons[s.Beacon.X] = true
-		}
-	}
-	return rv - len(beacons)
+	return ivs.Length()
 }

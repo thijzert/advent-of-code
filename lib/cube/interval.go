@@ -9,6 +9,10 @@ type Interval struct {
 	A, B int
 }
 
+func (a Interval) Length() int {
+	return a.B - a.A + 1
+}
+
 func (a Interval) Contains(x int) bool {
 	return x >= a.A && x <= a.B
 }
@@ -128,4 +132,21 @@ func (s *IntervalSet) String() string {
 		sep = ", "
 	}
 	return rv + "}"
+}
+
+func (s *IntervalSet) Length() int {
+	rv := 0
+	for _, iv := range s.I {
+		rv += iv.Length()
+	}
+	return rv
+}
+
+func (s *IntervalSet) FullyContains(v Interval) bool {
+	for _, a := range s.I {
+		if a.FullyContains(v) {
+			return true
+		}
+	}
+	return false
 }
