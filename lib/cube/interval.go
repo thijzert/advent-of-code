@@ -83,6 +83,7 @@ func NewIntervalSet(intervals ...Interval) *IntervalSet {
 }
 
 func (s *IntervalSet) Add(x Interval) {
+	//log.Printf("add %v to %s", x, s)
 	if len(s.I) == 0 {
 		s.I = append(s.I, x)
 		return
@@ -90,35 +91,38 @@ func (s *IntervalSet) Add(x Interval) {
 
 	idx := -1
 	for j, y := range s.I {
-		if x.A < y.A {
+		if y.B+1 < x.A {
 			continue
 		}
 		idx = j
 		break
 	}
+	//log.Printf("  Insert %v at index %d", x, idx)
 
 	if idx == -1 {
+		idx = len(s.I) - 1
 		s.I = append(s.I, x)
-		copy(s.I[1:], s.I[:len(s.I)-1])
-		s.I[0] = x
-		idx = 0
 	} else if y, overlap := x.Union(s.I[idx]); overlap {
+		//log.Printf("  interval %v overlaps with, %v → %v", x, s.I[idx], y)
 		s.I[idx] = y
 	} else {
-		idx++
 		s.I = append(s.I, x)
 		copy(s.I[idx+1:], s.I[idx:len(s.I)-1])
 		s.I[idx] = x
 	}
 
+	//log.Printf("  Checking overlap for index %d", idx)
 	for len(s.I) > idx+1 {
 		y, overlap := s.I[idx].Union(s.I[idx+1])
 		if !overlap {
+			//log.Printf("    no overlap with %v at index %d; done", s.I[idx+1], idx+1)
 			break
 		}
+		//log.Printf("    overlap between %v and %v, merging into %v ", s.I[idx], s.I[idx+1], y)
 		s.I[idx] = y
 		s.I = append(s.I[:idx+1], s.I[idx+2:]...)
 	}
+	//log.Printf("  Result: %s", s)
 }
 
 func (s *IntervalSet) String() string {
