@@ -39,7 +39,7 @@ func Dec11a(ctx ch.AOContext) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	img = readImage(lines[:len(lines)-1], seatmap)
+	img = readImage(lines, seatmap)
 
 	i, n = 0, 1
 	for n > 0 {
@@ -85,7 +85,7 @@ func Dec11b(ctx ch.AOContext) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	img = readImage(lines[:len(lines)-1], seatmap)
+	img = readImage(lines, seatmap)
 
 	i, n = 0, 1
 	for n > 0 {
