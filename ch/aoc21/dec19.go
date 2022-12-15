@@ -6,14 +6,14 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec19a(ctx ch.AOContext) error {
+func Dec19a(ctx ch.AOContext) (interface{}, error) {
 	scanners, err := readScannerBeacons(ctx, "inputs/2021/dec19.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	scannerPos, err := findScannerPositionsFromCommonBeacons(ctx, scanners)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	allBeacons := make(map[point3]bool)
@@ -21,7 +21,7 @@ func Dec19a(ctx ch.AOContext) error {
 	for i, points := range scanners {
 		sp, ok := scannerPos[i]
 		if !ok {
-			return fmt.Errorf("failed to find a position for scanner %d", i)
+			return nil, fmt.Errorf("failed to find a position for scanner %d", i)
 		}
 
 		for _, pt := range points {
@@ -29,18 +29,17 @@ func Dec19a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(len(allBeacons))
-	return nil
+	return len(allBeacons), nil
 }
 
-func Dec19b(ctx ch.AOContext) error {
+func Dec19b(ctx ch.AOContext) (interface{}, error) {
 	scanners, err := readScannerBeacons(ctx, "inputs/2021/dec19.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	scannerPos, err := findScannerPositionsFromCommonBeacons(ctx, scanners)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	maxD := 0
@@ -54,8 +53,7 @@ func Dec19b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(maxD)
-	return nil
+	return maxD, nil
 }
 
 type scannerPosition struct {

@@ -6,10 +6,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec16a(ctx ch.AOContext) error {
+func Dec16a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2021/dec16.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	finalErr := fmt.Errorf("empty input")
@@ -22,7 +22,7 @@ func Dec16a(ctx ch.AOContext) error {
 			ctx.Printf("Packet type %d: %d", p.Type, p)
 		}
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		rv := 0
@@ -30,20 +30,20 @@ func Dec16a(ctx ch.AOContext) error {
 			rv += p.RVersion()
 		}
 		if finalErr != nil {
-			ctx.FinalAnswer.Print(rv)
+			return rv, nil
 			finalErr = nil
 		} else {
 			ctx.Printf("Subsequent answer: %d", rv)
 		}
 	}
 
-	return finalErr
+	return nil, finalErr
 }
 
-func Dec16b(ctx ch.AOContext) error {
+func Dec16b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2021/dec16.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	finalErr := fmt.Errorf("empty input")
@@ -53,16 +53,16 @@ func Dec16b(ctx ch.AOContext) error {
 		}
 		packets, err := parsePacketsHex(line)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		for _, p := range packets {
 			rv, err := p.Evaluate()
 			if err != nil {
-				return err
+				return nil, err
 			}
 			if finalErr != nil {
-				ctx.FinalAnswer.Print(rv)
+				return rv, nil
 				finalErr = nil
 			} else {
 				ctx.Printf("Subsequent answer: %d", rv)
@@ -70,7 +70,7 @@ func Dec16b(ctx ch.AOContext) error {
 		}
 	}
 
-	return finalErr
+	return nil, finalErr
 }
 
 const (

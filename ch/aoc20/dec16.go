@@ -8,10 +8,10 @@ import (
 	"github.com/thijzert/advent-of-code/data"
 )
 
-func Dec16a(ctx ch.AOContext) error {
+func Dec16a(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2020/dec16.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	_, intervals := parseIntervalSets(sections[0])
 
@@ -31,21 +31,20 @@ func Dec16a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec16b(ctx ch.AOContext) error {
+func Dec16b(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2020/dec16.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	names, intervals := parseIntervalSets(sections[0])
 
 	myTicket := data.CSVInts(sections[1][1:])[0]
 
 	if len(names) != len(myTicket) {
-		return fmt.Errorf("trying to map %d fields onto %d values", len(names), len(myTicket))
+		return nil, fmt.Errorf("trying to map %d fields onto %d values", len(names), len(myTicket))
 	}
 
 	nearby := data.CSVInts(sections[2][1:])
@@ -133,8 +132,7 @@ func Dec16b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 type interval struct {

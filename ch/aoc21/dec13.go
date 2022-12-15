@@ -6,10 +6,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec13a(ctx ch.AOContext) error {
+func Dec13a(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2021/dec13.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	img := foldTransparentPaper(ctx, sections[0], sections[1][:1])
@@ -22,19 +22,18 @@ func Dec13a(ctx ch.AOContext) error {
 			}
 		}
 	}
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec13b(ctx ch.AOContext) error {
+func Dec13b(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2021/dec13.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	img := foldTransparentPaper(ctx, sections[0], sections[1])
-	ctx.FinalAnswer.Printf("Image:  (TODO: OCR)\n%s", img)
-	return nil
+	ctx.Printf("Image:\n%s", img)
+	return "(TODO: OCR)", nil
 }
 
 func foldTransparentPaper(ctx ch.AOContext, dotCoords, foldInstrs []string) *image {

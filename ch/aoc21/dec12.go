@@ -7,7 +7,7 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec12a(ctx ch.AOContext) error {
+func Dec12a(ctx ch.AOContext) (interface{}, error) {
 	caveA, caveB, caveC := dec12ExampleCaves()
 
 	ctx.Print(caveA.NPathsTo("end", 0))
@@ -16,15 +16,14 @@ func Dec12a(ctx ch.AOContext) error {
 
 	lines, err := ctx.DataLines("inputs/2021/dec12.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	cave := parseCaveSystem(lines)
 
-	ctx.FinalAnswer.Print(cave.NPathsTo("end", 0))
-	return nil
+	return cave.NPathsTo("end", 0), nil
 }
 
-func Dec12b(ctx ch.AOContext) error {
+func Dec12b(ctx ch.AOContext) (interface{}, error) {
 	caveA, caveB, caveC := dec12ExampleCaves()
 
 	ctx.Print(caveA.NPathsTo("end", 1))
@@ -33,12 +32,11 @@ func Dec12b(ctx ch.AOContext) error {
 
 	lines, err := ctx.DataLines("inputs/2021/dec12.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	cave := parseCaveSystem(lines)
 
-	ctx.FinalAnswer.Print(cave.NPathsTo("end", 1))
-	return nil
+	return cave.NPathsTo("end", 1), nil
 }
 
 func dec12ExampleCaves() (*subcave, *subcave, *subcave) {

@@ -7,10 +7,10 @@ import (
 	"github.com/thijzert/advent-of-code/lib/cube"
 )
 
-func Dec09a(ctx ch.AOContext) error {
+func Dec09a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2022/dec09.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//lines = []string{"R 4", "U 4", "L 3", "D 1", "R 4", "D 1", "L 5", "R 2"}
 
@@ -21,11 +21,11 @@ func Dec09a(ctx ch.AOContext) error {
 		var l int
 		_, err = fmt.Sscanf(line, "%s %d", &a, &l)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		dir, ok := cube.ParseDirection2D(a)
 		if !ok {
-			return fmt.Errorf("unknown direction '%c'", a)
+			return nil, fmt.Errorf("unknown direction '%c'", a)
 		}
 
 		for i := 0; i < l; i++ {
@@ -36,8 +36,7 @@ func Dec09a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(len(visited))
-	return nil
+	return len(visited), nil
 }
 
 func updatePlanckRope(head, tail cube.Point) cube.Point {
@@ -72,10 +71,10 @@ func updatePlanckRope(head, tail cube.Point) cube.Point {
 	return tail.Add(move)
 }
 
-func Dec09b(ctx ch.AOContext) error {
+func Dec09b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2022/dec09.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//lines = []string{"R 5", "U 8", "L 8", "D 3", "R 17", "D 10", "L 25", "U 20"}
 	//bounds := cube.Square{cube.Interval{-11, 14}, cube.Interval{-5, 15}}
@@ -87,11 +86,11 @@ func Dec09b(ctx ch.AOContext) error {
 		var l int
 		_, err = fmt.Sscanf(line, "%s %d", &a, &l)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		dir, ok := cube.ParseDirection2D(a)
 		if !ok {
-			return fmt.Errorf("unknown direction '%c'", a)
+			return nil, fmt.Errorf("unknown direction '%c'", a)
 		}
 
 		for i := 0; i < l; i++ {
@@ -105,8 +104,7 @@ func Dec09b(ctx ch.AOContext) error {
 		// ctx.Print(printRopeBridge(rope, bounds))
 	}
 
-	ctx.FinalAnswer.Print(len(visited))
-	return nil
+	return len(visited), nil
 }
 
 func printRopeBridge(rope []cube.Point, bounds cube.Square) string {

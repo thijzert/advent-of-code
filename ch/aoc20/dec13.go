@@ -7,13 +7,13 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec13a(ctx ch.AOContext) error {
+func Dec13a(ctx ch.AOContext) (interface{}, error) {
 	bus, wait := nextBus(939, []int{7, 13, 0, 0, 59, 0, 31, 19})
 	ctx.Printf("Example data: %d", bus*wait)
 
 	lines, err := ctx.DataLines("inputs/2020/dec13.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	offset, _ := strconv.Atoi(lines[0])
@@ -25,11 +25,10 @@ func Dec13a(ctx ch.AOContext) error {
 
 	bus, wait = nextBus(offset, buses)
 	ctx.Printf("Can take bus %d %d minutes from now", bus, wait)
-	ctx.FinalAnswer.Print(bus * wait)
-	return nil
+	return bus * wait, nil
 }
 
-func Dec13b(ctx ch.AOContext) error {
+func Dec13b(ctx ch.AOContext) (interface{}, error) {
 	buses := []int{7, 13, 0, 0, 59, 0, 31, 19}
 	offset := synchroniseDepartures(buses)
 
@@ -42,7 +41,7 @@ func Dec13b(ctx ch.AOContext) error {
 
 	lines, err := ctx.DataLines("inputs/2020/dec13.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	buses = nil
 	for _, s := range strings.Split(lines[1], ",") {
@@ -59,8 +58,7 @@ func Dec13b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(offset)
-	return nil
+	return offset, nil
 }
 
 func nextBus(offset int, buses []int) (busline int, waitTime int) {

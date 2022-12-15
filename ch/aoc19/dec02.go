@@ -6,10 +6,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec02a(ctx ch.AOContext) error {
+func Dec02a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataAsIntLists("inputs/2019/dec02.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	program := lines[0]
 	//program = []int{1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50}
@@ -19,17 +19,16 @@ func Dec02a(ctx ch.AOContext) error {
 
 	ans, err := runIntCodeProgram(program)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ctx.FinalAnswer.Print(ans)
-	return nil
+	return ans, nil
 }
 
-func Dec02b(ctx ch.AOContext) error {
+func Dec02b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataAsIntLists("inputs/2019/dec02.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	program := lines[0]
 	//program = []int{1, 9, 10, 3, 2, 3, 11, 0, 99, 30, 40, 50}
@@ -43,13 +42,12 @@ func Dec02b(ctx ch.AOContext) error {
 
 			ans, err := runIntCodeProgram(program)
 			if err == nil && ans == target {
-				ctx.FinalAnswer.Print(100*noun + verb)
-				return nil
+				return 100*noun + verb, nil
 			}
 		}
 	}
 
-	return errFailed
+	return nil, errFailed
 }
 
 func runIntCodeProgram(program []int) (int, error) {

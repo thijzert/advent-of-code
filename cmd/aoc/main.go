@@ -55,20 +55,15 @@ func main() {
 		}
 	}
 
-	var answerOut io.Writer = os.Stdout
 	var debugOut io.Writer = os.Stdout
 	if quiet || veryQuiet {
 		debugOut = io.Discard
 	}
-	if veryQuiet {
-		answerOut = io.Discard
-	}
 
 	ctx := ch.AOContext{
-		Ctx:         context.Background(),
-		Args:        flag.Args(),
-		Debug:       log.New(debugOut, "", log.Lshortfile),
-		FinalAnswer: log.New(answerOut, "final answer: ", log.Lshortfile),
+		Ctx:   context.Background(),
+		Args:  flag.Args(),
+		Debug: log.New(debugOut, "", log.Lshortfile),
 	}
 
 	if runAll {
@@ -91,8 +86,11 @@ func main() {
 		os.Exit(exitStatus)
 	} else {
 		t0 := time.Now()
-		err := allYears[yearIdx][funcIdx](ctx)
+		ans, err := allYears[yearIdx][funcIdx](ctx)
 		d := time.Since(t0)
+		if ans != nil {
+			fmt.Printf("Final answer: %v\n", ans)
+		}
 		if err != nil {
 			log.Fatal(err)
 		}

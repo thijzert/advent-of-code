@@ -2,10 +2,10 @@ package aoc20
 
 import "github.com/thijzert/advent-of-code/ch"
 
-func Dec03a(ctx ch.AOContext) error {
+func Dec03a(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2020/dec03.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	img := readImage(sections[0], octothorpe)
 
@@ -26,14 +26,13 @@ func Dec03a(ctx ch.AOContext) error {
 
 	ctx.Printf("Route:\n%s", img)
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec03b(ctx ch.AOContext) error {
+func Dec03b(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2020/dec03.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	img := readImage(sections[0], octothorpe)
 
@@ -54,6 +53,5 @@ func Dec03b(ctx ch.AOContext) error {
 		rv *= trees
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }

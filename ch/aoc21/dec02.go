@@ -7,13 +7,13 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec02a(ctx ch.AOContext) error {
+func Dec02a(ctx ch.AOContext) (interface{}, error) {
 	depth := 0
 	hPosition := 0
 
 	movement, err := ctx.DataLines("inputs/2021/dec02.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, l := range movement {
@@ -24,7 +24,7 @@ func Dec02a(ctx ch.AOContext) error {
 		var dist int
 		_, err = fmt.Sscanf(l, "%s %d", &direction, &dist)
 		if err != nil {
-			return errors.Wrapf(err, "invalid line '%s'", l)
+			return nil, errors.Wrapf(err, "invalid line '%s'", l)
 		}
 
 		if direction == "forward" {
@@ -34,25 +34,24 @@ func Dec02a(ctx ch.AOContext) error {
 		} else if direction == "down" {
 			depth += dist
 		} else {
-			return fmt.Errorf("invalid line '%s'", l)
+			return nil, fmt.Errorf("invalid line '%s'", l)
 		}
 	}
 
 	ctx.Debug.Printf("Depth:  %d", depth)
 	ctx.Debug.Printf("H. pos: %d", hPosition)
 
-	ctx.FinalAnswer.Print(depth * hPosition)
-	return nil
+	return depth * hPosition, nil
 }
 
-func Dec02b(ctx ch.AOContext) error {
+func Dec02b(ctx ch.AOContext) (interface{}, error) {
 	aim := 0
 	depth := 0
 	hPosition := 0
 
 	movement, err := ctx.DataLines("inputs/2021/dec02.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, l := range movement {
@@ -63,7 +62,7 @@ func Dec02b(ctx ch.AOContext) error {
 		var dist int
 		_, err = fmt.Sscanf(l, "%s %d", &direction, &dist)
 		if err != nil {
-			return errors.Wrapf(err, "invalid line '%s'", l)
+			return nil, errors.Wrapf(err, "invalid line '%s'", l)
 		}
 
 		if direction == "forward" {
@@ -74,13 +73,12 @@ func Dec02b(ctx ch.AOContext) error {
 		} else if direction == "down" {
 			aim += dist
 		} else {
-			return fmt.Errorf("invalid line '%s'", l)
+			return nil, fmt.Errorf("invalid line '%s'", l)
 		}
 	}
 
 	ctx.Debug.Printf("Depth:  %d", depth)
 	ctx.Debug.Printf("H. pos: %d", hPosition)
 
-	ctx.FinalAnswer.Print(depth * hPosition)
-	return nil
+	return depth * hPosition, nil
 }

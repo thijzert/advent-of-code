@@ -4,10 +4,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec06a(ctx ch.AOContext) error {
+func Dec06a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2022/dec06.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//lines = []string{
 	//	"mjqjpqmgbljsphdztnvjfqwrcgsmlb",
@@ -29,16 +29,16 @@ func Dec06a(ctx ch.AOContext) error {
 			}
 			i = -1
 		}
-		ctx.FinalAnswer.Print(i + 4)
+		return i + 4, nil
 	}
 
-	return nil
+	return nil, errFailed
 }
 
-func Dec06b(ctx ch.AOContext) error {
+func Dec06b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2022/dec06.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, line := range lines {
@@ -53,8 +53,8 @@ func Dec06b(ctx ch.AOContext) error {
 			}
 			i = -1
 		}
-		ctx.FinalAnswer.Print(i + 14)
+		return i + 14, nil
 	}
 
-	return nil
+	return nil, errFailed
 }

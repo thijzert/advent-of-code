@@ -8,10 +8,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec21a(ctx ch.AOContext) error {
+func Dec21a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2020/dec21.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	recipes := readRecipeList(lines)
@@ -26,7 +26,7 @@ func Dec21a(ctx ch.AOContext) error {
 
 	allIngredients, allAllergens, allergenIngredients, err := translationTableFromRecipes(recipes)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	ctx.Printf("Allergens: %d; ingredients: %d", len(allAllergens), len(allIngredients))
 
@@ -48,23 +48,20 @@ func Dec21a(ctx ch.AOContext) error {
 		totalOcc += ingredientOccurrence[ing]
 	}
 
-	ctx.FinalAnswer.Print(totalOcc)
-
 	ctx.Printf("%v", allergenIngredients)
-
-	return nil
+	return totalOcc, nil
 }
 
-func Dec21b(ctx ch.AOContext) error {
+func Dec21b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2020/dec21.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	recipes := readRecipeList(lines)
 	allIngredients, allAllergens, allergenIngredients, err := translationTableFromRecipes(recipes)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	ctx.Printf("Allergens: %d; ingredients: %d", len(allAllergens), len(allIngredients))
 
@@ -80,8 +77,7 @@ func Dec21b(ctx ch.AOContext) error {
 		rv += "," + allergenIngredients[alg]
 	}
 
-	ctx.FinalAnswer.Print(rv[1:])
-	return nil
+	return rv[1:], nil
 }
 
 type recipe struct {

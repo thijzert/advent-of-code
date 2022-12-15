@@ -10,10 +10,9 @@ import (
 )
 
 type AOContext struct {
-	Ctx         context.Context
-	Args        []string
-	Debug       *log.Logger
-	FinalAnswer *log.Logger
+	Ctx   context.Context
+	Args  []string
+	Debug *log.Logger
 }
 
 func (ctx AOContext) DataLines(assetName string) ([]string, error) {
@@ -96,7 +95,7 @@ func (ctx AOContext) Printf(format string, v ...interface{}) {
 	ctx.Debug.Printf(format, v...)
 }
 
-type AdventFunc func(AOContext) error
+type AdventFunc func(AOContext) (interface{}, error)
 
 type Advent [50]AdventFunc
 
@@ -111,7 +110,7 @@ func (ad Advent) Stars(ctx AOContext, onError func(error)) string {
 				continue
 			}
 			published = true
-			err := ad[i+j](ctx)
+			_, err := ad[i+j](ctx)
 			if err != nil {
 				onError(err)
 			} else {

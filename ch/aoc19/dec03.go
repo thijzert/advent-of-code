@@ -8,10 +8,10 @@ import (
 	"github.com/thijzert/advent-of-code/lib/cube"
 )
 
-func Dec03a(ctx ch.AOContext) error {
+func Dec03a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2019/dec03.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//lines = []string{"R8,U5,L5,D3", "U7,R6,D4,L4"}
 	//lines = []string{"R75,D30,R83,U83,L12,D49,R71,U7,L72", "U62,R66,U55,R34,D71,R55,D58,R83"}
@@ -46,9 +46,7 @@ func Dec03a(ctx ch.AOContext) error {
 			closest = mh
 		}
 	}
-	ctx.FinalAnswer.Print(closest)
-
-	return nil
+	return closest, nil
 }
 
 func iabs(i int) int {
@@ -58,10 +56,10 @@ func iabs(i int) int {
 	return i
 }
 
-func Dec03b(ctx ch.AOContext) error {
+func Dec03b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2019/dec03.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var lastVisited map[cube.Point]int
@@ -94,7 +92,5 @@ func Dec03b(ctx ch.AOContext) error {
 			closest = lengths
 		}
 	}
-	ctx.FinalAnswer.Print(closest)
-
-	return errNotImplemented
+	return closest, nil
 }

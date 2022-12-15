@@ -4,7 +4,7 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec21a(ctx ch.AOContext) error {
+func Dec21a(ctx ch.AOContext) (interface{}, error) {
 	// playerPos := []int{4, 8}
 	playerPos := []int{2, 5}
 	playerScore := []int{0, 0}
@@ -25,8 +25,7 @@ func Dec21a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(die.NRolls() * min(playerScore...))
-	return nil
+	return die.NRolls() * min(playerScore...), nil
 }
 
 type DeterministicDice interface {
@@ -51,7 +50,7 @@ func (d *DetD100) NRolls() int {
 	return d.nRolls
 }
 
-func Dec21b(ctx ch.AOContext) error {
+func Dec21b(ctx ch.AOContext) (interface{}, error) {
 	const toWin int = 21
 	const positions int = 10
 	const players int = 2
@@ -120,12 +119,11 @@ func Dec21b(ctx ch.AOContext) error {
 	ctx.Printf("There's no way this worked: %d / %d", gameSpace[0][0][0][3][7][0], gameSpace[0][0][0][3][7][1])
 	ctx.Printf("There's no fucking way this worked: %d / %d", gameSpace[0][0][0][1][4][0], gameSpace[0][0][0][1][4][1])
 
-	ctx.FinalAnswer.Print(gameSpace[0][0][0][1][4][0])
 	ctx.Printf("Why'd I need %.1f fucking megabytes of memory for this", float64(8*(maxTurns+1)*(maxPlayerScore+1)*(maxPlayerScore+1)*(positions)*(positions)*(players))/(1024.0*1024.0))
-	return nil
+	return gameSpace[0][0][0][1][4][0], nil
 }
 
-func almostDec21b(ctx ch.AOContext) error {
+func almostDec21b(ctx ch.AOContext) (interface{}, error) {
 	const toWin int = 21
 	const positions int = 10
 	const players int = 2
@@ -195,10 +193,10 @@ func almostDec21b(ctx ch.AOContext) error {
 		}
 	}
 
-	return errNotImplemented
+	return nil, errNotImplemented
 }
 
-func alsoNotDec21b(ctx ch.AOContext) error {
+func alsoNotDec21b(ctx ch.AOContext) (interface{}, error) {
 	const toWin int = 21
 	const positions int = 10
 	const players int = 2
@@ -269,10 +267,10 @@ func alsoNotDec21b(ctx ch.AOContext) error {
 		}
 	}
 
-	return errNotImplemented
+	return nil, errNotImplemented
 }
 
-func notdec21b(ctx ch.AOContext) error {
+func notdec21b(ctx ch.AOContext) (interface{}, error) {
 	maxPlayerAScore := 30
 	maxTotalScore := 50
 
@@ -326,5 +324,5 @@ func notdec21b(ctx ch.AOContext) error {
 
 	ctx.Printf("There's no way this worked: %d / %d", dirac[0][0][3][7], dirac[0][0][7][3])
 
-	return errNotImplemented
+	return nil, errNotImplemented
 }

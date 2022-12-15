@@ -7,10 +7,10 @@ import (
 	"github.com/thijzert/advent-of-code/lib/cube"
 )
 
-func Dec04a(ctx ch.AOContext) error {
+func Dec04a(ctx ch.AOContext) (interface{}, error) {
 	pairs, err := dataAsIVPs(ctx, "inputs/2022/dec04.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	fullyContain := 0
@@ -22,14 +22,13 @@ func Dec04a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(fullyContain)
-	return nil
+	return fullyContain, nil
 }
 
-func Dec04b(ctx ch.AOContext) error {
+func Dec04b(ctx ch.AOContext) (interface{}, error) {
 	pairs, err := dataAsIVPs(ctx, "inputs/2022/dec04.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	overlap := 0
@@ -39,8 +38,7 @@ func Dec04b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(overlap)
-	return nil
+	return overlap, nil
 }
 
 // IVP is an interval pair

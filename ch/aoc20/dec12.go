@@ -6,11 +6,11 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec12a(ctx ch.AOContext) error {
+func Dec12a(ctx ch.AOContext) (interface{}, error) {
 	lines := []string{"F10", "N3", "F7", "R90", "F11"}
 	x, y, _, err := navigateShip(lines)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ctx.Printf("Ship's position: %d,%d", x, y)
@@ -18,24 +18,23 @@ func Dec12a(ctx ch.AOContext) error {
 
 	lines, err = ctx.DataLines("inputs/2020/dec12.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	x, y, _, err = navigateShip(lines)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ctx.Printf("Ship's position: %d,%d", x, y)
-	ctx.FinalAnswer.Print(abs(x) + abs(y))
-	return nil
+	return abs(x) + abs(y), nil
 }
 
-func Dec12b(ctx ch.AOContext) error {
+func Dec12b(ctx ch.AOContext) (interface{}, error) {
 	lines := []string{"F10", "N3", "F7", "R90", "F11"}
 	x, y, err := navigateWaypoint(lines)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ctx.Printf("Ship's position: %d,%d", x, y)
@@ -43,17 +42,16 @@ func Dec12b(ctx ch.AOContext) error {
 
 	lines, err = ctx.DataLines("inputs/2020/dec12.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	x, y, err = navigateWaypoint(lines)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ctx.Printf("Ship's position: %d,%d", x, y)
-	ctx.FinalAnswer.Print(abs(x) + abs(y))
-	return nil
+	return abs(x) + abs(y), nil
 }
 
 func navigateShip(instructions []string) (x, y, dir int, err error) {

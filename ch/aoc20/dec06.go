@@ -2,10 +2,10 @@ package aoc20
 
 import "github.com/thijzert/advent-of-code/ch"
 
-func Dec06a(ctx ch.AOContext) error {
+func Dec06a(ctx ch.AOContext) (interface{}, error) {
 	groups, err := ctx.DataSections("inputs/2020/dec06.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rv := 0
@@ -19,14 +19,13 @@ func Dec06a(ctx ch.AOContext) error {
 		rv += len(yes)
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec06b(ctx ch.AOContext) error {
+func Dec06b(ctx ch.AOContext) (interface{}, error) {
 	groups, err := ctx.DataSections("inputs/2020/dec06.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rv := 0
@@ -44,6 +43,5 @@ func Dec06b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }

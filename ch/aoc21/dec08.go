@@ -8,10 +8,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec08a(ctx ch.AOContext) error {
+func Dec08a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2021/dec08.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	numberHistogram := make([]int, 10)
@@ -22,13 +22,13 @@ func Dec08a(ctx ch.AOContext) error {
 		}
 		parts := strings.Split(line, " | ")
 		if len(parts) != 2 {
-			return fmt.Errorf("line %d: invalid format '%s'", l+1, line)
+			return nil, fmt.Errorf("line %d: invalid format '%s'", l+1, line)
 		}
 		digits := strings.Split(parts[1], " ")
 		mapping, err := extractMicrowaveMapping(strings.Split(parts[0], " "))
 		if err != nil {
 			ctx.Printf("Mapping so far: '%c'", mapping)
-			return err
+			return nil, err
 		}
 
 		for _, d := range digits {
@@ -42,14 +42,13 @@ func Dec08a(ctx ch.AOContext) error {
 	}
 
 	ctx.Printf("Occurrences: %d", numberHistogram)
-	ctx.FinalAnswer.Print(numberHistogram[1] + numberHistogram[4] + numberHistogram[7] + numberHistogram[8])
-	return nil
+	return numberHistogram[1] + numberHistogram[4] + numberHistogram[7] + numberHistogram[8], nil
 }
 
-func Dec08b(ctx ch.AOContext) error {
+func Dec08b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2021/dec08.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sum := 0
@@ -60,7 +59,7 @@ func Dec08b(ctx ch.AOContext) error {
 		}
 		parts := strings.Split(line, " | ")
 		if len(parts) != 2 {
-			return fmt.Errorf("line %d: invalid format '%s'", l+1, line)
+			return nil, fmt.Errorf("line %d: invalid format '%s'", l+1, line)
 		}
 
 		passcode := 0
@@ -68,7 +67,7 @@ func Dec08b(ctx ch.AOContext) error {
 		mapping, err := extractMicrowaveMapping(strings.Split(parts[0], " "))
 		if err != nil {
 			ctx.Printf("Mapping so far: '%c'", mapping)
-			return err
+			return nil, err
 		}
 
 		for _, d := range digits {
@@ -84,8 +83,7 @@ func Dec08b(ctx ch.AOContext) error {
 		ctx.Printf("Passcode: %d", passcode)
 	}
 
-	ctx.FinalAnswer.Print(sum)
-	return nil
+	return sum, nil
 }
 
 var microwaveNumbers [10][7]bool = [10][7]bool{

@@ -7,10 +7,10 @@ import (
 	"github.com/thijzert/advent-of-code/lib/cube"
 )
 
-func Dec15a(ctx ch.AOContext) error {
+func Dec15a(ctx ch.AOContext) (interface{}, error) {
 	sensors, err := readCaveSensors(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	yy := 2000000
@@ -24,14 +24,13 @@ func Dec15a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv.Length() - len(beacons))
-	return nil
+	return rv.Length() - len(beacons), nil
 }
 
-func Dec15b(ctx ch.AOContext) error {
+func Dec15b(ctx ch.AOContext) (interface{}, error) {
 	sensors, err := readCaveSensors(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	fullSpectrum := cube.Interval{0, 4000000}
@@ -45,13 +44,12 @@ func Dec15b(ctx ch.AOContext) error {
 			if iv.B >= -1 {
 				x := iv.B + 1
 				ctx.Printf("Found mystery beacon at x=%d y=%d", x, y)
-				ctx.FinalAnswer.Print(4000000*x + y)
-				return nil
+				return 4000000*x + y, nil
 			}
 		}
 	}
 
-	return errFailed
+	return nil, errFailed
 }
 
 type caveSensor struct {

@@ -2,10 +2,10 @@ package aoc21
 
 import "github.com/thijzert/advent-of-code/ch"
 
-func Dec01a(ctx ch.AOContext) error {
+func Dec01a(ctx ch.AOContext) (interface{}, error) {
 	depths, err := ctx.DataAsInts("inputs/2021/dec01.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rv := 0
@@ -19,14 +19,13 @@ func Dec01a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Printf("%d\n", rv)
-	return nil
+	return rv, nil
 }
 
-func Dec01b(ctx ch.AOContext) error {
+func Dec01b(ctx ch.AOContext) (interface{}, error) {
 	depths, err := ctx.DataAsInts("inputs/2021/dec01.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rv := 0
@@ -48,6 +47,5 @@ func Dec01b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Printf("%d\n", rv)
-	return nil
+	return rv, nil
 }

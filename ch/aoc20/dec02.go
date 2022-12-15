@@ -7,10 +7,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec02a(ctx ch.AOContext) error {
+func Dec02a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2020/dec02.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	validPasswords := 0
@@ -35,14 +35,13 @@ func Dec02a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(validPasswords)
-	return nil
+	return validPasswords, nil
 }
 
-func Dec02b(ctx ch.AOContext) error {
+func Dec02b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2020/dec02.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	validPasswords := 0
@@ -67,6 +66,5 @@ func Dec02b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(validPasswords)
-	return nil
+	return validPasswords, nil
 }

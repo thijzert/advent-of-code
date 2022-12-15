@@ -7,13 +7,12 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec23a(ctx ch.AOContext) error {
+func Dec23a(ctx ch.AOContext) (interface{}, error) {
 	// Worked this out on a napkin
-	ctx.FinalAnswer.Print(15160)
-	return nil
+	return 15160, nil
 }
 
-func Dec23b(ctx ch.AOContext) error {
+func Dec23b(ctx ch.AOContext) (interface{}, error) {
 	cave := &amphipodCave{
 		hallway: make([]rune, 11),
 		rooms:   make([]amphipodRoom, 11),
@@ -70,7 +69,7 @@ func Dec23b(ctx ch.AOContext) error {
 	//ctx.Print(cave.pop(10, 8))
 
 	ctx.Printf("Cave:\n%s", cave)
-	//return errNotImplemented
+	//return nil, errNotImplemented
 
 	f := func(x rune) int {
 		if x == 'B' {
@@ -85,11 +84,10 @@ func Dec23b(ctx ch.AOContext) error {
 	}
 	dist, ok := cave.shortestSort(f)
 	if !ok {
-		return fmt.Errorf("failed to find a solution")
+		return nil, fmt.Errorf("failed to find a solution")
 	}
 
-	ctx.FinalAnswer.Print(dist)
-	return nil
+	return dist, nil
 }
 
 type amphipodRoom struct {

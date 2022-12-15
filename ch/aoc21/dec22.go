@@ -6,10 +6,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec22a(ctx ch.AOContext) error {
+func Dec22a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2021/dec22.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	reactor := make([]bool, 101*101*101)
@@ -18,7 +18,7 @@ func Dec22a(ctx ch.AOContext) error {
 		var xmin, xmax, ymin, ymax, zmin, zmax int
 		_, err := fmt.Sscanf(l, "%s x=%d..%d,y=%d..%d,z=%d..%d", &on, &xmin, &xmax, &ymin, &ymax, &zmin, &zmax)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		for z := zmin; z <= zmax; z++ {
@@ -46,14 +46,13 @@ func Dec22a(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec22b(ctx ch.AOContext) error {
+func Dec22b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2021/dec22.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	reactor := &cuboidSet{}
@@ -63,7 +62,7 @@ func Dec22b(ctx ch.AOContext) error {
 		var c cuboid
 		_, err := fmt.Sscanf(l, "%s x=%d..%d,y=%d..%d,z=%d..%d", &on, &c[0].min, &c[0].max, &c[1].min, &c[1].max, &c[2].min, &c[2].max)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		if on == "on" {
@@ -73,8 +72,7 @@ func Dec22b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(reactor.Size())
-	return nil
+	return reactor.Size(), nil
 }
 
 type interval struct {

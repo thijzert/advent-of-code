@@ -7,17 +7,16 @@ import (
 var Dec19a ch.AdventFunc = nil
 var Dec19b ch.AdventFunc = nil
 
-// func Dec19a(ctx ch.AOContext) error {
+// func Dec19a(ctx ch.AOContext) (interface{}, error) {
 // 	sections, err := ctx.DataSections("inputs/2022/dec19a.txt")
 // 	if err != nil {
-// 		return err
+// 		return nil, err
 // 	}
 //
 // 	ctx.Print(len(sections))
-// 	return errNotImplemented
+// 	return nil, errNotImplemented
 // }
 //
-// func Dec19b(ctx ch.AOContext) error {
-// 	return errNotImplemented
+// func Dec19b(ctx ch.AOContext) (interface{}, error) {
+// 	return nil, errNotImplemented
 // }
-

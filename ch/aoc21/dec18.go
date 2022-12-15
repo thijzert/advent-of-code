@@ -6,7 +6,7 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec18a(ctx ch.AOContext) error {
+func Dec18a(ctx ch.AOContext) (interface{}, error) {
 	lines := []string{
 		"[1,2]",
 		"[[1,2],3]",
@@ -20,7 +20,7 @@ func Dec18a(ctx ch.AOContext) error {
 	for _, line := range lines {
 		sn, n, err := parseSnailfishNumber(line)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if n != len(line) || sn == nil {
 			ctx.Printf("Error: only parsed %d characters instead of %d", n, len(line))
@@ -55,7 +55,7 @@ func Dec18a(ctx ch.AOContext) error {
 
 	lines, err := ctx.DataLines("inputs/2021/dec18.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var sn *snailfish
@@ -63,7 +63,7 @@ func Dec18a(ctx ch.AOContext) error {
 		if i == 0 {
 			sn, _, err = parseSnailfishNumber(line)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			ctx.Printf("Step %d: %s", i+1, sn)
 			continue
@@ -73,21 +73,20 @@ func Dec18a(ctx ch.AOContext) error {
 
 		b, _, err = parseSnailfishNumber(line)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		sn.Add(b)
 		ctx.Printf("Step %d: %s", i+1, sn)
 	}
 
 	ctx.Printf("snailfish sum: %s", sn)
-	ctx.FinalAnswer.Print(sn.Magnitude())
-	return nil
+	return sn.Magnitude(), nil
 }
 
-func Dec18b(ctx ch.AOContext) error {
+func Dec18b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2021/dec18.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	mmax := 0
@@ -109,8 +108,7 @@ func Dec18b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(mmax)
-	return nil
+	return mmax, nil
 }
 
 type snailfish struct {

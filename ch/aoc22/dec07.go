@@ -8,10 +8,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec07a(ctx ch.AOContext) error {
+func Dec07a(ctx ch.AOContext) (interface{}, error) {
 	root, err := readDirectoryStructure(ctx, "inputs/2022/dec07.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ctx.Printf("\n%s", root)
@@ -33,8 +33,7 @@ func Dec07a(ctx ch.AOContext) error {
 	}
 	ctx.Printf("Total size: %d", addDirSize(root))
 
-	ctx.FinalAnswer.Print(under100k)
-	return nil
+	return under100k, nil
 }
 
 type directory struct {
@@ -139,10 +138,10 @@ func readDirectoryStructure(ctx ch.AOContext, resourceName string) (*directory, 
 	return root, nil
 }
 
-func Dec07b(ctx ch.AOContext) error {
+func Dec07b(ctx ch.AOContext) (interface{}, error) {
 	root, err := readDirectoryStructure(ctx, "inputs/2022/dec07.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	totalDiskSize := 70000000
@@ -160,6 +159,5 @@ func Dec07b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(best)
-	return nil
+	return best, nil
 }

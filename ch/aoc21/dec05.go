@@ -6,20 +6,20 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec05a(ctx ch.AOContext) error {
+func Dec05a(ctx ch.AOContext) (interface{}, error) {
 	rv, err := dec05(ctx, false)
 	if err == nil {
-		ctx.FinalAnswer.Print(rv)
+		return rv, nil
 	}
-	return err
+	return nil, err
 }
 
-func Dec05b(ctx ch.AOContext) error {
+func Dec05b(ctx ch.AOContext) (interface{}, error) {
 	rv, err := dec05(ctx, true)
 	if err == nil {
-		ctx.FinalAnswer.Print(rv)
+		return rv, nil
 	}
-	return err
+	return nil, err
 }
 
 func dec05(ctx ch.AOContext, includeDiagonalVents bool) (int, error) {

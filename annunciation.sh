@@ -61,19 +61,19 @@ import (
 )
 
 var Dec${i}a ch.AdventFunc = nil
-// func Dec${i}a(ctx ch.AOContext) error {
+// func Dec${i}a(ctx ch.AOContext) (interface{}, error) {
 // 	sections, err := ctx.DataSections("inputs/${YEAR}/dec${i}a.txt")
 // 	if err != nil {
-// 		return err
+// 		return nil, err
 // 	}
 //
 // 	ctx.Print(len(sections))
-// 	return errNotImplemented
+// 	return nil, errNotImplemented
 // }
 
 var Dec${i}b ch.AdventFunc = nil
-// func Dec${i}b(ctx ch.AOContext) error {
-// 	return errNotImplemented
+// func Dec${i}b(ctx ch.AOContext) (interface{}, error) {
+// 	return nil, errNotImplemented
 // }
 
 EOF

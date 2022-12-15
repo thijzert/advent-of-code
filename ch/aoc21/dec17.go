@@ -4,7 +4,7 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec17a(ctx ch.AOContext) error {
+func Dec17a(ctx ch.AOContext) (interface{}, error) {
 	exampleTarget := rect{point{20, -10}, point{30, -5}}
 
 	for _, vel := range []point{{7, 2}, {6, 3}, {17, -4}, {6, 9}} {
@@ -17,12 +17,10 @@ func Dec17a(ctx ch.AOContext) error {
 
 	actualTarget := rect{point{138, -125}, point{184, -71}}
 	_, my = fireProbeWithStyle(actualTarget)
-	ctx.FinalAnswer.Print(my)
-
-	return nil
+	return my, nil
 }
 
-func Dec17b(ctx ch.AOContext) error {
+func Dec17b(ctx ch.AOContext) (interface{}, error) {
 	exampleTarget := rect{point{20, -10}, point{30, -5}}
 
 	nh, _ := fireProbeWithStyle(exampleTarget)
@@ -30,9 +28,7 @@ func Dec17b(ctx ch.AOContext) error {
 
 	actualTarget := rect{point{138, -125}, point{184, -71}}
 	nh, _ = fireProbeWithStyle(actualTarget)
-	ctx.FinalAnswer.Print(nh)
-
-	return nil
+	return nh, nil
 }
 
 func fireProbe(velocity point, target rect) (bool, int) {

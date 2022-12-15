@@ -6,16 +6,16 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec24a(ctx ch.AOContext) error {
+func Dec24a(ctx ch.AOContext) (interface{}, error) {
 	program, err := ctx.DataLines("inputs/2021/dec24.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	alu := &monadALU{}
 	err = alu.Run(program, []int{1, 3, 5, 7, 9, 2, 4, 6, 8, 9, 9, 9, 9, 9})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	ctx.Print(alu.Z, alu.Z == 0)
 
@@ -24,12 +24,12 @@ func Dec24a(ctx ch.AOContext) error {
 	modno := []int{9, 9, 9, 1, 1, 9, 9, 3, 9, 4, 9, 6, 8, 4}
 	err = alu.Run(program, modno)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	ctx.Print(alu.Z, alu.Z == 0)
 
 	if alu.Z != 0 {
-		return errFailed
+		return nil, errFailed
 	}
 
 	rv := 0
@@ -37,14 +37,13 @@ func Dec24a(ctx ch.AOContext) error {
 		rv *= 10
 		rv += i
 	}
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec24b(ctx ch.AOContext) error {
+func Dec24b(ctx ch.AOContext) (interface{}, error) {
 	program, err := ctx.DataLines("inputs/2021/dec24.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	alu := &monadALU{}
@@ -52,12 +51,12 @@ func Dec24b(ctx ch.AOContext) error {
 	modno := []int{6, 2, 9, 1, 1, 9, 4, 1, 7, 1, 6, 1, 1, 1}
 	err = alu.Run(program, modno)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	ctx.Print(alu.Z, alu.Z == 0)
 
 	if alu.Z != 0 {
-		return errFailed
+		return nil, errFailed
 	}
 
 	rv := 0
@@ -65,8 +64,7 @@ func Dec24b(ctx ch.AOContext) error {
 		rv *= 10
 		rv += i
 	}
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 type monadALU struct {

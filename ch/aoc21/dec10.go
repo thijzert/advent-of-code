@@ -6,23 +6,21 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec10a(ctx ch.AOContext) error {
+func Dec10a(ctx ch.AOContext) (interface{}, error) {
 	rv, err := checkMatchingPairs(ctx, "inputs/2021/dec10.txt", false)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec10b(ctx ch.AOContext) error {
+func Dec10b(ctx ch.AOContext) (interface{}, error) {
 	rv, err := checkMatchingPairs(ctx, "inputs/2021/dec10.txt", true)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 func checkMatchingPairs(ctx ch.AOContext, assetName string, autocomplete bool) (int, error) {

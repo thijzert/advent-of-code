@@ -6,10 +6,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec03a(ctx ch.AOContext) error {
+func Dec03a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2021/dec03.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	histo, _ := bitHistogram(lines, "")
@@ -29,8 +29,7 @@ func Dec03a(ctx ch.AOContext) error {
 	ctx.Debug.Printf("Gamma:   %3d (0b%b)", gamma, gamma)
 	ctx.Debug.Printf("Epsilon: %3d (0b%b)", epsilon, epsilon)
 
-	ctx.FinalAnswer.Print(gamma * epsilon)
-	return nil
+	return gamma * epsilon, nil
 }
 
 func bitHistogram(lines []string, prefix string) ([][2]int, int) {
@@ -57,10 +56,10 @@ func bitHistogram(lines []string, prefix string) ([][2]int, int) {
 	return histo, count
 }
 
-func Dec03b(ctx ch.AOContext) error {
+func Dec03b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2021/dec03.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	count := 0
@@ -94,12 +93,11 @@ func Dec03b(ctx ch.AOContext) error {
 	var a, b int
 	_, err = fmt.Sscanf(o2+" "+co2, "%b %b", &a, &b)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ctx.Debug.Printf("O₂ generator: %s (%d)", o2, a)
 	ctx.Debug.Printf("CO₂ scrubber: %s (%d)", co2, b)
 
-	ctx.FinalAnswer.Print(a * b)
-	return nil
+	return a * b, nil
 }

@@ -8,10 +8,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec19a(ctx ch.AOContext) error {
+func Dec19a(ctx ch.AOContext) (interface{}, error) {
 	rset, lines, err := readRuleSet(ctx, "inputs/2020/dec19.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rv := 0
@@ -26,14 +26,13 @@ func Dec19a(ctx ch.AOContext) error {
 		ctx.Printf("%3d: %5v  %s", i+1, v, line)
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec19b(ctx ch.AOContext) error {
+func Dec19b(ctx ch.AOContext) (interface{}, error) {
 	rset, lines, err := readRuleSet(ctx, "inputs/2020/dec19.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	ctx.Printf("%d rules, %d strings to match", len(rset.Rules), len(lines))
 
@@ -59,8 +58,7 @@ func Dec19b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 type grammarLexeme struct {

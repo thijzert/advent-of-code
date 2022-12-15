@@ -4,10 +4,10 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec01a(ctx ch.AOContext) error {
+func Dec01a(ctx ch.AOContext) (interface{}, error) {
 	masses, err := ctx.DataAsInts("inputs/2019/dec01a.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	s := 0
@@ -15,14 +15,13 @@ func Dec01a(ctx ch.AOContext) error {
 		s += (m / 3) - 2
 	}
 
-	ctx.FinalAnswer.Print(s)
-	return nil
+	return s, nil
 }
 
-func Dec01b(ctx ch.AOContext) error {
+func Dec01b(ctx ch.AOContext) (interface{}, error) {
 	masses, err := ctx.DataAsInts("inputs/2019/dec01a.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	s := 0
@@ -35,6 +34,5 @@ func Dec01b(ctx ch.AOContext) error {
 		}
 	}
 
-	ctx.FinalAnswer.Print(s)
-	return errNotImplemented
+	return s, nil
 }

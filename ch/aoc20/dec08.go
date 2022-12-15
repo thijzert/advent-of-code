@@ -6,21 +6,20 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec08a(ctx ch.AOContext) error {
+func Dec08a(ctx ch.AOContext) (interface{}, error) {
 	inputs := []string{"nop +0", "acc +1", "jmp +4", "acc +3", "jmp -3", "acc -99", "acc +1", "jmp -4", "acc +6"}
 	acc, _ := runGameConsoleProgram(inputs)
 	ctx.Printf("Example accumulator: %d", acc)
 
 	inputs, err := ctx.DataLines("inputs/2020/dec08.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	acc, _ = runGameConsoleProgram(inputs)
-	ctx.FinalAnswer.Print(acc)
-	return nil
+	return acc, nil
 }
 
-func Dec08b(ctx ch.AOContext) error {
+func Dec08b(ctx ch.AOContext) (interface{}, error) {
 	inputs := []string{"nop +0", "acc +1", "jmp +4", "acc +3", "jmp -3", "acc -99", "acc +1", "jmp -4", "acc +6"}
 	i, acc := busyConsoleBeaver(inputs)
 	if i >= 0 {
@@ -29,12 +28,11 @@ func Dec08b(ctx ch.AOContext) error {
 
 	inputs, err := ctx.DataLines("inputs/2020/dec08.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	i, acc = busyConsoleBeaver(inputs)
 	ctx.Printf("Changing instruction %d to '%s' results in %d", i+1, inputs[i], acc)
-	ctx.FinalAnswer.Print(acc)
-	return nil
+	return acc, nil
 }
 
 func runGameConsoleProgram(instrs []string) (int, bool) {

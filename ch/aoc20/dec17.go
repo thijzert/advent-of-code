@@ -6,7 +6,7 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec17a(ctx ch.AOContext) error {
+func Dec17a(ctx ch.AOContext) (interface{}, error) {
 	layers := [][]string{{".#.", "..#", "###"}}
 	cc := readConwayCube(layers)
 	ctx.Printf("Initial state: %d", cc.Length())
@@ -18,7 +18,7 @@ func Dec17a(ctx ch.AOContext) error {
 
 	layers, err := ctx.DataSections("inputs/2020/dec17.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cc = readConwayCube(layers)
@@ -26,11 +26,10 @@ func Dec17a(ctx ch.AOContext) error {
 		cc.Iterate()
 		ctx.Printf("After stage %d: %d", i+1, cc.Length())
 	}
-	ctx.FinalAnswer.Print(cc.Length())
-	return nil
+	return cc.Length(), nil
 }
 
-func Dec17b(ctx ch.AOContext) error {
+func Dec17b(ctx ch.AOContext) (interface{}, error) {
 	layers := [][]string{{".#.", "..#", "###"}}
 	cc := readConwayHypercube(layers)
 
@@ -41,7 +40,7 @@ func Dec17b(ctx ch.AOContext) error {
 
 	layers, err := ctx.DataSections("inputs/2020/dec17.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cc = readConwayHypercube(layers)
@@ -49,8 +48,7 @@ func Dec17b(ctx ch.AOContext) error {
 		cc.Iterate()
 		ctx.Printf("After stage %d: %d", i+1, cc.Length())
 	}
-	ctx.FinalAnswer.Print(cc.Length())
-	return nil
+	return cc.Length(), nil
 }
 
 type point3 struct {

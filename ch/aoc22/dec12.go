@@ -5,10 +5,10 @@ import (
 	"github.com/thijzert/advent-of-code/lib/dijkstra"
 )
 
-func Dec12a(ctx ch.AOContext) error {
+func Dec12a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2022/dec12.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	valid := func(x0, y0, x1, y1, cost int) bool {
@@ -29,11 +29,10 @@ func Dec12a(ctx ch.AOContext) error {
 
 	_, totalCost, err := dijkstra.ShortestPath(dijkstra.GridWalker(valid, final, start...))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ctx.FinalAnswer.Print(totalCost)
-	return nil
+	return totalCost, nil
 }
 
 func validHikeStep(lines []string, x0, y0, x1, y1 int) bool {
@@ -56,10 +55,10 @@ func validHikeStep(lines []string, x0, y0, x1, y1 int) bool {
 	return t <= (f + 1)
 }
 
-func Dec12b(ctx ch.AOContext) error {
+func Dec12b(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2022/dec12.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	valid := func(x0, y0, x1, y1, cost int) bool {
@@ -80,9 +79,8 @@ func Dec12b(ctx ch.AOContext) error {
 
 	_, totalCost, err := dijkstra.ShortestPath(dijkstra.GridWalker(valid, final, start...))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	ctx.FinalAnswer.Print(totalCost)
-	return nil
+	return totalCost, nil
 }

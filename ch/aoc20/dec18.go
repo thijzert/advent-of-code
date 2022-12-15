@@ -7,7 +7,7 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec18a(ctx ch.AOContext) error {
+func Dec18a(ctx ch.AOContext) (interface{}, error) {
 	totest := []struct {
 		Expr   string
 		Answer int
@@ -31,12 +31,12 @@ func Dec18a(ctx ch.AOContext) error {
 		}
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	lines, err := ctx.DataLines("inputs/2020/dec18.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rv := 0
@@ -49,11 +49,10 @@ func Dec18a(ctx ch.AOContext) error {
 		rv += a
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec18b(ctx ch.AOContext) error {
+func Dec18b(ctx ch.AOContext) (interface{}, error) {
 	totest := []struct {
 		Expr   string
 		Answer int
@@ -77,12 +76,12 @@ func Dec18b(ctx ch.AOContext) error {
 		}
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	lines, err := ctx.DataLines("inputs/2020/dec18.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rv := 0
@@ -95,8 +94,7 @@ func Dec18b(ctx ch.AOContext) error {
 		rv += a
 	}
 
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 type homeworkLexeme struct {

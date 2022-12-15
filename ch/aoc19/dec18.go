@@ -6,10 +6,10 @@ import (
 	"github.com/thijzert/advent-of-code/lib/dijkstra"
 )
 
-func Dec18a(ctx ch.AOContext) error {
+func Dec18a(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2019/dec18.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, lines := range sections {
@@ -17,7 +17,7 @@ func Dec18a(ctx ch.AOContext) error {
 
 		steps, cost, err := dijkstra.ShortestPath(tm)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		path := make([]byte, 0, len(steps)-1)
 		var prev dijkstra.Position = nil
@@ -31,9 +31,9 @@ func Dec18a(ctx ch.AOContext) error {
 			prev = p
 		}
 		ctx.Printf("Path taken: %s", path)
-		ctx.FinalAnswer.Print(cost)
+		return cost, nil
 	}
-	return nil
+	return nil, errFailed
 }
 
 type tractorMaze struct {
@@ -253,10 +253,10 @@ func (pdi *pos2diter) isOk(p pos2d) bool {
 	return true
 }
 
-func Dec18b(ctx ch.AOContext) error {
+func Dec18b(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2019/dec18.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, lines := range sections {
 
@@ -283,12 +283,12 @@ func Dec18b(ctx ch.AOContext) error {
 
 		_, cost, err := dijkstra.ShortestPath(tm)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		ctx.FinalAnswer.Print(cost)
+		return cost, nil
 	}
 
-	return nil
+	return nil, errFailed
 }
 
 type pos4d struct {

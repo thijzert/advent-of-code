@@ -4,10 +4,10 @@ import "github.com/thijzert/advent-of-code/ch"
 
 var allDirections [4]point = [4]point{{1, 0}, {0, 1}, {-1, 0}, {0, -1}}
 
-func Dec15a(ctx ch.AOContext) error {
+func Dec15a(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2021/dec15.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	ctx.Print(len(sections))
 
@@ -16,14 +16,13 @@ func Dec15a(ctx ch.AOContext) error {
 	})
 
 	rv := shortestPath(img)
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
-func Dec15b(ctx ch.AOContext) error {
+func Dec15b(ctx ch.AOContext) (interface{}, error) {
 	sections, err := ctx.DataSections("inputs/2021/dec15.txt")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	ctx.Print(len(sections))
 
@@ -49,8 +48,7 @@ func Dec15b(ctx ch.AOContext) error {
 	}
 
 	rv := shortestPath(tiledImage)
-	ctx.FinalAnswer.Print(rv)
-	return nil
+	return rv, nil
 }
 
 func shortestPath(img *image) int {
