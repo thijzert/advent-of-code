@@ -96,8 +96,10 @@ func ShortestPath(b Board) ([]Position, int, error) {
 		}
 	}
 
+	//log.Printf("initial: %v", dijk.Heads)
 	for i := 1; i < 10000; i++ {
 		dijk.Step()
+		//log.Printf("after step %d: %v", i, dijk.Heads)
 		if len(dijk.Heads) == 0 {
 			break
 		}
