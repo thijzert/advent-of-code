@@ -60,9 +60,56 @@ type valveNetwork struct {
 	NameMask          map[uint16]uint64
 	Flow              map[uint16]int
 	Neighbours        map[uint16][]uint16
+	Roadmap           map[uint32]uint16
 	ValveRequirement  uint64
 	MaxFlow           int
 	ElephantInTheRoom bool
+}
+
+func readValveNetwork(ctx ch.AOContext, filename string) (*valveNetwork, error) {
+	lines, err := ctx.DataLines(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	rv := &valveNetwork{
+		NameMask:   make(map[uint16]uint64),
+		Flow:       make(map[uint16]int),
+		Neighbours: make(map[uint16][]uint16),
+	}
+
+	name := func(s string) uint16 {
+		return uint16(s[1])<<8 | uint16(s[0])
+	}
+
+	mask := uint64(1)
+
+	for _, line := range lines {
+		var n string
+		var r int
+		_, err := fmt.Sscanf(line, "Valve %2s has flow rate=%d;", &n, &r)
+		if err != nil {
+			ctx.Printf("Line: '%s'", line)
+			return nil, err
+		}
+
+		p := name(n)
+		rv.NameMask[p] = mask
+		if r > 0 {
+			rv.ValveRequirement |= mask
+			rv.MaxFlow += r
+			mask <<= 1
+		}
+		rv.Flow[p] = r
+		rv.Neighbours[p] = []uint16{}
+
+		j := strings.IndexByte(line, ';')
+		for _, nbv := range strings.Split(strings.TrimSpace(line[j+24:]), ", ") {
+			rv.Neighbours[p] = append(rv.Neighbours[p], name(nbv))
+		}
+	}
+
+	return rv, nil
 }
 
 func (n *valveNetwork) StartingPositions() []dijkstra.Position {
@@ -234,50 +281,4 @@ func (p elephantInTheRoom) Hashcode() [4]uint64 {
 	}
 
 	return rv
-}
-
-func readValveNetwork(ctx ch.AOContext, filename string) (*valveNetwork, error) {
-	lines, err := ctx.DataLines(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	rv := &valveNetwork{
-		NameMask:   make(map[uint16]uint64),
-		Flow:       make(map[uint16]int),
-		Neighbours: make(map[uint16][]uint16),
-	}
-
-	name := func(s string) uint16 {
-		return uint16(s[1])<<8 | uint16(s[0])
-	}
-
-	mask := uint64(1)
-
-	for _, line := range lines {
-		var n string
-		var r int
-		_, err := fmt.Sscanf(line, "Valve %2s has flow rate=%d;", &n, &r)
-		if err != nil {
-			ctx.Printf("Line: '%s'", line)
-			return nil, err
-		}
-
-		p := name(n)
-		rv.NameMask[p] = mask
-		if r > 0 {
-			rv.ValveRequirement |= mask
-			rv.MaxFlow += r
-			mask <<= 1
-		}
-		rv.Flow[p] = r
-		rv.Neighbours[p] = []uint16{}
-
-		j := strings.IndexByte(line, ';')
-		for _, nbv := range strings.Split(strings.TrimSpace(line[j+24:]), ", ") {
-			rv.Neighbours[p] = append(rv.Neighbours[p], name(nbv))
-		}
-	}
-
-	return rv, nil
 }
