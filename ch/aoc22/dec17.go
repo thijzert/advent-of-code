@@ -8,16 +8,13 @@ import (
 
 func Dec17a(ctx ch.AOContext) (interface{}, error) {
 	return dec17(ctx, 2022)
-	return dec17(ctx, 1000000000)
 }
 
-var Dec17b ch.AdventFunc = nil
+func Dec17b(ctx ch.AOContext) (interface{}, error) {
+	return dec17(ctx, 1000000000000)
+}
 
-// func Dec17b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
-
-func dec17(ctx ch.AOContext, MAXROCKS int) (interface{}, error) {
+func dec17(ctx ch.AOContext, MAXROCKS int64) (interface{}, error) {
 	gasjets, err := ctx.DataLines("inputs/2022/dec17.txt")
 	if err != nil {
 		return nil, err
@@ -38,11 +35,25 @@ func dec17(ctx ch.AOContext, MAXROCKS int) (interface{}, error) {
 		return 0
 	})
 
-	towerHeight := 0
+	type lookingBack struct {
+		RockIndex    int
+		JetIndex     int
+		LandingSpots [40]cube.Point
+	}
+	type rockState struct {
+		RocksFallen int64
+		TowerHeight int64
+	}
+
+	seenBefore := make(map[lookingBack]rockState)
+	lb := lookingBack{}
+	skip, lengthExtension := int64(0), int64(0)
+
+	towerHeight := int64(0)
 	j := 0
-	for r := 0; r < MAXROCKS; r++ {
+	for r := 0; skip+int64(r) < MAXROCKS; r++ {
 		rock := rocks[r%len(rocks)]
-		offset := cube.Point{3, towerHeight + rock.Height + 3}
+		offset := cube.Point{3, int(towerHeight) + rock.Height + 3}
 
 		for {
 			tryX := offset.X + 1
@@ -64,15 +75,38 @@ func dec17(ctx ch.AOContext, MAXROCKS int) (interface{}, error) {
 			offset.Y--
 		}
 
+		lb.RockIndex = r % len(rocks)
+		lb.JetIndex = j
+		copy(lb.LandingSpots[1:], lb.LandingSpots[:len(lb.LandingSpots)-1])
+		lb.LandingSpots[0] = cube.Point{offset.X, offset.Y - int(towerHeight)}
+
 		tunnel.Sprite(rock, rock, offset.X, HEIGHT-offset.Y-1)
-		if offset.Y > towerHeight {
-			towerHeight = offset.Y
+		if int64(offset.Y) > towerHeight {
+			towerHeight = int64(offset.Y)
 		}
-		if r&0xfff == 0 {
-			ctx.Printf("block y: %d, offset y: %d, tower height: %d", offset.Y, tunnel.OffsetY, towerHeight)
+		if r&0xff == 0 {
+			ctx.Printf("after %d rocks: tower height: %d", r+1, towerHeight)
 		}
 
-		if towerHeight+tunnel.OffsetY > HEIGHT-20 {
+		if skip != 0 {
+		} else if st, ok := seenBefore[lb]; ok {
+			num, den := towerHeight-st.TowerHeight, int64(r)-st.RocksFallen
+			n := (MAXROCKS - int64(r)) / den
+			if n > 0 {
+				skip = den * n
+				lengthExtension = num * n
+				ctx.Printf("I've seen this one before, after rock %d", st.RocksFallen)
+				ctx.Printf("Seems that for every %d rocks, the tower gets %d spaces bigger.", den, num)
+				ctx.Printf("I should skip %d rocks and add %d to the tower height at the end", skip, lengthExtension)
+			}
+		} else if r > len(lb.LandingSpots) {
+			seenBefore[lb] = rockState{
+				RocksFallen: int64(r),
+				TowerHeight: towerHeight,
+			}
+		}
+
+		if towerHeight+int64(tunnel.OffsetY) > int64(HEIGHT-20) {
 			shiftLines := 3
 			tunnel.OffsetY -= shiftLines
 			copy(tunnel.Contents[shiftLines*WIDTH:], tunnel.Contents[:len(tunnel.Contents)-shiftLines*WIDTH])
@@ -81,7 +115,7 @@ func dec17(ctx ch.AOContext, MAXROCKS int) (interface{}, error) {
 	}
 	ctx.Printf("\n%s", tunnel)
 
-	return towerHeight, nil
+	return towerHeight + lengthExtension, nil
 }
 
 func fallingRocks() []*image.Image {
