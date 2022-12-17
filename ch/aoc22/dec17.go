@@ -7,6 +7,17 @@ import (
 )
 
 func Dec17a(ctx ch.AOContext) (interface{}, error) {
+	return dec17(ctx, 2022)
+	return dec17(ctx, 1000000000)
+}
+
+var Dec17b ch.AdventFunc = nil
+
+// func Dec17b(ctx ch.AOContext) (interface{}, error) {
+// 	return nil, errNotImplemented
+// }
+
+func dec17(ctx ch.AOContext, MAXROCKS int) (interface{}, error) {
 	gasjets, err := ctx.DataLines("inputs/2022/dec17.txt")
 	if err != nil {
 		return nil, err
@@ -19,7 +30,7 @@ func Dec17a(ctx ch.AOContext) (interface{}, error) {
 		ctx.Printf("\n%s", b)
 	}
 
-	HEIGHT, WIDTH := 4000, 9
+	HEIGHT, WIDTH := 80, 9
 	tunnel := image.NewImage(WIDTH, HEIGHT, func(x, y int) int {
 		if x == 0 || x == WIDTH-1 || y == HEIGHT-1 {
 			return 2
@@ -27,7 +38,6 @@ func Dec17a(ctx ch.AOContext) (interface{}, error) {
 		return 0
 	})
 
-	MAXROCKS := 2022
 	towerHeight := 0
 	j := 0
 	for r := 0; r < MAXROCKS; r++ {
@@ -58,18 +68,21 @@ func Dec17a(ctx ch.AOContext) (interface{}, error) {
 		if offset.Y > towerHeight {
 			towerHeight = offset.Y
 		}
-		ctx.Printf("offset y: %d, tower height: %d", offset.Y, towerHeight)
+		if r&0xfff == 0 {
+			ctx.Printf("block y: %d, offset y: %d, tower height: %d", offset.Y, tunnel.OffsetY, towerHeight)
+		}
+
+		if towerHeight+tunnel.OffsetY > HEIGHT-20 {
+			shiftLines := 3
+			tunnel.OffsetY -= shiftLines
+			copy(tunnel.Contents[shiftLines*WIDTH:], tunnel.Contents[:len(tunnel.Contents)-shiftLines*WIDTH])
+			//ctx.Printf("\n%s", tunnel)
+		}
 	}
-	//ctx.Printf("\n%s", tunnel)
+	ctx.Printf("\n%s", tunnel)
 
 	return towerHeight, nil
 }
-
-var Dec17b ch.AdventFunc = nil
-
-// func Dec17b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
 
 func fallingRocks() []*image.Image {
 	return []*image.Image{

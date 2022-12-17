@@ -5,9 +5,10 @@ type Runemap func(rune) int
 type ImageFunc func(int, int) int
 
 type Image struct {
-	Width, Height int
-	Contents      []int
-	Default       int
+	Width, Height    int
+	OffsetX, OffsetY int
+	Contents         []int
+	Default          int
 }
 
 func NewImage(width, height int, f ImageFunc) *Image {
@@ -59,7 +60,7 @@ func (i *Image) String() string {
 			rv += "\n"
 		}
 		for x := 0; x < i.Width; x++ {
-			rv += blocks(i.At(x, y), i.At(x, 1+y))
+			rv += blocks(i.At(i.OffsetX+x, i.OffsetY+y), i.At(i.OffsetX+x, i.OffsetY+1+y))
 		}
 	}
 
@@ -67,6 +68,8 @@ func (i *Image) String() string {
 }
 
 func (i *Image) At(x, y int) int {
+	x -= i.OffsetX
+	y -= i.OffsetY
 	if x < 0 || x >= i.Width || y < 0 || y >= i.Height {
 		return i.Default
 	}
@@ -75,6 +78,8 @@ func (i *Image) At(x, y int) int {
 }
 
 func (i *Image) Set(x, y, v int) {
+	x -= i.OffsetX
+	y -= i.OffsetY
 	if x < 0 || x >= i.Width || y < 0 || y >= i.Height {
 		return
 	}
