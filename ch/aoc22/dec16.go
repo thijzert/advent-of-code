@@ -32,14 +32,21 @@ func Dec16b(ctx ch.AOContext) (interface{}, error) {
 		return nil, err
 	}
 
+	for route, step := range network.Roadmap {
+		if route>>16 == 0x4141 {
+			ctx.Printf("From AA to %c%c: via %c%c", byte(route), byte(route>>8), byte(step), byte(step>>8))
+		}
+	}
+
 	network.ElephantInTheRoom = true
 
-	path, _, err := dijkstra.ShortestPath(network)
+	path, cost, err := dijkstra.ShortestPath(network)
 	if err != nil {
 		return nil, err
 	}
+	ctx.Printf("Pressure relieved: %d", 26*network.MaxFlow-cost)
 
-	tlast, plast := 0, 0
+	tlast := 0
 	pressureRelieved := 0
 	for _, p := range path {
 		ctx.Printf("%s", p)
@@ -49,9 +56,7 @@ func Dec16b(ctx ch.AOContext) (interface{}, error) {
 		}
 		pressureRelieved += (pp.FlowPerMinute) * (pp.Time - tlast)
 		tlast = pp.Time
-		plast = pp.FlowPerMinute
 	}
-	pressureRelieved -= plast
 
 	return pressureRelieved, nil
 }
@@ -60,10 +65,12 @@ type valveNetwork struct {
 	NameMask          map[uint16]uint64
 	Flow              map[uint16]int
 	Neighbours        map[uint16][]uint16
+	Destinations      []uint16
 	Roadmap           map[uint32]uint16
 	ValveRequirement  uint64
 	MaxFlow           int
 	ElephantInTheRoom bool
+	from, to          uint16
 }
 
 func readValveNetwork(ctx ch.AOContext, filename string) (*valveNetwork, error) {
@@ -76,14 +83,16 @@ func readValveNetwork(ctx ch.AOContext, filename string) (*valveNetwork, error) 
 		NameMask:   make(map[uint16]uint64),
 		Flow:       make(map[uint16]int),
 		Neighbours: make(map[uint16][]uint16),
+		Roadmap:    make(map[uint32]uint16),
 	}
 
 	name := func(s string) uint16 {
 		return uint16(s[1])<<8 | uint16(s[0])
 	}
 
-	mask := uint64(1)
+	rv.Destinations = []uint16{0x4141}
 
+	mask := uint64(1)
 	for _, line := range lines {
 		var n string
 		var r int
@@ -94,11 +103,12 @@ func readValveNetwork(ctx ch.AOContext, filename string) (*valveNetwork, error) 
 		}
 
 		p := name(n)
-		rv.NameMask[p] = mask
 		if r > 0 {
+			rv.NameMask[p] = mask
 			rv.ValveRequirement |= mask
 			rv.MaxFlow += r
 			mask <<= 1
+			rv.Destinations = append(rv.Destinations, p)
 		}
 		rv.Flow[p] = r
 		rv.Neighbours[p] = []uint16{}
@@ -109,10 +119,35 @@ func readValveNetwork(ctx ch.AOContext, filename string) (*valveNetwork, error) 
 		}
 	}
 
+	// Build road maps
+	for _, rv.from = range rv.Destinations {
+		for _, rv.to = range rv.Destinations {
+			if rv.to == rv.from {
+				continue
+			}
+			path, _, err := dijkstra.ShortestPath(rv)
+			if err != nil {
+				return nil, err
+			}
+			last := rv.from
+			for _, p := range path {
+				if pp, ok := p.(roadmapper); ok {
+					rv.Roadmap[uint32(last)<<16|uint32(rv.to)] = uint16(pp)
+					last = uint16(pp)
+				}
+			}
+		}
+	}
+	rv.from, rv.to = 0, 0
+
 	return rv, nil
 }
 
 func (n *valveNetwork) StartingPositions() []dijkstra.Position {
+	if n.from != 0 && n.to != 0 {
+		return []dijkstra.Position{roadmapper(n.from)}
+	}
+
 	if n.ElephantInTheRoom {
 		return []dijkstra.Position{elephantInTheRoom{
 			Position:      0x4141,
@@ -128,6 +163,29 @@ func (n *valveNetwork) StartingPositions() []dijkstra.Position {
 		Time:          1,
 		ValveMask:     0,
 	}}
+}
+
+type roadmapper uint16
+
+func (p roadmapper) Final(b dijkstra.Board) bool {
+	bb, ok := b.(*valveNetwork)
+	if !ok {
+		return false
+	}
+	return uint16(p) == bb.to
+}
+
+func (p roadmapper) Adjacent(b dijkstra.Board, totalCost int) dijkstra.AdjacencyIterator {
+	bb, ok := b.(*valveNetwork)
+	if !ok {
+		return dijkstra.DeadEnd()
+	}
+
+	adj := []dijkstra.Adj{}
+	for _, nb := range bb.Neighbours[uint16(p)] {
+		adj = append(adj, dijkstra.Adj{roadmapper(nb), 1})
+	}
+	return dijkstra.AdjacencyList(adj)
 }
 
 type valveConfiguration struct {
@@ -182,7 +240,9 @@ func (p valveConfiguration) Adjacent(b dijkstra.Board, totalCost int) dijkstra.A
 
 type elephantInTheRoom struct {
 	Position      uint16
+	Plan          uint16
 	Elephant      uint16
+	ElephantPlan  uint16
 	FlowPerMinute int
 	Time          int
 	ValveMask     uint64
@@ -191,12 +251,15 @@ type elephantInTheRoom struct {
 func (p elephantInTheRoom) String() string {
 	name := [2]byte{byte(p.Position), byte(p.Position >> 8)}
 	ename := [2]byte{byte(p.Elephant), byte(p.Elephant >> 8)}
+	plan := [2]byte{byte(p.Plan), byte(p.Plan >> 8)}
+	eplan := [2]byte{byte(p.ElephantPlan), byte(p.ElephantPlan >> 8)}
+	return fmt.Sprintf("t=%d: %s→%s/%s→%s, %x → %d", p.Time, name, plan, ename, eplan, p.ValveMask, p.FlowPerMinute)
 	return fmt.Sprintf("t=%d: %s/%s, %x → %d", p.Time, name, ename, p.ValveMask, p.FlowPerMinute)
 	return fmt.Sprintf("Minute %d: you are at valve %s, the elephant is at valve %s, valves %x are open releasing %d pressure", p.Time, name, ename, p.ValveMask, p.FlowPerMinute)
 }
 
 func (p elephantInTheRoom) Final(b dijkstra.Board) bool {
-	return p.Time == 27
+	return p.Time == 26
 }
 
 func (p elephantInTheRoom) Adjacent(b dijkstra.Board, totalCost int) dijkstra.AdjacencyIterator {
@@ -204,75 +267,128 @@ func (p elephantInTheRoom) Adjacent(b dijkstra.Board, totalCost int) dijkstra.Ad
 	if !ok {
 		return dijkstra.DeadEnd()
 	}
-	TIME := 27
-	if p.Time == TIME {
+	TIME := 26
+	if p.Time > TIME {
 		return dijkstra.DeadEnd()
 	}
 
-	//cost := bb.MaxFlow - p.FlowPerMinute
+	cost := bb.MaxFlow - p.FlowPerMinute
 
 	// Make a copy of p with the time advanced
 	pp := p
 	pp.Time += 1
 
 	if p.ValveMask == bb.ValveRequirement {
-		pp.Time = TIME
-		return dijkstra.AdjacencyList([]dijkstra.Adj{{pp, 0}})
+		//pp.Time = TIME
+		//return dijkstra.AdjacencyList([]dijkstra.Adj{{pp, 0}})
 	}
-
-	var youMoves, eMoves []elephantInTheRoom
 
 	// Positions if either you or the elephant opened a valve
 	adj := []dijkstra.Adj{}
 
+	var youMoves, eMoves []elephantInTheRoom
+
 	thisValve := bb.NameMask[p.Position]
-	if thisValve != 0 && p.ValveMask&thisValve == 0 && bb.Flow[p.Position] != 0 {
+	if p.Plan != 0 && p.Position == p.Plan && thisValve != 0 && p.ValveMask&thisValve == 0 {
 		q := pp
+		q.Plan = 0
 		q.ValveMask = q.ValveMask | thisValve
 		q.FlowPerMinute += bb.Flow[p.Position]
 		youMoves = append(youMoves, q)
-	}
-	thisValve = bb.NameMask[p.Elephant]
-	if thisValve != 0 && p.ValveMask&thisValve == 0 && bb.Flow[p.Elephant] != 0 {
+	} else if p.Plan != 0 && p.Position != p.Plan {
 		q := pp
+		q.Position = bb.Roadmap[uint32(p.Position)<<16|uint32(p.Plan)]
+		youMoves = append(youMoves, q)
+	} else {
+		for _, dst := range bb.Destinations {
+			if dst == pp.Position {
+				continue
+			}
+			if p.ValveMask&bb.NameMask[dst] != 0 {
+				continue
+			}
+			q := pp
+			q.Plan = dst
+			q.Position = bb.Roadmap[uint32(q.Position)<<16|uint32(q.Plan)]
+			youMoves = append(youMoves, q)
+		}
+		if len(youMoves) == 0 {
+			q := pp
+			q.Plan = 0
+			youMoves = append(youMoves, pp)
+		}
+	}
+
+	thisValve = bb.NameMask[p.Elephant]
+	if p.ElephantPlan != 0 && p.Elephant == p.ElephantPlan && thisValve != 0 && p.ValveMask&thisValve == 0 {
+		q := pp
+		q.ElephantPlan = 0
 		q.ValveMask = q.ValveMask | thisValve
 		q.FlowPerMinute += bb.Flow[p.Elephant]
 		eMoves = append(eMoves, q)
-	}
-
-	for _, nb := range bb.Neighbours[p.Position] {
+	} else if p.ElephantPlan != 0 && p.Elephant != p.ElephantPlan {
 		q := pp
-		q.Position = nb
-		youMoves = append(youMoves, q)
-	}
-	for _, nb := range bb.Neighbours[p.Elephant] {
-		q := pp
-		q.Elephant = nb
+		q.Elephant = bb.Roadmap[uint32(p.Elephant)<<16|uint32(p.ElephantPlan)]
 		eMoves = append(eMoves, q)
+	} else {
+		for _, dst := range bb.Destinations {
+			if dst == pp.Elephant {
+				continue
+			}
+			if p.ValveMask&bb.NameMask[dst] != 0 {
+				continue
+			}
+			q := pp
+			q.ElephantPlan = dst
+			q.Elephant = bb.Roadmap[uint32(q.Elephant)<<16|uint32(q.ElephantPlan)]
+			eMoves = append(eMoves, q)
+		}
+		if len(eMoves) == 0 {
+			q := pp
+			q.ElephantPlan = 0
+			eMoves = append(eMoves, q)
+		}
 	}
+	//if p.Time == 22 {
+	//	log.Printf("from %v (%d)", p, bb.ValveRequirement)
+	//	log.Printf("umoves: %v", youMoves)
+	//	log.Printf("emoves: %v", eMoves)
+	//}
 
 	for _, you := range youMoves {
 		for _, eleph := range eMoves {
+			//if p.Time == 22 {
+			//	log.Printf("combine {%v} and {%v}", you, eleph)
+			//}
 			if you.Position == eleph.Elephant && you.ValveMask == eleph.ValveMask {
-				continue
+				//continue
 			}
 			q := you
 			q.Elephant = eleph.Elephant
+			q.ElephantPlan = eleph.ElephantPlan
 			q.ValveMask = q.ValveMask | eleph.ValveMask
-			q.FlowPerMinute += eleph.FlowPerMinute - pp.FlowPerMinute
-			cost := (TIME - p.Time) * (bb.MaxFlow - q.FlowPerMinute)
+			//q.FlowPerMinute += eleph.FlowPerMinute - pp.FlowPerMinute
+			q.FlowPerMinute = 0
+			for nd, m := range bb.NameMask {
+				if q.ValveMask&m != 0 {
+					q.FlowPerMinute += bb.Flow[nd]
+				}
+			}
 			adj = append(adj, dijkstra.Adj{q, cost})
+			//if p.Time == 22 {
+			//	log.Printf("   → into {%v}", q)
+			//}
 		}
 	}
 
 	return dijkstra.AdjacencyList(adj)
 }
 
-func (p elephantInTheRoom) Hashcode() [4]uint64 {
+func (p elephantInTheRoom) Hushcode() [4]uint64 {
 	rv := [4]uint64{
 		uint64(p.Position)<<32 | uint64(p.Elephant),
 		p.ValveMask,
-		0,
+		uint64(p.Plan)<<32 | uint64(p.ElephantPlan),
 		0,
 	}
 
