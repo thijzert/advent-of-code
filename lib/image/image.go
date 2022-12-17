@@ -82,6 +82,26 @@ func (i *Image) Set(x, y, v int) {
 	i.Contents[i.Width*y+x] = v
 }
 
+func (i *Image) Sprite(sprite, mask *Image, offsetX, offsetY int) {
+	for y := 0; y < sprite.Height; y++ {
+		for x := 0; x < sprite.Width; x++ {
+			m := mask.At(x, y)
+			v := m*sprite.At(x, y) + (1-m)*i.At(offsetX+x, offsetY+y)
+			i.Set(offsetX+x, offsetY+y, v)
+		}
+	}
+}
+
+func (i *Image) MaskAt(mask *Image, x, y int) int {
+	rv := 0
+	for b := 0; b < mask.Height; b++ {
+		for a := 0; a < mask.Width; a++ {
+			rv += mask.At(a, b) * i.At(x+a, y+b)
+		}
+	}
+	return rv
+}
+
 func blocks(t, b int) string {
 	if t == b {
 		if t == 0 {
