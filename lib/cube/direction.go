@@ -20,6 +20,28 @@ func ParseDirection2D(dir string) (Point, bool) {
 	return Point{1, 0}, false
 }
 
+// Cardinal3D contains all cardinal directions in 3D space (right, forward, left, back, up, down)
+var Cardinal3D [6]Point3 = [6]Point3{{1, 0, 0}, {0, 1, 0}, {-1, 0, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}}
+
+// Cardinal3Diag contains all unit directions in 3D space, including diagonals and semidiagonals
+var Cardinal3Diag [26]Point3 = [26]Point3{
+	{1, 1, 1}, {0, 1, 1}, {-1, 1, 1}, {1, 0, 1}, {0, 0, 1}, {-1, 0, 1}, {1, -1, 1}, {0, -1, 1}, {-1, -1, 1},
+	{1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {-1, 1, 0}, {-1, 0, 0}, {-1, -1, 0}, {0, -1, 0}, {1, -1, 0},
+	{1, 1, -1}, {0, 1, -1}, {-1, 1, -1}, {1, 0, -1}, {0, 0, -1}, {-1, 0, -1}, {1, -1, -1}, {0, -1, -1}, {-1, -1, -1},
+}
+
+// ParseDirection3D returns a direction vector from a named direction, such as "L" or "DR"
+func ParseDirection3D(dir string) (Point3, bool) {
+	dir = strings.ToUpper(dir)
+	names := [12]string{"R", "F", "L", "B", "U", "D", "RIGHT", "FORWARD", "LEFT", "BACK", "UP", "DOWN"}
+	for i, s := range names {
+		if s == dir {
+			return Cardinal3Diag[i%len(Cardinal3Diag)], true
+		}
+	}
+	return Point3{1, 0, 0}, false
+}
+
 // A Walker represents a callback function to be passed to Walk(). If the
 // Walker returns true, the Walk is aborted before reaching the boundaries
 type Walker func(p Point) bool
