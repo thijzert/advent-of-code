@@ -31,7 +31,33 @@ func Dec16a(ctx ch.AOContext) (interface{}, error) {
 }
 
 func Dec16b(ctx ch.AOContext) (interface{}, error) {
-	return nil, errNotImplemented
+	network, err := readValveNetwork(ctx, "inputs/2022/dec16.txt")
+	if err != nil {
+		return nil, err
+	}
+
+	//ctx.Printf("Network: %v", network)
+	m := make(maskMap)
+	fillMaskMap(m, network, 26, 0, "AA", "AA", 0)
+	ctx.Printf("%d paths examined", len(m))
+
+	max := 0
+	uPath, ePath := "", ""
+	for uMask, uP := range m {
+		for eMask, eP := range m {
+			if uMask&eMask != 0 {
+				continue
+			}
+			if uP.PressureRelieved+eP.PressureRelieved > max {
+				max = uP.PressureRelieved + eP.PressureRelieved
+				uPath = uP.Path
+				ePath = eP.Path
+			}
+		}
+	}
+	ctx.Printf("Best path: %s and %s", uPath, ePath)
+
+	return max, nil
 }
 
 type valvePath struct {
