@@ -63,6 +63,18 @@ func (a Interval) FullyContains(b Interval) bool {
 	return b.A >= a.A && b.A <= a.B && b.B >= a.A && b.B <= a.B
 }
 
+// UpdatedBound returns an updated interval that contains the original Interval
+// as well as the new point
+func (a Interval) UpdatedBound(p int) Interval {
+	if p <= a.A {
+		a.A = p
+	}
+	if p >= a.B {
+		a.B = p
+	}
+	return a
+}
+
 func iabs(x int) int {
 	if x < 0 {
 		return -x

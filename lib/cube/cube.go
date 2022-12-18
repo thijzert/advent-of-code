@@ -38,6 +38,10 @@ type Cube struct {
 	X, Y, Z Interval
 }
 
+func (a Cube) Volume() int {
+	return a.X.Length() * a.Y.Length() * a.Z.Length()
+}
+
 func (a Cube) Contains(p Point3) bool {
 	return a.X.Contains(p.X) && a.Y.Contains(p.Y) && a.Z.Contains(p.Z)
 }
@@ -63,4 +67,13 @@ func (a Cube) Overlap(b Cube) (Cube, bool) {
 
 func (a Cube) FullyContains(b Cube) bool {
 	return a.X.FullyContains(b.X) && a.Y.FullyContains(b.Y) && a.Z.FullyContains(b.Z)
+}
+
+// UpdatedBound returns an updated interval that contains the original Interval
+// as well as the new point
+func (a Cube) UpdatedBound(p Point3) Cube {
+	a.X = a.X.UpdatedBound(p.X)
+	a.Y = a.Y.UpdatedBound(p.Y)
+	a.Z = a.Z.UpdatedBound(p.Z)
+	return a
 }

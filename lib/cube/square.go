@@ -35,6 +35,10 @@ type Square struct {
 	X, Y Interval
 }
 
+func (a Square) Area() int {
+	return a.X.Length() * a.Y.Length()
+}
+
 func (a Square) Contains(p Point) bool {
 	return a.X.Contains(p.X) && a.Y.Contains(p.Y)
 }
@@ -55,4 +59,12 @@ func (a Square) Overlap(b Square) (Square, bool) {
 
 func (a Square) FullyContains(b Square) bool {
 	return a.X.FullyContains(b.X) && a.Y.FullyContains(b.Y)
+}
+
+// UpdatedBound returns an updated interval that contains the original Interval
+// as well as the new point
+func (a Square) UpdatedBound(p Point) Square {
+	a.X = a.X.UpdatedBound(p.X)
+	a.Y = a.Y.UpdatedBound(p.Y)
+	return a
 }

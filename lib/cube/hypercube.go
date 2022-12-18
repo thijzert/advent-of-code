@@ -37,6 +37,10 @@ type Hypercube struct {
 	X, Y, Z, W Interval
 }
 
+func (a Hypercube) Hypervolume() int {
+	return a.X.Length() * a.Y.Length() * a.Z.Length() * a.W.Length()
+}
+
 func (a Hypercube) Contains(p Point4) bool {
 	return a.X.Contains(p.X) && a.Y.Contains(p.Y) && a.Z.Contains(p.Z) && a.W.Contains(p.W)
 }
@@ -67,4 +71,14 @@ func (a Hypercube) Overlap(b Hypercube) (Hypercube, bool) {
 
 func (a Hypercube) FullyContains(b Hypercube) bool {
 	return a.X.FullyContains(b.X) && a.Y.FullyContains(b.Y) && a.Z.FullyContains(b.Z)
+}
+
+// UpdatedBound returns an updated interval that contains the original Interval
+// as well as the new point
+func (a Hypercube) UpdatedBound(p Point4) Hypercube {
+	a.X = a.X.UpdatedBound(p.X)
+	a.Y = a.Y.UpdatedBound(p.Y)
+	a.Z = a.Z.UpdatedBound(p.Z)
+	a.W = a.W.UpdatedBound(p.W)
+	return a
 }
