@@ -44,9 +44,35 @@ func runIntCodeProgram(program []int, input []int, output []int) (int, int, int,
 			inputPtr++
 			pc += 2
 		} else if opcode == 4 {
-			output[outputPtr] = get(pc+1, modeB)
+			output[outputPtr] = get(pc+1, modeA)
 			outputPtr++
 			pc += 2
+		} else if opcode == 5 {
+			if get(pc+1, modeA) != 0 {
+				pc = get(pc+2, modeB)
+			} else {
+				pc += 3
+			}
+		} else if opcode == 6 {
+			if get(pc+1, modeA) == 0 {
+				pc = get(pc+2, modeB)
+			} else {
+				pc += 3
+			}
+		} else if opcode == 7 {
+			v := 0
+			if get(pc+1, modeA) < get(pc+2, modeB) {
+				v = 1
+			}
+			set(pc+3, modeC, v)
+			pc += 4
+		} else if opcode == 8 {
+			v := 0
+			if get(pc+1, modeA) == get(pc+2, modeB) {
+				v = 1
+			}
+			set(pc+3, modeC, v)
+			pc += 4
 		} else {
 			return 0, inputPtr, outputPtr, fmt.Errorf("Undefined opcode %d", opcode)
 		}
