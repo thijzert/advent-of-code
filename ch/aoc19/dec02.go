@@ -15,7 +15,7 @@ func Dec02a(ctx ch.AOContext) (interface{}, error) {
 	program[1] = 12
 	program[2] = 2
 
-	ans, err := runIntCodeProgram(program, nil, nil)
+	ans, _, _, err := runIntCodeProgram(program, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func Dec02b(ctx ch.AOContext) (interface{}, error) {
 			program[1] = noun
 			program[2] = verb
 
-			ans, err := runIntCodeProgram(program, nil, nil)
+			ans, _, _, err := runIntCodeProgram(program, nil, nil)
 			if err == nil && ans == target {
 				return 100*noun + verb, nil
 			}
