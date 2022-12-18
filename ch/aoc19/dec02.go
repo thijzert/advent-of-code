@@ -1,8 +1,6 @@
 package aoc19
 
 import (
-	"fmt"
-
 	"github.com/thijzert/advent-of-code/ch"
 )
 
@@ -17,7 +15,7 @@ func Dec02a(ctx ch.AOContext) (interface{}, error) {
 	program[1] = 12
 	program[2] = 2
 
-	ans, err := runIntCodeProgram(program)
+	ans, err := runIntCodeProgram(program, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +38,7 @@ func Dec02b(ctx ch.AOContext) (interface{}, error) {
 			program[1] = noun
 			program[2] = verb
 
-			ans, err := runIntCodeProgram(program)
+			ans, err := runIntCodeProgram(program, nil, nil)
 			if err == nil && ans == target {
 				return 100*noun + verb, nil
 			}
@@ -48,24 +46,4 @@ func Dec02b(ctx ch.AOContext) (interface{}, error) {
 	}
 
 	return nil, errFailed
-}
-
-func runIntCodeProgram(program []int) (int, error) {
-	memory := make([]int, len(program))
-	copy(memory, program)
-
-	pc := 0
-	for pc >= 0 && pc <= len(memory) && memory[pc] != 99 {
-		if memory[pc] == 1 {
-			memory[memory[pc+3]] = memory[memory[pc+1]] + memory[memory[pc+2]]
-			pc += 4
-		} else if memory[pc] == 2 {
-			memory[memory[pc+3]] = memory[memory[pc+1]] * memory[memory[pc+2]]
-			pc += 4
-		} else {
-			return 0, fmt.Errorf("Undefined opcode %d", memory[pc])
-		}
-	}
-
-	return memory[0], nil
 }
