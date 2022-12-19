@@ -2,7 +2,6 @@ package aoc22
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/thijzert/advent-of-code/ch"
 )
@@ -13,31 +12,17 @@ func Dec19a(ctx ch.AOContext) (interface{}, error) {
 		return nil, err
 	}
 
-	ipts, opts := make(chan int), make(chan int)
-	go func() {
-		rv := 0
-		for i := range ipts {
-			rv += i
-		}
-		opts <- rv
-	}()
-
-	var wg sync.WaitGroup
+	rv := 0
 	for i, blp := range recipes {
-		wg.Add(1)
-		go func(i int, blp botRecipe) {
-			var startingBots resourceState
-			startingBots[ORE] = 1
-			m := mostGeodes(blp, resourceState{}, startingBots, 24)
-			ctx.Printf("recipe %d: can crack %d geodes; quality=%d", i, m, i*m[GEODE])
-			ipts <- i * m[GEODE]
-			wg.Done()
-		}(i+1, blp)
+		i++
+		var startingBots resourceState
+		startingBots[ORE] = 1
+		m := mostGeodes(blp, resourceState{}, startingBots, 24)
+		ctx.Printf("recipe %d: can crack %d geodes; quality=%d", i, m, i*m[GEODE])
+		rv += i * m[GEODE]
 	}
-	wg.Wait()
-	close(ipts)
 
-	return <-opts, nil
+	return rv, nil
 }
 
 func Dec19b(ctx ch.AOContext) (interface{}, error) {
@@ -49,31 +34,17 @@ func Dec19b(ctx ch.AOContext) (interface{}, error) {
 		recipes = recipes[:3]
 	}
 
-	ipts, opts := make(chan int), make(chan int)
-	go func() {
-		rv := 1
-		for i := range ipts {
-			rv *= i
-		}
-		opts <- rv
-	}()
-
-	var wg sync.WaitGroup
+	rv := 1
 	for i, blp := range recipes {
-		wg.Add(1)
-		go func(i int, blp botRecipe) {
-			var startingBots resourceState
-			startingBots[ORE] = 1
-			m := mostGeodes(blp, resourceState{}, startingBots, 32)
-			ctx.Printf("recipe %d: can crack %d geodes", i+1, m)
-			ipts <- m[GEODE]
-			wg.Done()
-		}(i, blp)
+		i++
+		var startingBots resourceState
+		startingBots[ORE] = 1
+		m := mostGeodes(blp, resourceState{}, startingBots, 32)
+		ctx.Printf("recipe %d: can crack %d geodes", i, m)
+		rv *= m[GEODE]
 	}
-	wg.Wait()
-	close(ipts)
 
-	return <-opts, nil
+	return rv, nil
 }
 
 func readBotRecipes(ctx ch.AOContext, name string) ([]botRecipe, error) {
