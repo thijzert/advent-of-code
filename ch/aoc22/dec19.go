@@ -61,6 +61,14 @@ func readBotRecipes(ctx ch.AOContext, name string) ([]botRecipe, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		for i := 0; i < RESLENGTH; i++ {
+			for j := 0; j < RESLENGTH; j++ {
+				if blp[RESLENGTH][j] < blp[i][j] && i != j {
+					blp[RESLENGTH][j] = blp[i][j]
+				}
+			}
+		}
 		ctx.Printf("recipe %d: %v", i, blp)
 		rv = append(rv, blp)
 	}
@@ -89,7 +97,7 @@ func (a resourceState) more(b resourceState) bool {
 	return false
 }
 
-type botRecipe [RESLENGTH][RESLENGTH]int
+type botRecipe [RESLENGTH + 1][RESLENGTH]int
 
 func mostGeodes(recipe botRecipe, resources, bots resourceState, timeRemaining int) resourceState {
 	nr := resources
@@ -98,8 +106,12 @@ func mostGeodes(recipe botRecipe, resources, bots resourceState, timeRemaining i
 	}
 	max := nr
 
+	maxBots := recipe[RESLENGTH]
 	//for b, cost := range recipe {
 	for b := RESLENGTH - 1; b >= 0; b-- {
+		if maxBots[b] > 0 && bots[b] >= maxBots[b] {
+			continue
+		}
 		cost := recipe[b]
 		steps := 0
 		canBuild := true
