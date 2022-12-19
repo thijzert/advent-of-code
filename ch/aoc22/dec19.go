@@ -7,12 +7,53 @@ import (
 )
 
 func Dec19a(ctx ch.AOContext) (interface{}, error) {
-	lines, err := ctx.DataLines("inputs/2022/dec19.txt")
+	recipes, err := readBotRecipes(ctx, "inputs/2022/dec19.txt")
 	if err != nil {
 		return nil, err
 	}
 
 	rv := 0
+	for i, blp := range recipes {
+		i++
+		var startingBots resourceState
+		startingBots[ORE] = 1
+		m := mostGeodes(blp, resourceState{}, startingBots, 24)
+		ctx.Printf("recipe %d: can crack %d geodes; quality=%d", i, m, i*m[GEODE])
+		rv += i * m[GEODE]
+	}
+
+	return rv, nil
+}
+
+func Dec19b(ctx ch.AOContext) (interface{}, error) {
+	recipes, err := readBotRecipes(ctx, "inputs/2022/dec19.txt")
+	if err != nil {
+		return nil, err
+	}
+	if len(recipes) > 3 {
+		recipes = recipes[:3]
+	}
+
+	rv := 1
+	for i, blp := range recipes {
+		i++
+		var startingBots resourceState
+		startingBots[ORE] = 1
+		m := mostGeodes(blp, resourceState{}, startingBots, 32)
+		ctx.Printf("recipe %d: can crack %d geodes", i, m)
+		rv *= m[GEODE]
+	}
+
+	return rv, nil
+}
+
+func readBotRecipes(ctx ch.AOContext, name string) ([]botRecipe, error) {
+	lines, err := ctx.DataLines(name)
+	if err != nil {
+		return nil, err
+	}
+
+	rv := []botRecipe{}
 	for _, line := range lines {
 		var i int
 		var blp botRecipe
@@ -21,12 +62,7 @@ func Dec19a(ctx ch.AOContext) (interface{}, error) {
 			return nil, err
 		}
 		ctx.Printf("recipe %d: %v", i, blp)
-
-		var startingBots resourceState
-		startingBots[ORE] = 1
-		m := mostGeodes(blp, resourceState{}, startingBots, 24)
-		ctx.Printf("recipe %d: can crack %d geodes; quality=%d", i, m, i*m[GEODE])
-		rv += i * m[GEODE]
+		rv = append(rv, blp)
 	}
 
 	return rv, nil
@@ -95,9 +131,3 @@ func mostGeodes(recipe botRecipe, resources, bots resourceState, timeRemaining i
 	}
 	return max
 }
-
-var Dec19b ch.AdventFunc = nil
-
-// func Dec19b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
