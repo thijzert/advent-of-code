@@ -7,6 +7,14 @@ import (
 )
 
 func Dec20a(ctx ch.AOContext) (interface{}, error) {
+	return decryptCoordinates(ctx, 1, 1)
+}
+
+func Dec20b(ctx ch.AOContext) (interface{}, error) {
+	return decryptCoordinates(ctx, 811589153, 10)
+}
+
+func decryptCoordinates(ctx ch.AOContext, encryptionKey int, mixTimes int) (interface{}, error) {
 	ints, err := ctx.DataAsInts("inputs/2022/dec20.txt")
 	if err != nil {
 		return nil, err
@@ -17,7 +25,7 @@ func Dec20a(ctx ch.AOContext) (interface{}, error) {
 	nodes := make([]*dll, len(ints))
 
 	for i, v := range ints {
-		nd := &dll{V: v}
+		nd := &dll{V: v * encryptionKey}
 		nodes[i] = nd
 		if i == 0 {
 			nd.Prev, nd.Next = nd, nd
@@ -31,10 +39,12 @@ func Dec20a(ctx ch.AOContext) (interface{}, error) {
 	}
 
 	ctx.Printf("initial arrangement: %s", head)
-	for _, nd := range nodes {
-		nd.Move(nd.V)
-		ctx.Printf("%d moves between %d and %d", nd.V, nd.Prev.V, nd.Next.V)
-		//ctx.Printf("%s", head)
+	for j := 0; j < mixTimes; j++ {
+		for _, nd := range nodes {
+			nd.Move(nd.V % (len(nodes) - 1))
+			ctx.Printf("%d moves between %d and %d", nd.V, nd.Prev.V, nd.Next.V)
+			//ctx.Printf("%s", head)
+		}
 	}
 	ctx.Printf("final arrangement: %s", head)
 
@@ -50,12 +60,6 @@ func Dec20a(ctx ch.AOContext) (interface{}, error) {
 	}
 	return rv, nil
 }
-
-var Dec20b ch.AdventFunc = nil
-
-// func Dec20b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
 
 type dll struct {
 	Prev *dll
