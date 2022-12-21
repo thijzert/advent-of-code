@@ -34,11 +34,37 @@ func Dec21a(ctx ch.AOContext) (interface{}, error) {
 	return monkeys["root"].Answer, nil
 }
 
-var Dec21b ch.AdventFunc = nil
+func Dec21b(ctx ch.AOContext) (interface{}, error) {
+	monkeys, err := readMonkeyMath(ctx)
+	if err != nil {
+		return nil, err
+	}
+	mm := monkeys["root"]
+	mm.Operation = '='
+	monkeys["root"] = mm
 
-// func Dec21b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
+	// Always mount a few of these
+	scratchMonkeys := make(map[string]monkeyMath)
+	for k, mm := range monkeys {
+		scratchMonkeys[k] = mm
+	}
+
+	finalAnswer, err := solveMonkeyMath(ctx, monkeys, "root", "humn")
+	if err != nil {
+		return nil, err
+	}
+
+	mm = scratchMonkeys["humn"]
+	mm.Answer = finalAnswer
+	scratchMonkeys["humn"] = mm
+
+	err = applyAllMonkeyMath(scratchMonkeys)
+	if err != nil {
+		return nil, err
+	}
+
+	return finalAnswer, nil
+}
 
 type monkeyMath struct {
 	AnswerKnown bool
@@ -102,6 +128,18 @@ func readMonkeyMath(ctx ch.AOContext) (map[string]monkeyMath, error) {
 	return monkeys, nil
 }
 
+func applyAllMonkeyMath(monkeys map[string]monkeyMath) error {
+	var err error
+	changed := 1
+	for changed > 0 {
+		changed, err = applyMonkeyMath(monkeys)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func applyMonkeyMath(monkeys map[string]monkeyMath) (int, error) {
 	changed := 0
 	for k, mm := range monkeys {
@@ -112,10 +150,10 @@ func applyMonkeyMath(monkeys map[string]monkeyMath) (int, error) {
 		var lhs, rhs monkeyMath
 		var ok bool
 		if lhs, ok = monkeys[mm.LHS]; !ok {
-			return changed, fmt.Errorf("monkey '%s' not found")
+			continue
 		}
 		if rhs, ok = monkeys[mm.RHS]; !ok {
-			return changed, fmt.Errorf("monkey '%s' not found")
+			continue
 		}
 		if lhs.AnswerKnown && rhs.AnswerKnown {
 			mm.AnswerKnown = true
@@ -127,6 +165,11 @@ func applyMonkeyMath(monkeys map[string]monkeyMath) (int, error) {
 				mm.Answer = lhs.Answer * rhs.Answer
 			} else if mm.Operation == '/' {
 				mm.Answer = lhs.Answer / rhs.Answer
+			} else if mm.Operation == '=' {
+				mm.Answer = 1
+				if lhs.Answer != rhs.Answer {
+					return changed, fmt.Errorf("Equation failed: %d ≠ %d", lhs.Answer, rhs.Answer)
+				}
 			} else {
 				return changed, fmt.Errorf("Invalid operation '%c' (0x%2x)", mm.Operation, mm.Operation)
 			}
@@ -135,4 +178,93 @@ func applyMonkeyMath(monkeys map[string]monkeyMath) (int, error) {
 		}
 	}
 	return changed, nil
+}
+
+func hasMonkeyVariable(monkeys map[string]monkeyMath, expr, forvar string) bool {
+	if expr == forvar {
+		return true
+	}
+	mm, ok := monkeys[expr]
+	if !ok {
+		return false
+	}
+
+	return hasMonkeyVariable(monkeys, mm.LHS, forvar) || hasMonkeyVariable(monkeys, mm.RHS, forvar)
+}
+
+func solveMonkeyMath(ctx ch.AOContext, monkeys map[string]monkeyMath, eq, forvar string) (int, error) {
+	mm, ok := monkeys[eq]
+	if !ok {
+		return 0, fmt.Errorf("cannot find root expression '%s'", eq)
+	}
+
+	if hasMonkeyVariable(monkeys, mm.RHS, forvar) {
+		mm.LHS, mm.RHS = mm.RHS, mm.LHS
+		monkeys[eq] = mm
+	}
+	delete(monkeys, forvar)
+
+	err := applyAllMonkeyMath(monkeys)
+	if err != nil {
+		return 0, err
+	}
+	for mm.LHS != forvar {
+		mmLHS := mm.LHS
+		ctx.Print(printMonkeyExpr(monkeys, eq, forvar))
+		ctx.Printf("%v %v %v", mm, monkeys[mm.LHS], monkeys[mm.RHS])
+		lhs := monkeys[mm.LHS]
+		if !hasMonkeyVariable(monkeys, lhs.RHS, forvar) {
+			t := mm.RHS
+			mm.RHS = mm.LHS
+			mm.LHS = lhs.LHS
+			lhs.LHS = t
+		} else {
+			t := mm.RHS
+			mm.RHS = mm.LHS
+			mm.LHS = lhs.RHS
+			lhs.RHS = t
+			if lhs.Operation == '*' || lhs.Operation == '+' {
+				lhs.LHS, lhs.RHS = lhs.RHS, lhs.LHS
+			}
+		}
+
+		if lhs.Operation == '+' {
+			lhs.Operation = '-'
+		} else if lhs.Operation == '-' {
+			lhs.Operation = '+'
+		} else if lhs.Operation == '*' {
+			lhs.Operation = '/'
+		} else if lhs.Operation == '/' {
+			lhs.Operation = '*'
+		} else {
+			return 0, errFailed
+		}
+		monkeys[mmLHS] = lhs
+		monkeys[eq] = mm
+		//ctx.Printf("%v %v %v", mm, monkeys[mm.LHS], monkeys[mm.RHS])
+	}
+	ctx.Print(printMonkeyExpr(monkeys, eq, forvar))
+
+	err = applyAllMonkeyMath(monkeys)
+	if err != nil {
+		return 0, err
+	}
+	ctx.Print(printMonkeyExpr(monkeys, eq, forvar))
+
+	if !monkeys[monkeys[eq].RHS].AnswerKnown {
+		return 0, errFailed
+	}
+
+	return monkeys[monkeys[eq].RHS].Answer, nil
+}
+
+func printMonkeyExpr(monkeys map[string]monkeyMath, expr, forvar string) string {
+	if expr == forvar {
+		return "X"
+	}
+	mm := monkeys[expr]
+	if mm.AnswerKnown {
+		return fmt.Sprintf("%d", mm.Answer)
+	}
+	return fmt.Sprintf("(%s %c %s)", printMonkeyExpr(monkeys, mm.LHS, forvar), mm.Operation, printMonkeyExpr(monkeys, mm.RHS, forvar))
 }
