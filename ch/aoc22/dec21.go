@@ -2,6 +2,7 @@ package aoc22
 
 import (
 	"fmt"
+	"math/big"
 
 	"github.com/thijzert/advent-of-code/ch"
 )
@@ -46,6 +47,10 @@ func Dec21b(ctx ch.AOContext) (interface{}, error) {
 	// Always mount a few of these
 	scratchMonkeys := make(map[string]monkeyMath)
 	for k, mm := range monkeys {
+		sc := mm
+		if mm.Answer != nil {
+			sc.Answer = big.NewInt(0).Set(mm.Answer)
+		}
 		scratchMonkeys[k] = mm
 	}
 
@@ -68,7 +73,7 @@ func Dec21b(ctx ch.AOContext) (interface{}, error) {
 
 type monkeyMath struct {
 	AnswerKnown bool
-	Answer      int
+	Answer      *big.Int
 	Operation   rune
 	LHS, RHS    string
 }
@@ -112,9 +117,11 @@ func readMonkeyMath(ctx ch.AOContext) (map[string]monkeyMath, error) {
 	for _, line := range lines {
 		var mm monkeyMath
 		var k string
-		_, err := fmt.Sscanf(line, "%4s: %d", &k, &mm.Answer)
+		var n int64
+		_, err := fmt.Sscanf(line, "%4s: %d", &k, &n)
 		if err == nil {
 			mm.AnswerKnown = true
+			mm.Answer = big.NewInt(n)
 		} else {
 			_, err = fmt.Sscanf(line, "%4s: %4s %c %4s", &k, &mm.LHS, &mm.Operation, &mm.RHS)
 			if err != nil {
@@ -147,29 +154,35 @@ func applyMonkeyMath(monkeys map[string]monkeyMath) (int, error) {
 			continue
 		}
 
+		if mm.Operation == '~' {
+			//log.Printf("checking %s: %v", mm, monkeys[mm.RHS])
+		}
+
 		var lhs, rhs monkeyMath
 		var ok bool
-		if lhs, ok = monkeys[mm.LHS]; !ok {
+		if lhs, ok = monkeys[mm.LHS]; mm.Operation != '~' && !ok {
 			continue
 		}
 		if rhs, ok = monkeys[mm.RHS]; !ok {
 			continue
 		}
-		if lhs.AnswerKnown && rhs.AnswerKnown {
+		if (lhs.AnswerKnown || mm.Operation == '~') && rhs.AnswerKnown {
 			mm.AnswerKnown = true
 			if mm.Operation == '+' {
-				mm.Answer = lhs.Answer + rhs.Answer
+				mm.Answer = big.NewInt(0).Add(lhs.Answer, rhs.Answer)
 			} else if mm.Operation == '-' {
-				mm.Answer = lhs.Answer - rhs.Answer
+				mm.Answer = big.NewInt(0).Sub(lhs.Answer, rhs.Answer)
 			} else if mm.Operation == '*' {
-				mm.Answer = lhs.Answer * rhs.Answer
+				mm.Answer = big.NewInt(0).Mul(lhs.Answer, rhs.Answer)
 			} else if mm.Operation == '/' {
-				mm.Answer = lhs.Answer / rhs.Answer
+				mm.Answer = big.NewInt(0).Div(lhs.Answer, rhs.Answer)
+			} else if mm.Operation == '~' {
+				mm.Answer = big.NewInt(0).Sub(big.NewInt(0), rhs.Answer)
 			} else if mm.Operation == '=' {
-				mm.Answer = 1
-				if lhs.Answer != rhs.Answer {
+				if lhs.Answer.Cmp(rhs.Answer) != 0 {
 					return changed, fmt.Errorf("Equation failed: %d ≠ %d", lhs.Answer, rhs.Answer)
 				}
+				mm.Answer = big.NewInt(1)
 			} else {
 				return changed, fmt.Errorf("Invalid operation '%c' (0x%2x)", mm.Operation, mm.Operation)
 			}
@@ -192,10 +205,10 @@ func hasMonkeyVariable(monkeys map[string]monkeyMath, expr, forvar string) bool 
 	return hasMonkeyVariable(monkeys, mm.LHS, forvar) || hasMonkeyVariable(monkeys, mm.RHS, forvar)
 }
 
-func solveMonkeyMath(ctx ch.AOContext, monkeys map[string]monkeyMath, eq, forvar string) (int, error) {
+func solveMonkeyMath(ctx ch.AOContext, monkeys map[string]monkeyMath, eq, forvar string) (*big.Int, error) {
 	mm, ok := monkeys[eq]
 	if !ok {
-		return 0, fmt.Errorf("cannot find root expression '%s'", eq)
+		return nil, fmt.Errorf("cannot find root expression '%s'", eq)
 	}
 
 	if hasMonkeyVariable(monkeys, mm.RHS, forvar) {
@@ -206,12 +219,11 @@ func solveMonkeyMath(ctx ch.AOContext, monkeys map[string]monkeyMath, eq, forvar
 
 	err := applyAllMonkeyMath(monkeys)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	for mm.LHS != forvar {
 		mmLHS := mm.LHS
 		ctx.Print(printMonkeyExpr(monkeys, eq, forvar))
-		ctx.Printf("%v %v %v", mm, monkeys[mm.LHS], monkeys[mm.RHS])
 		lhs := monkeys[mm.LHS]
 		if !hasMonkeyVariable(monkeys, lhs.RHS, forvar) {
 			t := mm.RHS
@@ -219,6 +231,19 @@ func solveMonkeyMath(ctx ch.AOContext, monkeys map[string]monkeyMath, eq, forvar
 			mm.LHS = lhs.LHS
 			lhs.LHS = t
 		} else {
+			if lhs.Operation == '-' {
+				lhs.LHS, lhs.RHS = lhs.RHS, lhs.LHS
+				negNode := monkeyMath{
+					Operation: '~',
+					RHS:       mm.RHS,
+				}
+				monkeys["-"+mm.RHS] = negNode
+				mm.RHS = "-" + mm.RHS
+				monkeys[eq] = mm
+				monkeys[mm.LHS] = lhs
+				continue
+			}
+
 			t := mm.RHS
 			mm.RHS = mm.LHS
 			mm.LHS = lhs.RHS
@@ -237,22 +262,21 @@ func solveMonkeyMath(ctx ch.AOContext, monkeys map[string]monkeyMath, eq, forvar
 		} else if lhs.Operation == '/' {
 			lhs.Operation = '*'
 		} else {
-			return 0, errFailed
+			return nil, errFailed
 		}
 		monkeys[mmLHS] = lhs
 		monkeys[eq] = mm
-		//ctx.Printf("%v %v %v", mm, monkeys[mm.LHS], monkeys[mm.RHS])
 	}
 	ctx.Print(printMonkeyExpr(monkeys, eq, forvar))
 
 	err = applyAllMonkeyMath(monkeys)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	ctx.Print(printMonkeyExpr(monkeys, eq, forvar))
 
 	if !monkeys[monkeys[eq].RHS].AnswerKnown {
-		return 0, errFailed
+		return nil, errFailed
 	}
 
 	return monkeys[monkeys[eq].RHS].Answer, nil
@@ -265,6 +289,9 @@ func printMonkeyExpr(monkeys map[string]monkeyMath, expr, forvar string) string 
 	mm := monkeys[expr]
 	if mm.AnswerKnown {
 		return fmt.Sprintf("%d", mm.Answer)
+	}
+	if mm.Operation == '~' {
+		return fmt.Sprintf("~%s %s", printMonkeyExpr(monkeys, mm.RHS, forvar), monkeys[mm.RHS])
 	}
 	return fmt.Sprintf("(%s %c %s)", printMonkeyExpr(monkeys, mm.LHS, forvar), mm.Operation, printMonkeyExpr(monkeys, mm.RHS, forvar))
 }
