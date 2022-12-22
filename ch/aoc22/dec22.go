@@ -15,7 +15,19 @@ const (
 )
 
 func Dec22a(ctx ch.AOContext) (interface{}, error) {
-	sections, err := ctx.DataSections("inputs/2022/dec22.txt")
+	return dec22(ctx, "inputs/2022/dec22.txt", walkBoard)
+}
+
+var Dec22b ch.AdventFunc
+
+// func Dec22b(ctx ch.AOContext) (interface{}, error) {
+// 	return nil, errNotImplemented
+// }
+
+type boardWalker func(*image.Image, cube.Point, int) (cube.Point, int)
+
+func dec22(ctx ch.AOContext, name string, w boardWalker) (interface{}, error) {
+	sections, err := ctx.DataSections(name)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +45,7 @@ func Dec22a(ctx ch.AOContext) (interface{}, error) {
 
 	instructions := sections[1][0]
 	dir := 0
-	pos := walkBoard(board, cube.Point{0, 0}, cube.Cardinal2D[dir])
+	pos, dir := w(board, cube.Point{0, 0}, dir)
 	ctx.Printf("Position: %v, direction %v", pos, dir)
 
 	for len(instructions) > 0 {
@@ -47,7 +59,7 @@ func Dec22a(ctx ch.AOContext) (interface{}, error) {
 			return nil, err
 		}
 		for i := 0; i < steps; i++ {
-			pos = walkBoard(board, pos, cube.Cardinal2D[dir])
+			pos, dir = w(board, pos, dir)
 		}
 		if j >= len(instructions) {
 			ctx.Printf("final position: %v, direction %v", pos, dir)
@@ -58,19 +70,14 @@ func Dec22a(ctx ch.AOContext) (interface{}, error) {
 			dir = (dir + 3) % 4
 		}
 		instructions = instructions[j+1:]
-		ctx.Printf("Position: %v, direction %v; Remaining instructions: '%s'", pos, dir, instructions)
+		// ctx.Printf("Position: %v, direction %v; Remaining instructions: '%s'", pos, dir, instructions)
 	}
 
 	return 1000*(pos.Y+1) + 4*(pos.X+1) + dir, nil
 }
 
-var Dec22b ch.AdventFunc = nil
-
-// func Dec22b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
-
-func walkBoard(board *image.Image, start, dir cube.Point) cube.Point {
+func walkBoard(board *image.Image, start cube.Point, diridx int) (cube.Point, int) {
+	dir := cube.Cardinal2D[diridx]
 	nx := start
 	nx.X = (nx.X + dir.X + 2*board.Width) % board.Width
 	nx.Y = (nx.Y + dir.Y + 2*board.Height) % board.Height
@@ -81,7 +88,7 @@ func walkBoard(board *image.Image, start, dir cube.Point) cube.Point {
 	}
 
 	for board.At(nx.X, nx.Y) == WALL {
-		return start
+		return start, diridx
 	}
-	return nx
+	return nx, diridx
 }
