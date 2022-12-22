@@ -19,7 +19,7 @@ func Dec22a(ctx ch.AOContext) (interface{}, error) {
 }
 
 func Dec22b(ctx ch.AOContext) (interface{}, error) {
-	return dec22(ctx, "inputs/2022/dec22a.txt", walkCubeExample)
+	return dec22(ctx, "inputs/2022/dec22.txt", walkCubeProper)
 }
 
 type boardWalker func(*image.Image, cube.Point, int) (cube.Point, int)
@@ -30,7 +30,9 @@ func dec22(ctx ch.AOContext, name string, w boardWalker) (interface{}, error) {
 		return nil, err
 	}
 
-	board := image.ReadImage(sections[0], func(r rune) int {
+	boardImg := sections[0]
+	boardImg = append(boardImg, "") // add an extra blank line so we're guaranteed to encounter blank spaces before wrapping
+	board := image.ReadImage(boardImg, func(r rune) int {
 		if r == '.' {
 			return TILE
 		} else if r == '#' {
@@ -173,4 +175,86 @@ func walkCubeExample(board *image.Image, start cube.Point, diridx int) (cube.Poi
 		return start, lastDir
 	}
 	return nx, diridx
+}
+
+func walkCubeProper(board *image.Image, start cube.Point, dir int) (cube.Point, int) {
+	dirv := cube.Cardinal2D[dir]
+	nx := start
+	nx.X = (nx.X + dirv.X + 2*board.Width) % board.Width
+	nx.Y = (nx.Y + dirv.Y + 2*board.Height) % board.Height
+
+	lastDir := dir
+	if board.At(nx.X, nx.Y) == 0 {
+		// This hardcodes the cube net in the my challenge input
+		if dir == 0 {
+			if nx.Y < 50 {
+				nx.Y = 149 - nx.Y
+				nx.X = 99
+				dir = 2
+			} else if nx.Y < 100 {
+				nx.X = 100 + (nx.Y - 50)
+				nx.Y = 49
+				dir = 3
+			} else if nx.Y < 150 {
+				nx.Y = 49 - (nx.Y - 100)
+				nx.X = 149
+				dir = 2
+			} else {
+				nx.X = 50 + (nx.Y - 150)
+				nx.Y = 149
+				dir = 3
+			}
+		} else if dir == 1 {
+			if nx.X < 50 {
+				nx.Y = 100 + nx.X
+				nx.X = 99
+				dir = 2
+			} else if nx.X < 100 {
+				nx.Y = 150 + (nx.X - 50)
+				nx.X = 49
+				dir = 2
+			} else {
+				nx.Y = 50 + (nx.X - 100)
+				nx.X = 99
+				dir = 2
+			}
+		} else if dir == 2 {
+			if nx.Y < 50 {
+				nx.Y = 149 - nx.Y
+				nx.X = 0
+				dir = 0
+			} else if nx.Y < 100 {
+				nx.X = nx.Y - 50
+				nx.Y = 100
+				dir = 1
+			} else if nx.Y < 150 {
+				nx.Y = 49 - (nx.Y - 100)
+				nx.X = 50
+				dir = 0
+			} else {
+				nx.X = 50 + (nx.Y - 150)
+				nx.Y = 0
+				dir = 1
+			}
+		} else {
+			if nx.X < 50 {
+				nx.Y = 50 + nx.X
+				nx.X = 50
+				dir = 0
+			} else if nx.X < 100 {
+				nx.Y = 150 + (nx.X - 50)
+				nx.X = 0
+				dir = 1
+			} else {
+				nx.X = nx.X - 100
+				nx.Y = 199
+				dir = 3
+			}
+		}
+	}
+
+	for board.At(nx.X, nx.Y) == WALL {
+		return start, lastDir
+	}
+	return nx, dir
 }
