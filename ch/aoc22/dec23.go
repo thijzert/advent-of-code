@@ -24,11 +24,21 @@ func Dec23a(ctx ch.AOContext) (interface{}, error) {
 	return rv, nil
 }
 
-var Dec23b ch.AdventFunc = nil
+func Dec23b(ctx ch.AOContext) (interface{}, error) {
+	elves, err := readElfBotanists(ctx, "inputs/2022/dec23.txt")
+	if err != nil {
+		return nil, err
+	}
 
-// func Dec23b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
+	for i := 0; i < 10000; i++ {
+		m := moveBotanistElves(ctx, elves, i)
+		if m == 0 {
+			return i + 1, nil
+		}
+	}
+
+	return nil, errFailed
+}
 
 func readElfBotanists(ctx ch.AOContext, name string) (map[cube.Point]int, error) {
 	lines, err := ctx.DataLines(name)
@@ -92,7 +102,7 @@ var botanistDirections [4]botanistDirection = [4]botanistDirection{
 	{cube.Point{1, 0}, [3]cube.Point{{1, -1}, {1, 0}, {1, 1}}},
 }
 
-func moveBotanistElves(ctx ch.AOContext, elves map[cube.Point]int, round int) {
+func moveBotanistElves(ctx ch.AOContext, elves map[cube.Point]int, round int) int {
 	maybeMove := make(map[cube.Point]cube.Point)
 	propose := make(map[cube.Point]int)
 	for elf := range elves {
@@ -117,10 +127,15 @@ func moveBotanistElves(ctx ch.AOContext, elves map[cube.Point]int, round int) {
 			}
 		}
 	}
+
+	rv := 0
 	for elf, dest := range maybeMove {
 		if propose[dest] == 1 {
 			delete(elves, elf)
 			elves[dest] = 1
+			rv++
 		}
 	}
+
+	return rv
 }
