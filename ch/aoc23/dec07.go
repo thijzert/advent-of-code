@@ -1,7 +1,6 @@
 package aoc23
 
 import (
-	"log"
 	"sort"
 
 	"github.com/thijzert/advent-of-code/ch"
@@ -49,9 +48,9 @@ func Dec7CountCards(hand [5]byte) [5]CamelCardCount {
 	return rv
 }
 
-func CamelCardLess(a, b byte) bool {
+func CamelCardLess(a, b byte, cardOrder string) bool {
 	aa, bb := -1, -1
-	for i, c := range "AKQJT98765432" {
+	for i, c := range cardOrder {
 		if byte(c) == a {
 			aa = i
 		}
@@ -90,14 +89,17 @@ type CamelHand struct {
 	Counts [5]CamelCardCount
 }
 
-type CamelPoker []CamelHand
+type CamelPoker struct {
+	Hands     []CamelHand
+	CardOrder string
+}
 
 func (cp CamelPoker) Len() int {
-	return len(cp)
+	return len(cp.Hands)
 }
 
 func (cp CamelPoker) Swap(i, j int) {
-	cp[i], cp[j] = cp[j], cp[i]
+	cp.Hands[i], cp.Hands[j] = cp.Hands[j], cp.Hands[i]
 }
 
 func (cp CamelPoker) Less(i, j int) bool {
@@ -110,20 +112,17 @@ func (cp CamelPoker) Less(i, j int) bool {
 		Dec7OnePair,
 		Dec7HighCard,
 	}
-	for k, f := range labels {
-		aa, bb := f(cp[i].Counts), f(cp[j].Counts)
+	for _, f := range labels {
+		aa, bb := f(cp.Hands[i].Counts), f(cp.Hands[j].Counts)
 		if aa && !bb {
-			log.Printf("Hand %s has label %v", cp[i].Hand, k)
 			return false
 		} else if !aa && bb {
-			log.Printf("Hand %s has label %v", cp[j].Hand, k)
 			return true
 		} else if aa && bb {
-			log.Printf("Hand %s and %s have label %v", cp[i].Hand, cp[j].Hand, k)
-			for k, c := range cp[i].Hand {
-				if CamelCardLess(c, cp[j].Hand[k]) {
+			for k, c := range cp.Hands[i].Hand {
+				if CamelCardLess(c, cp.Hands[j].Hand[k], cp.CardOrder) {
 					return false
-				} else if CamelCardLess(cp[j].Hand[k], c) {
+				} else if CamelCardLess(cp.Hands[j].Hand[k], c, cp.CardOrder) {
 					return true
 				}
 			}
@@ -138,7 +137,9 @@ func Dec07a(ctx ch.AOContext) (interface{}, error) {
 		return nil, err
 	}
 
-	var cp CamelPoker
+	cp := CamelPoker{
+		CardOrder: "AKQJT98765432",
+	}
 	for _, line := range lines {
 		var p CamelHand
 		for i, c := range line[:5] {
@@ -146,22 +147,55 @@ func Dec07a(ctx ch.AOContext) (interface{}, error) {
 		}
 		p.Counts = Dec7CountCards(p.Hand)
 		p.Bid = atoid(line[6:], -1)
-		cp = append(cp, p)
-		ctx.Printf("Hand: %s, counts: %v", p.Hand, p.Counts)
+		cp.Hands = append(cp.Hands, p)
 	}
 
 	sort.Sort(cp)
 
 	answer := 0
-	for i, hand := range cp {
+	for i, hand := range cp.Hands {
 		ctx.Printf("%3d: %s (%d)", i+1, hand.Hand, hand.Bid)
 		answer += (i + 1) * hand.Bid
 	}
 	return answer, nil
 }
 
-var Dec07b ch.AdventFunc = nil
+func Dec07b(ctx ch.AOContext) (interface{}, error) {
+	lines, err := ctx.DataLines("inputs/2023/dec07.txt")
+	if err != nil {
+		return nil, err
+	}
 
-// func Dec07b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
+	cp := CamelPoker{
+		CardOrder: "AKQT98765432J",
+	}
+	for _, line := range lines {
+		var p CamelHand
+		for i, c := range line[:5] {
+			p.Hand[i] = byte(c)
+		}
+		p.Counts = Dec7CountCards(p.Hand)
+		p.Bid = atoid(line[6:], -1)
+
+		for i, ct := range p.Counts {
+			if ct.Card == 'J' {
+				jokers := ct.Count
+				copy(p.Counts[i:], p.Counts[i+1:])
+				p.Counts[4].Count = 0
+				p.Counts[0].Count += jokers
+				break
+			}
+		}
+
+		cp.Hands = append(cp.Hands, p)
+	}
+
+	sort.Sort(cp)
+
+	answer := 0
+	for i, hand := range cp.Hands {
+		ctx.Printf("%3d: %s (%d)", i+1, hand.Hand, hand.Bid)
+		answer += (i + 1) * hand.Bid
+	}
+	return answer, nil
+}
