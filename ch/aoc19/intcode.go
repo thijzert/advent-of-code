@@ -5,10 +5,31 @@ import (
 )
 
 func runIntCodeProgram(program []int, input []int, output []int) (int, int, int, error) {
+	chin, chout := make(chan int), make(chan int)
+	inputPtr, outputPtr := 0, 0
+
+	go func() {
+		for v := range chout {
+			output[outputPtr] = v
+			outputPtr++
+		}
+	}()
+	go func() {
+		for _, v := range input {
+			chin <- v
+			inputPtr++
+		}
+	}()
+
+	mem0, err := startIntCodeProgram(program, chin, chout)
+	close(chin)
+	close(chout)
+	return mem0, outputPtr, inputPtr, err
+}
+
+func startIntCodeProgram(program []int, input chan int, output chan int) (int, error) {
 	memory := make([]int, len(program))
 	copy(memory, program)
-
-	inputPtr, outputPtr := 0, 0
 
 	get := func(pc, mode int) int {
 		if mode == 0 {
@@ -40,12 +61,10 @@ func runIntCodeProgram(program []int, input []int, output []int) (int, int, int,
 			set(pc+3, modeC, get(pc+1, modeA)*get(pc+2, modeB))
 			pc += 4
 		} else if opcode == 3 {
-			set(pc+1, modeB, input[inputPtr])
-			inputPtr++
+			set(pc+1, modeB, <-input)
 			pc += 2
 		} else if opcode == 4 {
-			output[outputPtr] = get(pc+1, modeA)
-			outputPtr++
+			output <- get(pc+1, modeA)
 			pc += 2
 		} else if opcode == 5 {
 			if get(pc+1, modeA) != 0 {
@@ -74,9 +93,9 @@ func runIntCodeProgram(program []int, input []int, output []int) (int, int, int,
 			set(pc+3, modeC, v)
 			pc += 4
 		} else {
-			return 0, inputPtr, outputPtr, fmt.Errorf("Undefined opcode %d", opcode)
+			return 0, fmt.Errorf("Undefined opcode %d", opcode)
 		}
 	}
 
-	return memory[0], inputPtr, outputPtr, nil
+	return memory[0], nil
 }
