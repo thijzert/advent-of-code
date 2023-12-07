@@ -6,20 +6,20 @@ import (
 	"github.com/thijzert/advent-of-code/ch"
 )
 
-func Dec06a(ctx ch.AOContext) (interface{}, error) {
+func Dec6OrbitMap(ctx ch.AOContext) (parent map[string]string, level map[string]int, err error) {
 	lines, err := ctx.DataLines("inputs/2019/dec06.txt")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	parent := make(map[string]string)
+	parent = make(map[string]string)
 	for _, line := range lines {
 		lpts := strings.Split(line, ")")
 		parent[lpts[1]] = lpts[0]
 	}
 
 	totalIndirectOrbits := 0
-	level := make(map[string]int)
+	level = make(map[string]int)
 	level["COM"] = 0
 	done := false
 	for !done {
@@ -34,13 +34,44 @@ func Dec06a(ctx ch.AOContext) (interface{}, error) {
 			}
 		}
 	}
-	ctx.Printf("Levels: %v", level)
+
+	return parent, level, nil
+}
+
+func Dec06a(ctx ch.AOContext) (interface{}, error) {
+	_, level, err := Dec6OrbitMap(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	totalIndirectOrbits := 0
+	for _, l := range level {
+		totalIndirectOrbits += l
+	}
 
 	return totalIndirectOrbits, nil
 }
 
-var Dec06b ch.AdventFunc = nil
+func Dec06b(ctx ch.AOContext) (interface{}, error) {
+	parent, level, err := Dec6OrbitMap(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-// func Dec06b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
+	// Find common ancestor
+	santas := make(map[string]bool)
+	s := "SAN"
+	for s != "COM" {
+		santas[s] = true
+		s = parent[s]
+	}
+	s = "YOU"
+	for s != "COM" {
+		if santas[s] {
+			break
+		}
+		s = parent[s]
+	}
+
+	return level["SAN"] + level["YOU"] - 2*level[s] - 2, nil
+}
