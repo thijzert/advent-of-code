@@ -2,6 +2,7 @@ package aoc19
 
 import (
 	"github.com/thijzert/advent-of-code/ch"
+	"github.com/thijzert/advent-of-code/lib/image"
 )
 
 func Dec08a(ctx ch.AOContext) (interface{}, error) {
@@ -32,5 +33,22 @@ func Dec08a(ctx ch.AOContext) (interface{}, error) {
 }
 
 func Dec08b(ctx ch.AOContext) (interface{}, error) {
-	return nil, errNotImplemented
+	lines, err := ctx.DataLines("inputs/2019/dec08.txt")
+	if err != nil {
+		return nil, err
+	}
+	imageData := lines[0]
+	w, h := 25, 6
+
+	img := image.NewImage(w, h, func(x, y int) int {
+		for offset := y*w + x; offset < len(imageData); offset += w * h {
+			if imageData[offset] == '0' || imageData[offset] == '1' {
+				return int(imageData[offset] - '0')
+			}
+		}
+		return 5
+	})
+	ctx.Printf("Image data:\n%s", img)
+
+	return "(gosh, that OCR functionality sure would have come in handy now)", nil
 }
