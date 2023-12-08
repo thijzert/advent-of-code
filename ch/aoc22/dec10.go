@@ -78,5 +78,9 @@ func Dec10b(ctx ch.AOContext) (interface{}, error) {
 	}
 
 	ctx.Printf("\n%s", img)
-	return "(Maybe I should implement OCR at some point)", nil
+	rv, err := img.OCR()
+	if err != nil {
+		err = fmt.Errorf("error finding text: %w", err)
+	}
+	return rv, err
 }

@@ -76,7 +76,7 @@ func Dec08b(ctx ch.AOContext) (interface{}, error) {
 		}
 	}
 
-	return answer, errNotImplemented
+	return answer, nil
 }
 
 func lcm(a, b int) int {

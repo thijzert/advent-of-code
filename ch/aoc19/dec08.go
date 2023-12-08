@@ -1,6 +1,8 @@
 package aoc19
 
 import (
+	"fmt"
+
 	"github.com/thijzert/advent-of-code/ch"
 	"github.com/thijzert/advent-of-code/lib/image"
 )
@@ -50,5 +52,9 @@ func Dec08b(ctx ch.AOContext) (interface{}, error) {
 	})
 	ctx.Printf("Image data:\n%s", img)
 
-	return "(gosh, that OCR functionality sure would have come in handy now)", nil
+	rv, err := img.OCR()
+	if err != nil {
+		err = fmt.Errorf("error finding text: %w", err)
+	}
+	return rv, err
 }
