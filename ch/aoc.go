@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -73,9 +74,11 @@ func (ctx AOContext) DataAsIntLists(assetName string) ([][]int, error) {
 		return nil, err
 	}
 
+	re := regexp.MustCompile(",| +")
+
 	var rv [][]int
 	for _, line := range lines {
-		strs := strings.Split(line, ",")
+		strs := re.Split(line, -1)
 		iline := make([]int, 0, len(strs))
 		for _, str := range strs {
 			i, err := strconv.Atoi(str)
