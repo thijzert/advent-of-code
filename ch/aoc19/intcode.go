@@ -2,28 +2,34 @@ package aoc19
 
 import (
 	"fmt"
+	"sync"
 )
 
 func runIntCodeProgram(program []int, input []int, output []int) (int, int, int, error) {
 	chin, chout := make(chan int), make(chan int)
 	inputPtr, outputPtr := 0, 0
 
+	var wv sync.WaitGroup
 	go func() {
+		wv.Add(1)
 		for v := range chout {
 			output[outputPtr] = v
 			outputPtr++
 		}
+		wv.Done()
 	}()
 	go func() {
+		wv.Add(1)
 		for _, v := range input {
 			chin <- v
 			inputPtr++
 		}
+		close(chin)
+		wv.Done()
 	}()
 
 	mem0, err := startIntCodeProgram(program, chin, chout)
-	close(chin)
-	close(chout)
+	wv.Wait()
 	return mem0, inputPtr, outputPtr, err
 }
 
@@ -97,5 +103,6 @@ func startIntCodeProgram(program []int, input chan int, output chan int) (int, e
 		}
 	}
 
+	close(output)
 	return memory[0], nil
 }
