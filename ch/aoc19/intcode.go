@@ -50,19 +50,45 @@ func startIntCodeProgram(program []int, input chan int, output chan int) (int, e
 	memory := make([]int, len(program))
 	copy(memory, program)
 
+	base := 0
+
 	get := func(pc, mode int) int {
 		if mode == 0 {
+			addr := memory[pc]
+			if addr >= len(memory) {
+				return 0
+			}
 			return memory[memory[pc]]
 		} else if mode == 1 {
 			return memory[pc]
+		} else if mode == 2 {
+			addr := base + memory[pc]
+			if addr >= len(memory) {
+				return 0
+			}
+			return memory[addr]
 		}
 		panic("invalid mode")
 	}
 	set := func(pc, mode, value int) {
 		if mode == 0 {
+			addr := memory[pc]
+			if addr > 0 && addr < 0x1000000 {
+				for len(memory) <= addr {
+					memory = append(memory, 0)
+				}
+			}
 			memory[memory[pc]] = value
 		} else if mode == 1 {
 			panic("cannot set an immediate value")
+		} else if mode == 2 {
+			addr := base + memory[pc]
+			if addr > 0 && addr < 0x1000000 {
+				for len(memory) < addr {
+					memory = append(memory, 0)
+				}
+			}
+			memory[addr] = value
 		} else {
 			panic("invalid mode")
 		}
@@ -111,6 +137,9 @@ func startIntCodeProgram(program []int, input chan int, output chan int) (int, e
 			}
 			set(pc+3, modeC, v)
 			pc += 4
+		} else if opcode == OP_CHRB {
+			base += get(pc+1, modeA)
+			pc += 2
 		} else {
 			return 0, fmt.Errorf("Undefined opcode %d", opcode)
 		}
