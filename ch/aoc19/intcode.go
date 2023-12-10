@@ -24,7 +24,7 @@ func runIntCodeProgram(program []int, input []int, output []int) (int, int, int,
 	mem0, err := startIntCodeProgram(program, chin, chout)
 	close(chin)
 	close(chout)
-	return mem0, outputPtr, inputPtr, err
+	return mem0, inputPtr, outputPtr, err
 }
 
 func startIntCodeProgram(program []int, input chan int, output chan int) (int, error) {
@@ -64,7 +64,7 @@ func startIntCodeProgram(program []int, input chan int, output chan int) (int, e
 			set(pc+1, modeB, <-input)
 			pc += 2
 		} else if opcode == 4 {
-			output <- get(pc+1, modeA)
+			output <- get(pc+1, modeB)
 			pc += 2
 		} else if opcode == 5 {
 			if get(pc+1, modeA) != 0 {
