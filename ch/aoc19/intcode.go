@@ -2,6 +2,7 @@ package aoc19
 
 import (
 	"fmt"
+	"math/big"
 	"sync"
 )
 
@@ -47,104 +48,116 @@ func runIntCodeProgram(program []int, input []int, output []int) (int, int, int,
 }
 
 func startIntCodeProgram(program []int, input chan int, output chan int) (int, error) {
-	memory := make([]int, len(program))
-	copy(memory, program)
+	memory := make([]*big.Int, len(program))
+	for i, n := range program {
+		memory[i] = big.NewInt(int64(n))
+	}
 
 	base := 0
 
-	get := func(pc, mode int) int {
+	get := func(pc, mode int) *big.Int {
 		if mode == 0 {
-			addr := memory[pc]
+			addr := int(memory[pc].Int64())
 			if addr >= len(memory) {
-				return 0
+				return big.NewInt(0)
 			}
-			return memory[memory[pc]]
+			return memory[addr]
 		} else if mode == 1 {
 			return memory[pc]
 		} else if mode == 2 {
-			addr := base + memory[pc]
+			addr := base + int(memory[pc].Int64())
 			if addr >= len(memory) {
-				return 0
+				return big.NewInt(0)
 			}
 			return memory[addr]
 		}
 		panic("invalid mode")
 	}
-	set := func(pc, mode, value int) {
+	set := func(pc, mode int, value *big.Int) {
 		if mode == 0 {
-			addr := memory[pc]
+			addr := int(memory[pc].Int64())
 			if addr > 0 && addr < 0x1000000 {
 				for len(memory) <= addr {
-					memory = append(memory, 0)
+					memory = append(memory, big.NewInt(0))
 				}
 			}
-			memory[memory[pc]] = value
+			memory[addr].Set(value)
 		} else if mode == 1 {
 			panic("cannot set an immediate value")
 		} else if mode == 2 {
-			addr := base + memory[pc]
+			addr := base + int(memory[pc].Int64())
 			if addr > 0 && addr < 0x1000000 {
-				for len(memory) < addr {
-					memory = append(memory, 0)
+				for len(memory) <= addr {
+					memory = append(memory, big.NewInt(0))
 				}
 			}
-			memory[addr] = value
+			memory[addr].Set(value)
 		} else {
 			panic("invalid mode")
 		}
 	}
 
 	pc := 0
-	for pc >= 0 && pc <= len(memory) && memory[pc] != OP_HALT {
-		opcode := memory[pc] % 100
-		modeA, modeB, modeC := (memory[pc]/100)%10, (memory[pc]/1000)%10, (memory[pc]/10000)%10
+	for pc >= 0 && pc <= len(memory) {
+		instr := int(memory[pc].Int64())
+		opcode := instr % 100
+		modeA, modeB, modeC := (instr/100)%10, (instr/1000)%10, (instr/10000)%10
 
 		if opcode == OP_ADD {
-			set(pc+3, modeC, get(pc+1, modeA)+get(pc+2, modeB))
+			v := big.NewInt(0)
+			v.Add(get(pc+1, modeA), get(pc+2, modeB))
+			set(pc+3, modeC, v)
 			pc += 4
 		} else if opcode == OP_MULT {
-			set(pc+3, modeC, get(pc+1, modeA)*get(pc+2, modeB))
+			v := big.NewInt(0)
+			v.Mul(get(pc+1, modeA), get(pc+2, modeB))
+			set(pc+3, modeC, v)
 			pc += 4
 		} else if opcode == OP_READ {
-			set(pc+1, modeA, <-input)
+			set(pc+1, modeA, big.NewInt(int64(<-input)))
 			pc += 2
 		} else if opcode == OP_WRITE {
-			output <- get(pc+1, modeA)
+			v := get(pc+1, modeA)
+			output <- int(v.Int64())
 			pc += 2
 		} else if opcode == OP_JTRUE {
-			if get(pc+1, modeA) != 0 {
-				pc = get(pc+2, modeB)
+			v := get(pc+1, modeA)
+			if !v.IsInt64() || v.Int64() != 0 {
+				pc = int(get(pc+2, modeB).Int64())
 			} else {
 				pc += 3
 			}
 		} else if opcode == OP_JFALSE {
-			if get(pc+1, modeA) == 0 {
-				pc = get(pc+2, modeB)
+			v := get(pc+1, modeA)
+			if v.IsInt64() && v.Int64() == 0 {
+				pc = int(get(pc+2, modeB).Int64())
 			} else {
 				pc += 3
 			}
 		} else if opcode == OP_LESS {
-			v := 0
-			if get(pc+1, modeA) < get(pc+2, modeB) {
-				v = 1
+			v := big.NewInt(0)
+			if get(pc+1, modeA).Cmp(get(pc+2, modeB)) < 0 {
+				v.SetInt64(1)
 			}
 			set(pc+3, modeC, v)
 			pc += 4
 		} else if opcode == OP_EQUALS {
-			v := 0
-			if get(pc+1, modeA) == get(pc+2, modeB) {
-				v = 1
+			v := big.NewInt(0)
+			if get(pc+1, modeA).Cmp(get(pc+2, modeB)) == 0 {
+				v.SetInt64(1)
 			}
 			set(pc+3, modeC, v)
 			pc += 4
 		} else if opcode == OP_CHRB {
-			base += get(pc+1, modeA)
+			base += int(get(pc+1, modeA).Int64())
 			pc += 2
+		} else if opcode == OP_HALT {
+			break
 		} else {
 			return 0, fmt.Errorf("Undefined opcode %d", opcode)
 		}
 	}
 
 	close(output)
-	return memory[0], nil
+	return int(memory[0].Int64()), nil
 }
