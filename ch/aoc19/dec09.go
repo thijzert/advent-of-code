@@ -27,8 +27,20 @@ func Dec09a(ctx ch.AOContext) (interface{}, error) {
 	return nil, errNotImplemented
 }
 
-var Dec09b ch.AdventFunc = nil
+func Dec09b(ctx ch.AOContext) (interface{}, error) {
+	programs, err := ctx.DataAsIntLists("inputs/2019/dec09.txt")
+	if err != nil {
+		return nil, err
+	}
+	program := programs[0]
 
-// func Dec09b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
+	input := []int{2}
+	output := make([]int, 100)
+	_, _, no, err := runIntCodeProgram(program, input, output)
+	if err != nil {
+		return nil, err
+	}
+	ctx.Printf("Output: %d", output[:no])
+
+	return nil, errNotImplemented
+}
