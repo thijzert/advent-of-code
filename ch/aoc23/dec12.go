@@ -8,12 +8,23 @@ import (
 )
 
 func dec12Arrangements(ctx ch.AOContext, conditionRecord []byte, checksum []int) int {
+	return dec12ArrangementsCache(ctx, make(map[[2]int]int), conditionRecord, checksum)
+}
+
+func dec12ArrangementsCache(ctx ch.AOContext, cache map[[2]int]int, conditionRecord []byte, checksum []int) int {
+	key := [2]int{len(conditionRecord), len(checksum)}
+	if v, ok := cache[key]; ok {
+		return v
+	}
+
 	if len(checksum) == 0 {
 		for _, b := range conditionRecord {
 			if b == '#' {
+				cache[key] = 0
 				return 0
 			}
 		}
+		cache[key] = 1
 		return 1
 	}
 
@@ -50,10 +61,11 @@ func dec12Arrangements(ctx ch.AOContext, conditionRecord []byte, checksum []int)
 		if conditionRecord[i+n] == '#' {
 			continue
 		}
-		rv += dec12Arrangements(ctx, conditionRecord[i+n+1:], checksum[1:])
+		rv += dec12ArrangementsCache(ctx, cache, conditionRecord[i+n+1:], checksum[1:])
 	}
 	//ctx.Printf("   %d ways", rv)
 
+	cache[key] = rv
 	return rv
 }
 
