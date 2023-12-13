@@ -21,6 +21,24 @@ func GetLines(assetName string) ([]string, error) {
 	return rv, nil
 }
 
+func Transpose(lines []string) []string {
+	l := 0
+	for _, line := range lines {
+		l = max(l, len(line))
+	}
+	rv := make([]string, l)
+	for i := 0; i < l; i++ {
+		buf := make([]byte, len(lines))
+		for j, line := range lines {
+			if len(line) > i {
+				buf[j] = line[i]
+			}
+		}
+		rv[i] = string(buf)
+	}
+	return rv
+}
+
 func GetInts(assetName string) ([]int, error) {
 	lines, err := GetLines(assetName)
 	if err != nil {
