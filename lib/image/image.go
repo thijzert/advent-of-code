@@ -4,6 +4,12 @@ type Runemap func(rune) int
 
 type ImageFunc func(int, int) int
 
+type Imagery interface {
+	Size() (int, int)
+	At(x, y int) int
+	Set(x, y, v int)
+}
+
 type Image struct {
 	Width, Height    int
 	OffsetX, OffsetY int
@@ -65,6 +71,10 @@ func (i *Image) String() string {
 	}
 
 	return rv
+}
+
+func (i *Image) Size() (int, int) {
+	return i.Width, i.Height
 }
 
 func (i *Image) At(x, y int) int {
