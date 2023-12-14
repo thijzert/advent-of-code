@@ -31,15 +31,28 @@ func Dec14b(ctx ch.AOContext) (interface{}, error) {
 		Img: img,
 	}
 
-	cycles := 1000000000
-	for cycl := 0; cycl < cycles; cycl++ {
+	cutoff := 1000000000
+	seen := make(map[string]int)
+	seen[img.String()] = 0
+	for cycl := 1; cycl <= cutoff; cycl++ {
 		for img2.Orientation = 0; img2.Orientation < 4; img2.Orientation++ {
 			dec14RollNorth(ctx, img2)
 		}
+		next := img.String()
+		if seen != nil {
+			if bcycl, ok := seen[next]; ok {
+				ctx.Printf("Loop detected: after %d spin cycles the board resets to cycle %d", cycl, bcycl)
+				m := bcycl - cycl
+				cycl = bcycl + m*((cutoff-bcycl)/m)
+				ctx.Printf("Skipping to %d", cycl)
+				seen = nil
+				continue
+			}
+			seen[next] = cycl
+		}
 	}
-	ctx.Printf("After %d cycles:\n%s", cycles, img)
-
-	return nil, errNotImplemented
+	ctx.Printf("After %d spin cycles:\n%s", cutoff, img)
+	return dec14Load(ctx, img), nil
 }
 
 func dec14RollNorth(ctx ch.AOContext, img image.Imagery) int {
@@ -58,6 +71,19 @@ func dec14RollNorth(ctx ch.AOContext, img image.Imagery) int {
 			} else if c == 5 {
 				// Square rock
 				next = y + 1
+			}
+		}
+	}
+	return rv
+}
+
+func dec14Load(ctx ch.AOContext, img image.Imagery) int {
+	width, height := img.Size()
+	rv := 0
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			if img.At(x, y) == 1 {
+				rv += height - y
 			}
 		}
 	}
