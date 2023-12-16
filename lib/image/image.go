@@ -77,6 +77,10 @@ func (i *Image) Size() (int, int) {
 	return i.Width, i.Height
 }
 
+func (i *Image) Inside(x, y int) bool {
+	return x >= 0 && x < i.Width && y >= 0 && y < i.Height
+}
+
 func (i *Image) At(x, y int) int {
 	x -= i.OffsetX
 	y -= i.OffsetY
