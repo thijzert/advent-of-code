@@ -78,11 +78,6 @@ func (c crucible) Adjacent(b dijkstra.Board, totalCost int) dijkstra.AdjacencyIt
 	straight.X, straight.Y = straight.X/l, straight.Y/l
 	back := straight.Mul(-1)
 
-	// HACK: The position of the virtual "last turn" is outside the board.
-	if c.LastTurn.X < 0 {
-		l--
-	}
-
 	rv := []dijkstra.Adj{}
 	for _, dir := range cube.Cardinal2D {
 		if dir == back || (dir == straight && l >= c.MaxStraight) || (dir != straight && l < c.MinStraight) {
