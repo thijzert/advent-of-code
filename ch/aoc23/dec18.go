@@ -2,10 +2,11 @@ package aoc23
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/thijzert/advent-of-code/ch"
 	"github.com/thijzert/advent-of-code/lib/cube"
-	"github.com/thijzert/advent-of-code/lib/image"
+	"github.com/thijzert/advent-of-code/lib/pq"
 )
 
 type digInstruction struct {
@@ -31,7 +32,7 @@ func Dec18a(ctx ch.AOContext) (interface{}, error) {
 }
 
 func Dec18b(ctx ch.AOContext) (interface{}, error) {
-	lines, err := ctx.DataLines("inputs/2023/dec18a.txt")
+	lines, err := ctx.DataLines("inputs/2023/dec18.txt")
 	if err != nil {
 		return nil, err
 	}
@@ -50,38 +51,88 @@ func Dec18b(ctx ch.AOContext) (interface{}, error) {
 
 func dec18(ctx ch.AOContext, instrs []digInstruction) (any, error) {
 	bounds := cube.Square{}
+	corners := pq.PriorityQueue[int]{}
 	dig := cube.Point{}
 	for _, inst := range instrs {
-		for i := 0; i < inst.Distance; i++ {
-			dig = dig.Add(inst.Direction)
-			bounds = bounds.UpdatedBound(dig)
-		}
+		dig = dig.Add(inst.Direction.Mul(inst.Distance))
+		bounds = bounds.UpdatedBound(dig)
+		corners.Push(dig.X, dig.Y)
 	}
 	ctx.Printf("Bounds: %v", bounds)
 
-	img := image.NewImage(bounds.X.B-bounds.X.A+2, bounds.Y.B-bounds.Y.A+2, func(x, y int) int {
-		return 0
-	})
-	dig = cube.Point{X: 1 - bounds.X.A, Y: 1 - bounds.Y.A}
-	for _, inst := range instrs {
-		for i := 0; i < inst.Distance; i++ {
-			dig = dig.Add(inst.Direction)
-			img.Set(dig.X, dig.Y, 1)
-		}
-	}
-
-	// TODO: this, but better
-	img.FloodFill(2-bounds.X.A, -bounds.Y.A, 5)
-
 	answer := 0
-	for y := 0; y < img.Height; y++ {
-		for x := 0; x < img.Width; x++ {
-			if img.At(x, y) > 0 {
-				answer++
+	ylast := bounds.Y.A
+	ranges := cube.IntervalSet{}
+	for corners.Len() > 0 {
+		x0, y0, _ := corners.Pop()
+		answer += ranges.Length() * (y0 - ylast - 1)
+		xs := []int{x0}
+		for corners.Len() > 0 {
+			x, y, _ := corners.Pop()
+			if y != y0 {
+				corners.Push(x, y)
+				break
+			}
+			xs = append(xs, x)
+		}
+		sort.Ints(xs)
+		ctx.Printf("Y %d corner points: %d", y0, xs)
+		if len(xs)%2 != 0 {
+			return nil, errFailed
+		}
+
+		// Add current line, with existing and new horizontal segments
+		currentLine := cube.IntervalSet{}
+		currentLine.I = append(currentLine.I, ranges.I...)
+		for i := 0; i < len(xs); i += 2 {
+			currentLine.Add(cube.Interval{xs[i], xs[i+1]})
+		}
+		answer += currentLine.Length()
+
+		// Update vertcial slice
+		for i := 0; i < len(xs); i += 2 {
+			found := false
+			for j, intv := range ranges.I {
+				if !intv.Contains(xs[i]) && !intv.Contains(xs[i+1]) {
+					continue
+				}
+				found = true
+				oth := cube.Interval{0, -1}
+				if xs[i] == intv.A && xs[i+1] == intv.B {
+					// Just delete this entire interval
+					intv.A, intv.B = 1, 0
+				} else if xs[i] == intv.A {
+					intv.A = xs[i+1]
+				} else if xs[i+1] == intv.A {
+					intv.A = xs[i]
+				} else if xs[i] == intv.B {
+					intv.B = xs[i+1]
+				} else if xs[i+1] == intv.B {
+					intv.B = xs[i]
+				} else {
+					oth.A, oth.B = xs[i+1], intv.B
+					intv.B = xs[i]
+				}
+				ranges.I[j] = intv
+				if oth.Length() > 0 {
+					ranges.Add(oth)
+				}
+				break
+			}
+			if !found {
+				ranges.Add(cube.Interval{xs[i], xs[i+1]})
 			}
 		}
+		newRanges := cube.IntervalSet{}
+		for _, intv := range ranges.I {
+			newRanges.Add(intv)
+		}
+		ranges = newRanges
+
+		ctx.Printf("vertical: (%d) %v", ranges.Length(), ranges)
+
+		ylast = y0
 	}
 
-	ctx.Printf("Trench: \n%s", img)
 	return answer, nil
 }
