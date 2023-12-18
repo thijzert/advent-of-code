@@ -1,5 +1,7 @@
 package image
 
+import "github.com/thijzert/advent-of-code/lib/cube"
+
 type Runemap func(rune) int
 
 type ImageFunc func(int, int) int
@@ -109,6 +111,34 @@ func (i *Image) Sprite(sprite, mask *Image, offsetX, offsetY int) {
 			i.Set(offsetX+x, offsetY+y, v)
 		}
 	}
+}
+
+func (i *Image) FloodFill(x, y int, v int) int {
+	v0 := i.At(x, y)
+	if v0 == v {
+		return 0
+	}
+
+	rv := 0
+	queue := make([]cube.Point, 1)
+	queue[0].X = x
+	queue[0].Y = y
+	for len(queue) > 0 {
+		pos := queue[len(queue)-1]
+		queue = queue[:len(queue)-1]
+		if i.At(pos.X, pos.Y) != v0 {
+			continue
+		}
+		i.Set(pos.X, pos.Y, v)
+		rv++
+		for _, dir := range cube.Cardinal2D {
+			next := pos.Add(dir)
+			if i.Inside(next.X, next.Y) {
+				queue = append(queue, next)
+			}
+		}
+	}
+	return rv
 }
 
 func (i *Image) MaskAt(mask *Image, x, y int) int {
