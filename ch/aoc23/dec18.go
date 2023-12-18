@@ -8,20 +8,52 @@ import (
 	"github.com/thijzert/advent-of-code/lib/image"
 )
 
+type digInstruction struct {
+	Direction cube.Point
+	Distance  int
+}
+
 func Dec18a(ctx ch.AOContext) (interface{}, error) {
 	lines, err := ctx.DataLines("inputs/2023/dec18.txt")
 	if err != nil {
 		return nil, err
 	}
 
+	instrs := []digInstruction{}
+	for _, l := range lines {
+		inst := digInstruction{}
+		dir := ""
+		fmt.Sscanf(l, "%s %d ", &dir, &inst.Distance)
+		inst.Direction, _ = cube.ParseDirection2D(dir)
+		instrs = append(instrs, inst)
+	}
+	return dec18(ctx, instrs)
+}
+
+func Dec18b(ctx ch.AOContext) (interface{}, error) {
+	lines, err := ctx.DataLines("inputs/2023/dec18a.txt")
+	if err != nil {
+		return nil, err
+	}
+
+	instrs := []digInstruction{}
+	for _, l := range lines {
+		oldDir, oldDist, colour := "", 0, 0
+		fmt.Sscanf(l, "%s %d (#%06x)", &oldDir, &oldDist, &colour)
+		instrs = append(instrs, digInstruction{
+			Distance:  colour >> 4,
+			Direction: cube.Cardinal2D[colour&0xf],
+		})
+	}
+	return dec18(ctx, instrs)
+}
+
+func dec18(ctx ch.AOContext, instrs []digInstruction) (any, error) {
 	bounds := cube.Square{}
 	dig := cube.Point{}
-	for _, l := range lines {
-		dir, dist := "", 0
-		fmt.Sscanf(l, "%s %d ", &dir, &dist)
-		du, _ := cube.ParseDirection2D(dir)
-		for i := 0; i < dist; i++ {
-			dig = dig.Add(du)
+	for _, inst := range instrs {
+		for i := 0; i < inst.Distance; i++ {
+			dig = dig.Add(inst.Direction)
 			bounds = bounds.UpdatedBound(dig)
 		}
 	}
@@ -31,15 +63,14 @@ func Dec18a(ctx ch.AOContext) (interface{}, error) {
 		return 0
 	})
 	dig = cube.Point{X: 1 - bounds.X.A, Y: 1 - bounds.Y.A}
-	for _, l := range lines {
-		dir, dist := "", 0
-		fmt.Sscanf(l, "%s %d ", &dir, &dist)
-		du, _ := cube.ParseDirection2D(dir)
-		for i := 0; i < dist; i++ {
-			dig = dig.Add(du)
+	for _, inst := range instrs {
+		for i := 0; i < inst.Distance; i++ {
+			dig = dig.Add(inst.Direction)
 			img.Set(dig.X, dig.Y, 1)
 		}
 	}
+
+	// TODO: this, but better
 	img.FloodFill(2-bounds.X.A, -bounds.Y.A, 5)
 
 	answer := 0
@@ -54,9 +85,3 @@ func Dec18a(ctx ch.AOContext) (interface{}, error) {
 	ctx.Printf("Trench: \n%s", img)
 	return answer, nil
 }
-
-var Dec18b ch.AdventFunc = nil
-
-// func Dec18b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
