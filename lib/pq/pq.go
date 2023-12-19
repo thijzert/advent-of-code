@@ -69,6 +69,14 @@ func (pq *PriorityQueue[a]) Pop() (a, int, bool) {
 	return rv, rvp, true
 }
 
+func (pq *PriorityQueue[a]) Peek() (a, int, bool) {
+	if pq.root == nil {
+		var zero a
+		return zero, 0, false
+	}
+	return pq.root.Value, pq.root.Priority, true
+}
+
 func (pq *PriorityQueue[a]) Len() int {
 	if pq.root == nil {
 		return 0
