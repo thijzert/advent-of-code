@@ -24,6 +24,10 @@ type Position interface {
 	// directly from this position. The total cost of the path that led here is
 	// passed in the second parameter
 	Adjacent(b Board, totalCost int) AdjacencyIterator
+
+	// Pack packs the position into an integer index. Different positions should
+	// not pack to the same index
+	Pack() int
 }
 
 // A Hashcoder is a special type of position that exerts influence over how
@@ -37,6 +41,7 @@ type hashCodePos [4]uint64
 
 func (hashCodePos) Final(b Board) bool                                { return false }
 func (hashCodePos) Adjacent(b Board, totalCost int) AdjacencyIterator { return nil }
+func (hashCodePos) Pack() int                                         { return -1 }
 
 // An AdjacencyIterator is an abstraction over an Adjacency slice that can be
 // ranged over. This allows one to generate infinitely many adjacent tiles
@@ -96,21 +101,18 @@ func ShortestPath(b Board) ([]Position, int, error) {
 
 	dijk := &dijkstra{
 		Board:   b,
-		Visited: make(map[Position]dijkHead),
+		Visited: make([]dijkHead, 250),
+		VisMap:  make(map[Position]dijkHead),
 	}
 	for _, pos := range starts {
-		nn := pos
-		if hc, ok := pos.(Hashcoder); ok {
-			nn = hashCodePos(hc.Hashcode())
-		}
 		dijk.Heads = append(dijk.Heads, dijkHead{
 			Position:  pos,
 			TotalCost: 0,
 		})
-		dijk.Visited[nn] = dijkHead{
-			Position:  nil,
+		dijk.setVisited(pos, dijkHead{
+			Position:  startingPoint{},
 			TotalCost: 0,
-		}
+		})
 	}
 
 	//log.Printf("initial: %v", dijk.Heads)
@@ -132,11 +134,8 @@ func ShortestPath(b Board) ([]Position, int, error) {
 	end := dijk.Shortest.Position
 	for end != nil {
 		rv = append(rv, end)
-		nn := end
-		if hc, ok := end.(Hashcoder); ok {
-			nn = hashCodePos(hc.Hashcode())
-		}
-		end = dijk.Visited[nn].Position
+		dh, _ := dijk.haveVisited(end)
+		end = dh.Position
 	}
 	l := len(rv)
 	for i := range rv[:l/2] {
@@ -155,7 +154,8 @@ type dijkstra struct {
 	Board    Board
 	Heads    []dijkHead
 	Shortest dijkHead
-	Visited  map[Position]dijkHead
+	Visited  []dijkHead
+	VisMap   map[Position]dijkHead
 }
 
 func (d *dijkstra) Step() {
@@ -185,16 +185,12 @@ func (d *dijkstra) Step() {
 			}
 
 			nn := n
-			if hc, ok := n.(Hashcoder); ok {
-				nn = hashCodePos(hc.Hashcode())
-			}
-			val, ok := d.Visited[nn]
+			val, ok := d.haveVisited(nn)
 			if !ok || val.TotalCost > newCost {
-				val = dijkHead{
+				d.setVisited(nn, dijkHead{
 					Position:  h.Position,
 					TotalCost: newCost,
-				}
-				d.Visited[nn] = val
+				})
 
 				if first {
 					d.Heads[i].Position = n
@@ -237,4 +233,46 @@ func (d *dijkstra) Step() {
 		}
 	}
 	d.Heads = append(d.Heads, newHeads...)
+}
+
+type startingPoint struct{}
+
+func (startingPoint) Final(b Board) bool                                { return false }
+func (startingPoint) Adjacent(b Board, totalCost int) AdjacencyIterator { return nil }
+func (startingPoint) Pack() int                                         { return -1 }
+
+func (d *dijkstra) haveVisited(p Position) (dijkHead, bool) {
+	idx := p.Pack()
+	rv, ok := dijkHead{}, false
+	if idx < 0 {
+		rv, ok = d.VisMap[p]
+	} else if idx < len(d.Visited) {
+		rv = d.Visited[idx]
+		ok = rv.Position != nil
+	}
+
+	if ok && rv.TotalCost == 0 {
+		if _, ok2 := rv.Position.(startingPoint); ok2 {
+			rv.Position = nil
+		}
+	}
+	return rv, ok
+}
+
+func (d *dijkstra) setVisited(p Position, head dijkHead) {
+	idx := p.Pack()
+	if idx < 0 {
+		d.VisMap[p] = head
+		return
+	}
+	if idx >= len(d.Visited) {
+		nl := len(d.Visited) * 2
+		for idx >= nl {
+			nl *= 2
+		}
+		nv := make([]dijkHead, nl)
+		copy(nv, d.Visited)
+		d.Visited = nv
+	}
+	d.Visited[idx] = head
 }

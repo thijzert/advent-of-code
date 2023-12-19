@@ -118,3 +118,7 @@ func (p rivercrossing) Adjacent(b Board, totalCost int) AdjacencyIterator {
 	}
 	return AdjacencyList(rv)
 }
+
+func (p rivercrossing) Pack() int {
+	return int(p.Boatman<<3 | p.Carrot<<2 | p.Rabbit<<1 | p.Fox)
+}

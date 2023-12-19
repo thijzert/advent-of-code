@@ -98,3 +98,7 @@ func (p gridPoint) Adjacent(b Board, totalCost int) AdjacencyIterator {
 
 	return AdjacencyList(rv)
 }
+
+func (p gridPoint) Pack() int {
+	return 0
+}
