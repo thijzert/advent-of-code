@@ -194,6 +194,9 @@ func (pos pos2d) Adjacent(b dijkstra.Board, totalCost int) dijkstra.AdjacencyIte
 		idx: 0,
 	}
 }
+func (pos pos2d) Pack() int {
+	return -1
+}
 
 type pos2diter struct {
 	pos pos2d
@@ -333,6 +336,10 @@ func (p pos4d) Adjacent(b dijkstra.Board, totalCost int) dijkstra.AdjacencyItera
 	}
 
 	return dijkstra.AdjacencyList(rv)
+}
+
+func (p pos4d) Pack() int {
+	return -1
 }
 
 // WithUpdatedMask returns a copy of p with the key/door masks set to the correct value for this board

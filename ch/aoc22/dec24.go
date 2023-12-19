@@ -128,3 +128,7 @@ func (p expeditionPosition) Adjacent(b dijkstra.Board, totalCost int) dijkstra.A
 
 	return dijkstra.AdjacencyList(rv)
 }
+
+func (p expeditionPosition) Pack() int {
+	return -1
+}

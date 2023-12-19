@@ -2,7 +2,8 @@ package dijkstra
 
 import (
 	"errors"
-	"sort"
+
+	"github.com/thijzert/advent-of-code/lib/pq"
 )
 
 // A Board represents the space through which we'd like to find short paths.
@@ -24,6 +25,10 @@ type Position interface {
 	// directly from this position. The total cost of the path that led here is
 	// passed in the second parameter
 	Adjacent(b Board, totalCost int) AdjacencyIterator
+
+	// Pack packs the position into an integer index. Different positions should
+	// not pack to the same index
+	Pack() int
 }
 
 // A Hashcoder is a special type of position that exerts influence over how
@@ -37,6 +42,7 @@ type hashCodePos [4]uint64
 
 func (hashCodePos) Final(b Board) bool                                { return false }
 func (hashCodePos) Adjacent(b Board, totalCost int) AdjacencyIterator { return nil }
+func (hashCodePos) Pack() int                                         { return -1 }
 
 // An AdjacencyIterator is an abstraction over an Adjacency slice that can be
 // ranged over. This allows one to generate infinitely many adjacent tiles
@@ -96,31 +102,26 @@ func ShortestPath(b Board) ([]Position, int, error) {
 
 	dijk := &dijkstra{
 		Board:   b,
-		Visited: make(map[Position]dijkHead),
+		Visited: make([]dijkHead, 250),
+		VisMap:  make(map[Position]dijkHead),
 	}
 	for _, pos := range starts {
-		nn := pos
-		if hc, ok := pos.(Hashcoder); ok {
-			nn = hashCodePos(hc.Hashcode())
-		}
-		dijk.Heads = append(dijk.Heads, dijkHead{
-			Position:  pos,
+		dijk.Heads.Push(pos, 0)
+		dijk.setVisited(pos, dijkHead{
+			Position:  startingPoint{},
 			TotalCost: 0,
 		})
-		dijk.Visited[nn] = dijkHead{
-			Position:  nil,
-			TotalCost: 0,
-		}
 	}
 
 	//log.Printf("initial: %v", dijk.Heads)
 	for i := 1; i < 10000; i++ {
 		dijk.Step()
 		//log.Printf("after step %d: %v", i, dijk.Heads)
-		if len(dijk.Heads) == 0 {
+		if dijk.Heads.Len() == 0 {
 			break
 		}
-		//log.Printf("after step %d: %d heads: %v...", i, len(dijk.Heads), dijk.Heads[0])
+		//pos, tc, _ := dijk.Heads.Peek()
+		//log.Printf("after step %d: %d heads: %v (%d) %d, ...", i, dijk.Heads.Len(), pos, pos.Pack(), tc)
 	}
 
 	if dijk.Shortest.Position == nil {
@@ -132,11 +133,8 @@ func ShortestPath(b Board) ([]Position, int, error) {
 	end := dijk.Shortest.Position
 	for end != nil {
 		rv = append(rv, end)
-		nn := end
-		if hc, ok := end.(Hashcoder); ok {
-			nn = hashCodePos(hc.Hashcode())
-		}
-		end = dijk.Visited[nn].Position
+		dh, _ := dijk.haveVisited(end)
+		end = dh.Position
 	}
 	l := len(rv)
 	for i := range rv[:l/2] {
@@ -153,56 +151,38 @@ type dijkHead struct {
 
 type dijkstra struct {
 	Board    Board
-	Heads    []dijkHead
+	Heads    pq.PriorityQueue[Position]
 	Shortest dijkHead
-	Visited  map[Position]dijkHead
+	Visited  []dijkHead
+	VisMap   map[Position]dijkHead
 }
 
 func (d *dijkstra) Step() {
-	length := len(d.Heads)
-	CUTOFF := 5000
-	if length > CUTOFF {
-		sort.Slice(d.Heads, func(i, j int) bool {
-			return d.Heads[i].TotalCost < d.Heads[j].TotalCost
-		})
-		length = CUTOFF
-	}
+	length := d.Heads.Len()
 
-	newHeads := []dijkHead{}
-	for i, h := range d.Heads[:length] {
-		it := h.Position.Adjacent(d.Board, h.TotalCost)
-		first := true
+	for i := 0; i < length; i++ {
+		position, totalCost, _ := d.Heads.Pop()
+		it := position.Adjacent(d.Board, totalCost)
 		for {
 			n, cost := it.Next()
 			if n == nil {
 				break
 			}
 
-			newCost := h.TotalCost + cost
+			newCost := totalCost + cost
 			if d.Shortest.Position != nil && d.Shortest.TotalCost < newCost {
 				// The current partial path is already longer than the shortest path that finishes
 				continue
 			}
 
-			nn := n
-			if hc, ok := n.(Hashcoder); ok {
-				nn = hashCodePos(hc.Hashcode())
-			}
-			val, ok := d.Visited[nn]
+			val, ok := d.haveVisited(n)
 			if !ok || val.TotalCost > newCost {
-				val = dijkHead{
-					Position:  h.Position,
+				d.setVisited(n, dijkHead{
+					Position:  position,
 					TotalCost: newCost,
-				}
-				d.Visited[nn] = val
+				})
 
-				if first {
-					d.Heads[i].Position = n
-					d.Heads[i].TotalCost = newCost
-					first = false
-				} else {
-					newHeads = append(newHeads, dijkHead{n, newCost})
-				}
+				d.Heads.Push(n, newCost)
 			}
 
 			if n.Final(d.Board) {
@@ -212,29 +192,47 @@ func (d *dijkstra) Step() {
 				}
 			}
 		}
-		if first {
-			d.Heads[i].Position = nil
-		}
+	}
+}
+
+type startingPoint struct{}
+
+func (startingPoint) Final(b Board) bool                                { return false }
+func (startingPoint) Adjacent(b Board, totalCost int) AdjacencyIterator { return nil }
+func (startingPoint) Pack() int                                         { return -1 }
+
+func (d *dijkstra) haveVisited(p Position) (dijkHead, bool) {
+	idx := p.Pack()
+	rv, ok := dijkHead{}, false
+	if idx < 0 {
+		rv, ok = d.VisMap[p]
+	} else if idx < len(d.Visited) {
+		rv = d.Visited[idx]
+		ok = rv.Position != nil
 	}
 
-	if d.Shortest.Position != nil {
-		// Prune paths that are longer than the shortest finishing path, but were below the cutoff
-		pruned := 0
-		for i, h := range d.Heads[length:] {
-			if h.TotalCost > d.Shortest.TotalCost {
-				d.Heads[length+i].Position = nil
-				pruned++
-			}
-		}
-		if pruned > 0 {
-			//log.Printf("%d paths pruned; shortest path is %d", pruned, d.Shortest.TotalCost)
+	if ok && rv.TotalCost == 0 {
+		if _, ok2 := rv.Position.(startingPoint); ok2 {
+			rv.Position = nil
 		}
 	}
+	return rv, ok
+}
 
-	for i := len(d.Heads) - 1; i >= 0; i-- {
-		if d.Heads[i].Position == nil {
-			d.Heads = append(d.Heads[:i], d.Heads[i+1:]...)
-		}
+func (d *dijkstra) setVisited(p Position, head dijkHead) {
+	idx := p.Pack()
+	if idx < 0 {
+		d.VisMap[p] = head
+		return
 	}
-	d.Heads = append(d.Heads, newHeads...)
+	if idx >= len(d.Visited) {
+		nl := len(d.Visited) * 2
+		for idx >= nl {
+			nl *= 2
+		}
+		nv := make([]dijkHead, nl)
+		copy(nv, d.Visited)
+		d.Visited = nv
+	}
+	d.Visited[idx] = head
 }

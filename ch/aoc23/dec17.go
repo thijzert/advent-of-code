@@ -96,6 +96,16 @@ func (c crucible) Adjacent(b dijkstra.Board, totalCost int) dijkstra.AdjacencyIt
 	return dijkstra.AdjacencyList(rv)
 }
 
+func (c crucible) Pack() int {
+	const SIZE = 200
+
+	straight := c.Position.Sub(c.LastTurn)
+	l := iabs(straight.X) + iabs(straight.Y)
+	straight.X, straight.Y = straight.X/l, straight.Y/l
+
+	return SIZE*99*c.Position.Y + 99*c.Position.X + 9*l + 3*(straight.Y+1) + (straight.X + 1)
+}
+
 func (c crucible) Hashcode() [4]uint64 {
 	return [4]uint64{uint64(c.Position.X), uint64(c.Position.Y), uint64(c.LastTurn.X), uint64(c.LastTurn.Y)}
 }

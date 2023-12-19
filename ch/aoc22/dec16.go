@@ -182,3 +182,7 @@ func (p roadmapper) Adjacent(b dijkstra.Board, totalCost int) dijkstra.Adjacency
 	}
 	return dijkstra.AdjacencyList(adj)
 }
+
+func (p roadmapper) Pack() int {
+	return -1
+}
