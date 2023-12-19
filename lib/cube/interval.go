@@ -166,3 +166,13 @@ func (s *IntervalSet) FullyContains(v Interval) bool {
 	}
 	return false
 }
+
+func (s *IntervalSet) Intersect(v Interval) *IntervalSet {
+	rv := NewIntervalSet()
+	for _, a := range s.I {
+		if b, ok := a.Overlap(v); ok {
+			rv.Add(b)
+		}
+	}
+	return rv
+}

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/thijzert/advent-of-code/ch"
+	"github.com/thijzert/advent-of-code/lib/cube"
 )
 
 type machinePart struct {
@@ -13,6 +14,23 @@ type machinePart struct {
 
 func (pt machinePart) Rating() int {
 	return pt.X + pt.M + pt.A + pt.S
+}
+
+type machinePartRange struct {
+	X, M, A, S *cube.IntervalSet
+}
+
+func (r machinePartRange) Copy() machinePartRange {
+	return machinePartRange{
+		X: cube.NewIntervalSet(r.X.I...),
+		M: cube.NewIntervalSet(r.M.I...),
+		A: cube.NewIntervalSet(r.A.I...),
+		S: cube.NewIntervalSet(r.S.I...),
+	}
+}
+
+func (r machinePartRange) Size() int {
+	return r.X.Length() * r.M.Length() * r.A.Length() * r.S.Length()
 }
 
 type machineOp struct {
@@ -49,9 +67,57 @@ func (op machineOp) Match(pt machinePart) string {
 	return ""
 }
 
+func (op machineOp) SplitRange(pr machinePartRange) (matching machinePartRange, passing machinePartRange) {
+	matching, passing = pr.Copy(), pr.Copy()
+	var leftm, leftp **cube.IntervalSet
+	if op.Left == 'x' {
+		leftm, leftp = &matching.X, &passing.X
+	} else if op.Left == 'm' {
+		leftm, leftp = &matching.M, &passing.M
+	} else if op.Left == 'a' {
+		leftm, leftp = &matching.A, &passing.A
+	} else if op.Left == 's' {
+		leftm, leftp = &matching.S, &passing.S
+	}
+
+	intvm, intvp := cube.Interval{A: 1, B: 4000}, cube.Interval{A: 1, B: 4000}
+	if op.Op == '<' {
+		intvm.B, intvp.A = op.Right-1, op.Right
+	} else if op.Op == '>' {
+		intvm.A, intvp.B = op.Right+1, op.Right
+	}
+
+	*leftm = (*leftm).Intersect(intvm)
+	*leftp = (*leftp).Intersect(intvp)
+	return
+}
+
 type machineRule struct {
 	Operations []machineOp
 	Default    string
+}
+
+func (rule machineRule) CountAcceptedParts(rng machinePartRange, otherRules machineRuleSet) int {
+	if rng.Size() == 0 {
+		return 0
+	}
+	rv := 0
+	for _, operation := range rule.Operations {
+		in, out := operation.SplitRange(rng)
+		if operation.Jump == "A" {
+			rv += in.Size()
+		} else if operation.Jump != "R" {
+			rv += otherRules[operation.Jump].CountAcceptedParts(in, otherRules)
+		}
+		rng = out
+	}
+
+	if rule.Default == "A" {
+		rv += rng.Size()
+	} else if rule.Default != "R" {
+		rv += otherRules[rule.Default].CountAcceptedParts(rng, otherRules)
+	}
+	return rv
 }
 
 type machineRuleSet map[string]machineRule
@@ -90,11 +156,23 @@ func Dec19a(ctx ch.AOContext) (interface{}, error) {
 	return answer, nil
 }
 
-var Dec19b ch.AdventFunc = nil
+func Dec19b(ctx ch.AOContext) (interface{}, error) {
+	ruleset, _, err := dec19read(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-// func Dec19b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
+	defaultRange := cube.Interval{A: 1, B: 4000}
+	rng := machinePartRange{
+		X: cube.NewIntervalSet(defaultRange),
+		M: cube.NewIntervalSet(defaultRange),
+		A: cube.NewIntervalSet(defaultRange),
+		S: cube.NewIntervalSet(defaultRange),
+	}
+
+	answer := ruleset["in"].CountAcceptedParts(rng, ruleset)
+	return answer, nil
+}
 
 func dec19read(ctx ch.AOContext) (machineRuleSet, []machinePart, error) {
 	sections, err := ctx.DataSections("inputs/2023/dec19.txt")
