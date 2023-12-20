@@ -35,20 +35,58 @@ func Dec20b(ctx ch.AOContext) (interface{}, error) {
 	}
 	ctx.Print(len(mm.modules))
 
-	for i := 0; i < 0x7fffffffffffffff; i++ {
-		err = mm.Press(LOW)
+	ctx.Printf("inputs to rx: %s", mm.inputs["rx"])
+	rx0 := mm.inputs["rx"][0]
+	mod := mm.modules[rx0]
+	conj, ok := mod.module.(*conjunctionModule)
+	if !ok {
+		return nil, fmt.Errorf("node connected to rx is of type %T", conj)
+	}
+
+	inputs := mm.inputs[rx0]
+	ctx.Printf("inputs to %s: %s", rx0, inputs)
+
+	// Here, we abuse the structure of the network: it's a few disjunct parts that
+	// output HIGH periodically, which are connected to a single conjunction node.
+	// The conjunction node connecting all parts should have a period equal to the
+	// least common multiple of the period of each part.
+	// For each part, we disconnect the other parts from that final node, and
+	// measure the time to the first LOW pulse.
+
+	answer := 1
+	for _, ipt := range inputs {
+		mm, err := dec20read(ctx)
 		if err != nil {
 			return nil, err
 		}
-		if i < 5 || (i < 50 && i%10 == 9) || (i < 500 && i%100 == 99) || i%10000 == 9999 {
-			ctx.Printf("  after %d presses: low: %d, high: %d", i+1, mm.bus.lowCount, mm.bus.highCount)
+		mod := mm.modules[rx0]
+		conj := mod.module.(*conjunctionModule)
+		conj.inputState = make(map[string]pulse)
+		conj.inputState[ipt] = LOW
+
+		p, err := dec20timeToFirstOutput(ctx, mm)
+		if err != nil {
+			return nil, err
+		}
+		ctx.Printf("Period of node %s: %d", ipt, p)
+		answer = lcm(answer, p)
+	}
+
+	return answer, nil
+}
+
+func dec20timeToFirstOutput(ctx ch.AOContext, mm *moduleNetwork) (int, error) {
+	for i := 0; i < 0x7fff; i++ {
+		err := mm.Press(LOW)
+		if err != nil {
+			return 0, err
 		}
 		if mm.machineSwitch.state {
 			return i + 1, nil
 		}
 	}
 
-	return nil, errFailed
+	return 0, errFailed
 }
 
 type pulse uint8
@@ -175,7 +213,8 @@ type moduleNetwork struct {
 		module  module
 		outputs []string
 	}
-	bus *pulseBus
+	inputs map[string][]string
+	bus    *pulseBus
 
 	machineSwitch *outputModule
 }
@@ -198,6 +237,41 @@ func (n *moduleNetwork) Press(value pulse) error {
 	return nil
 }
 
+func dec20printDiagram(ctx ch.AOContext) error {
+	lines, err := ctx.DataLines("inputs/2023/dec20c.txt")
+	if err != nil {
+		return err
+	}
+
+	mermaid := "stateDiagram\n\n"
+	mermaid += "classDef broadcast    fill:#f0f\n"
+	mermaid += "classDef flipflop     fill:#0f0\n"
+	mermaid += "classDef conjunction  fill:#00f\n"
+	mermaid += "classDef output       fill:#f00\n\n"
+	mermaid += "class output output\n\n"
+
+	for _, line := range lines {
+		parts := strings.Split(line, " -> ")
+		name := parts[0][1:]
+
+		if parts[0][0] == '%' {
+			mermaid += fmt.Sprintf("class %s flipflop\n", name)
+		} else if parts[0][0] == '&' {
+			mermaid += fmt.Sprintf("class %s conjunction\n", name)
+		} else if parts[0][0] == 'b' {
+			mermaid += fmt.Sprintf("class %s broadcast\n", name)
+		}
+
+		outputs := strings.Split(parts[1], ", ")
+		for _, out := range outputs {
+			mermaid += fmt.Sprintf("%s --> %s\n", name, out)
+		}
+	}
+
+	ctx.Printf("Mermaid diagram:\n\n%s\n", mermaid)
+	return nil
+}
+
 func dec20read(ctx ch.AOContext) (*moduleNetwork, error) {
 	lines, err := ctx.DataLines("inputs/2023/dec20.txt")
 	if err != nil {
@@ -208,8 +282,8 @@ func dec20read(ctx ch.AOContext) (*moduleNetwork, error) {
 	for _, line := range lines {
 		parts := strings.Split(line, " -> ")
 		name := parts[0][1:]
-		outputs := strings.Split(parts[1], ", ")
 
+		outputs := strings.Split(parts[1], ", ")
 		for _, out := range outputs {
 			a := inputs[out]
 			a = append(a, name)
@@ -222,6 +296,7 @@ func dec20read(ctx ch.AOContext) (*moduleNetwork, error) {
 			module  module
 			outputs []string
 		}),
+		inputs:        inputs,
 		bus:           &pulseBus{},
 		machineSwitch: &outputModule{},
 	}
