@@ -51,10 +51,11 @@ func Dec20b(ctx ch.AOContext) (interface{}, error) {
 	return nil, errFailed
 }
 
-type pulse bool
+type pulse uint8
 
-const LOW pulse = false
-const HIGH pulse = true
+const LOW pulse = 1
+const HIGH pulse = 2
+const NO_PULSE pulse = 191
 
 type pulseBus struct {
 	highCount, lowCount int
@@ -107,22 +108,22 @@ func (p *pulseBus) Len() int {
 }
 
 type module interface {
-	handlePulse(string, pulse) []pulse
+	handlePulse(string, pulse) pulse
 }
 
 type flipflopModule struct {
 	state bool
 }
 
-func (ffm *flipflopModule) handlePulse(source string, value pulse) []pulse {
+func (ffm *flipflopModule) handlePulse(source string, value pulse) pulse {
 	if value == HIGH {
-		return nil
+		return NO_PULSE
 	}
 	ffm.state = !ffm.state
 	if ffm.state {
-		return []pulse{HIGH}
+		return HIGH
 	} else {
-		return []pulse{LOW}
+		return LOW
 	}
 }
 
@@ -130,9 +131,9 @@ type conjunctionModule struct {
 	inputState map[string]pulse
 }
 
-func (cjm *conjunctionModule) handlePulse(source string, value pulse) []pulse {
+func (cjm *conjunctionModule) handlePulse(source string, value pulse) pulse {
 	if _, ok := cjm.inputState[source]; !ok {
-		return nil
+		return NO_PULSE
 	}
 	cjm.inputState[source] = value
 	rv := LOW
@@ -141,21 +142,32 @@ func (cjm *conjunctionModule) handlePulse(source string, value pulse) []pulse {
 			rv = HIGH
 		}
 	}
-	return []pulse{rv}
+	return rv
 }
 
 type broadcasterModule struct {
 }
 
-func (cjm *broadcasterModule) handlePulse(source string, value pulse) []pulse {
-	return []pulse{value}
+func (cjm *broadcasterModule) handlePulse(source string, value pulse) pulse {
+	return value
 }
 
 type debugModule struct {
 }
 
-func (dbm *debugModule) handlePulse(source string, value pulse) []pulse {
-	return nil
+func (dbm *debugModule) handlePulse(source string, value pulse) pulse {
+	return NO_PULSE
+}
+
+type outputModule struct {
+	state bool
+}
+
+func (outm *outputModule) handlePulse(source string, value pulse) pulse {
+	if value == LOW {
+		outm.state = true
+	}
+	return NO_PULSE
 }
 
 type moduleNetwork struct {
@@ -165,7 +177,7 @@ type moduleNetwork struct {
 	}
 	bus *pulseBus
 
-	machineSwitch *flipflopModule
+	machineSwitch *outputModule
 }
 
 func (n *moduleNetwork) Press(value pulse) error {
@@ -177,9 +189,9 @@ func (n *moduleNetwork) Press(value pulse) error {
 			return fmt.Errorf("module '%s' not found", dest)
 		}
 		reply := mod.module.handlePulse(source, value)
-		for _, v := range reply {
+		if reply != NO_PULSE {
 			for _, d := range mod.outputs {
-				n.bus.Yeet(dest, d, v)
+				n.bus.Yeet(dest, d, reply)
 			}
 		}
 	}
@@ -211,7 +223,7 @@ func dec20read(ctx ch.AOContext) (*moduleNetwork, error) {
 			outputs []string
 		}),
 		bus:           &pulseBus{},
-		machineSwitch: &flipflopModule{},
+		machineSwitch: &outputModule{},
 	}
 
 	// Output module
