@@ -28,11 +28,28 @@ func Dec20a(ctx ch.AOContext) (interface{}, error) {
 	return mm.bus.lowCount * mm.bus.highCount, nil
 }
 
-var Dec20b ch.AdventFunc = nil
+func Dec20b(ctx ch.AOContext) (interface{}, error) {
+	mm, err := dec20read(ctx)
+	if err != nil {
+		return nil, err
+	}
+	ctx.Print(len(mm.modules))
 
-// func Dec20b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
+	for i := 0; i < 0x7fffffffffffffff; i++ {
+		err = mm.Press(LOW)
+		if err != nil {
+			return nil, err
+		}
+		if i < 5 || (i < 50 && i%10 == 9) || (i < 500 && i%100 == 99) || i%10000 == 9999 {
+			ctx.Printf("  after %d presses: low: %d, high: %d", i+1, mm.bus.lowCount, mm.bus.highCount)
+		}
+		if mm.machineSwitch.state {
+			return i + 1, nil
+		}
+	}
+
+	return nil, errFailed
+}
 
 type pulse bool
 
@@ -147,6 +164,8 @@ type moduleNetwork struct {
 		outputs []string
 	}
 	bus *pulseBus
+
+	machineSwitch *flipflopModule
 }
 
 func (n *moduleNetwork) Press(value pulse) error {
@@ -191,8 +210,16 @@ func dec20read(ctx ch.AOContext) (*moduleNetwork, error) {
 			module  module
 			outputs []string
 		}),
-		bus: &pulseBus{},
+		bus:           &pulseBus{},
+		machineSwitch: &flipflopModule{},
 	}
+
+	// Output module
+	rv.modules["rx"] = struct {
+		module  module
+		outputs []string
+	}{rv.machineSwitch, nil}
+
 	for _, line := range lines {
 		parts := strings.Split(line, " -> ")
 		name := parts[0][1:]
