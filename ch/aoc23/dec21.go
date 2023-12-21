@@ -28,20 +28,20 @@ func dec21BFSflood(lines []string, start []cube.Point, steps int) (int, *image.I
 	img := image.ReadImage(lines, image.Octothorpe)
 	img.Default = -1
 
-	reach := []cube.Point{}
+	reach := make(map[cube.Point]bool)
 	for _, pt := range start {
-		reach = append(reach, pt)
+		reach[pt] = true
 		img.Set(pt.X, pt.Y, 2)
 	}
 
 	for step := 0; step < steps; step++ {
-		newReach := []cube.Point{}
-		for _, pos := range reach {
+		newReach := make(map[cube.Point]bool)
+		for pos := range reach {
 			img.Set(pos.X, pos.Y, 0)
 			for _, add := range cube.Cardinal2D {
 				np := pos.Add(add)
 				if img.At((np.X+img.Width)%img.Width, (np.Y+img.Height)%img.Height) == 0 {
-					newReach = append(newReach, cube.Point{np.X, np.Y})
+					newReach[cube.Point{np.X, np.Y}] = true
 					img.Set(np.X, np.Y, 2)
 				}
 			}
