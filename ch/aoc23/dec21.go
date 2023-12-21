@@ -11,26 +11,36 @@ func Dec21a(ctx ch.AOContext) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	start := []cube.Point{}
+	for y, line := range lines {
+		for x, c := range line {
+			if c == 'S' {
+				start = append(start, cube.Point{x, y})
+			}
+		}
+	}
+	answer, img := dec21BFSflood(lines, start, 64)
+	ctx.Printf("Garden:\n%s", img)
+
+	return answer, nil
+}
+func dec21BFSflood(lines []string, start []cube.Point, steps int) (int, *image.Image) {
 	img := image.ReadImage(lines, image.Octothorpe)
 	img.Default = -1
 
 	reach := []cube.Point{}
-	for y, line := range lines {
-		for x, c := range line {
-			if c == 'S' {
-				reach = append(reach, cube.Point{x, y})
-				img.Set(x, y, 2)
-			}
-		}
+	for _, pt := range start {
+		reach = append(reach, pt)
+		img.Set(pt.X, pt.Y, 2)
 	}
 
-	for step := 0; step < 64; step++ {
+	for step := 0; step < steps; step++ {
 		newReach := []cube.Point{}
 		for _, pos := range reach {
 			img.Set(pos.X, pos.Y, 0)
 			for _, add := range cube.Cardinal2D {
 				np := pos.Add(add)
-				if img.At(np.X, np.Y) == 0 {
+				if img.At((np.X+img.Width)%img.Width, (np.Y+img.Height)%img.Height) == 0 {
 					newReach = append(newReach, cube.Point{np.X, np.Y})
 					img.Set(np.X, np.Y, 2)
 				}
@@ -40,8 +50,7 @@ func Dec21a(ctx ch.AOContext) (interface{}, error) {
 	}
 
 	img.Default = 0
-	ctx.Printf("Garden:\n%s", img)
-	return len(reach), nil
+	return len(reach), img
 }
 
 var Dec21b ch.AdventFunc = nil
