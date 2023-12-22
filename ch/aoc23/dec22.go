@@ -10,9 +10,86 @@ import (
 )
 
 func Dec22a(ctx ch.AOContext) (interface{}, error) {
-	lines, err := ctx.DataLines("inputs/2023/dec22.txt")
+	supports, supported, err := dec22(ctx)
 	if err != nil {
 		return nil, err
+	}
+
+	answer := 0
+	for k, v := range supports {
+		if len(v) == 0 {
+			answer++
+			if len(supports) < 26 {
+				ctx.Printf("Brick '%c' supports no bricks", 'A'+rune(k))
+			}
+		} else {
+			if len(supports) < 26 {
+				ctx.Printf("Brick '%c' supports bricks %v", 'A'+rune(k), v)
+			}
+			allOk := true
+			for _, br := range v {
+				otherSupport := false
+				for _, ob := range supported[br] {
+					if ob != k {
+						otherSupport = true
+						if len(supports) < 26 {
+							ctx.Printf("   but brick '%c' is also supported by '%c'", 'A'+rune(br), 'A'+rune(ob))
+						}
+					}
+				}
+				allOk = allOk && otherSupport
+			}
+			if allOk {
+				answer++
+			}
+		}
+	}
+
+	return answer, nil
+}
+
+func Dec22b(ctx ch.AOContext) (interface{}, error) {
+	_, supported, err := dec22(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	answer := 0
+	for brid := range supported {
+		gone := make(map[int]bool)
+		gone[brid] = true
+		changed := true
+		for changed {
+			changed = false
+			for ob, sup := range supported {
+				if gone[ob] {
+					continue
+				}
+
+				isSupported := false
+				for _, s := range sup {
+					isSupported = isSupported || !gone[s]
+				}
+				if !isSupported {
+					gone[ob] = true
+					changed = true
+				}
+			}
+		}
+
+		// ctx.Printf("Disintegrating brick %d will cause %d bricks to fall", brid, len(gone)-1)
+		answer += len(gone) - 1
+	}
+
+	// 1258: too low
+	// 10716: too low
+	return answer, nil
+}
+
+func dec22(ctx ch.AOContext) ([][]int, [][]int, error) {
+	lines, err := ctx.DataLines("inputs/2023/dec22.txt")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	var sortedBricks pq.PriorityQueue[int]
@@ -55,10 +132,12 @@ func Dec22a(ctx ch.AOContext) (interface{}, error) {
 					tb := topBrick.At(x, y)
 					if tb >= 0 {
 						sup := supports[tb]
-						sup = append(sup, i)
-						supports[tb] = sup
-						bricksBelow = append(bricksBelow, tb)
+						if len(sup) == 0 || sup[len(sup)-1] != i {
+							sup = append(sup, i)
+							supports[tb] = sup
+						}
 					}
+					bricksBelow = append(bricksBelow, tb)
 				}
 				topBrick.Set(x, y, i)
 				heightmap.Set(x, y, zfinal+1+max(z0, z1)-min(z0, z1))
@@ -67,41 +146,5 @@ func Dec22a(ctx ch.AOContext) (interface{}, error) {
 		supported[i] = bricksBelow
 	}
 
-	answer := 0
-	for k, v := range supports {
-		if len(v) == 0 {
-			answer++
-			if len(lines) < 26 {
-				ctx.Printf("Brick '%c' supports no bricks", 'A'+rune(k))
-			}
-		} else {
-			if len(lines) < 26 {
-				ctx.Printf("Brick '%c' supports bricks %v", 'A'+rune(k), v)
-			}
-			allOk := true
-			for _, br := range v {
-				otherSupport := false
-				for _, ob := range supported[br] {
-					if ob != k {
-						otherSupport = true
-						if len(lines) < 26 {
-							ctx.Printf("   but brick '%c' is also supported by '%c'", 'A'+rune(br), 'A'+rune(ob))
-						}
-					}
-				}
-				allOk = allOk && otherSupport
-			}
-			if allOk {
-				answer++
-			}
-		}
-	}
-
-	return answer, nil
+	return supports, supported, nil
 }
-
-var Dec22b ch.AdventFunc = nil
-
-// func Dec22b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
