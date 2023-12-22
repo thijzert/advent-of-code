@@ -38,6 +38,14 @@ type Cube struct {
 	X, Y, Z Interval
 }
 
+func NewCube(x0, y0, z0, x1, y1, z1 int) Cube {
+	return Cube{
+		X: Interval{A: x0, B: x1},
+		Y: Interval{A: y0, B: y1},
+		Z: Interval{A: z0, B: z1},
+	}
+}
+
 func (a Cube) Volume() int {
 	return a.X.Length() * a.Y.Length() * a.Z.Length()
 }
