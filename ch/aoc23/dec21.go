@@ -64,20 +64,20 @@ func dec21BFSflood(lines []string, start []cube.Point, steps int) (int, int, *im
 	topleft -= img.At(0, 0) / 2
 
 	img.Default = 0
-	return len(reach) - topleft, topleft, img
+	return len(reach), topleft, img
 }
 
 func dec21bGenerateTestData(ctx ch.AOContext) (interface{}, error) {
-	lines, err := ctx.DataLines("inputs/2023/dec21.txt")
+	lines, err := ctx.DataLines("inputs/2023/dec21b.txt")
 	if err != nil {
 		return nil, err
 	}
 	for i, line := range lines {
-		lines[i] = "." + strings.Repeat(line[1:], 9)
+		lines[i] = strings.Repeat(line, 9)
 	}
-	newLines := []string{lines[0]}
+	newLines := []string{}
 	for i := 0; i < 9; i++ {
-		newLines = append(newLines, lines[1:]...)
+		newLines = append(newLines, lines...)
 	}
 	lines = newLines
 	size := len(lines) - 1
@@ -88,9 +88,12 @@ func dec21bGenerateTestData(ctx ch.AOContext) (interface{}, error) {
 		return nil, errFailed
 	}
 
-	// 501 steps with actual input: 217868
-	// 69 steps with synthetic 19x19 input: 3964
-	const STEPS = 501
+	// 501 steps with actual input (tiled wrong): 217868
+	// 69 steps with synthetic 19x19 input (tiled wrong): 3964
+
+	// 75 steps with synthetic 19x19 input: 4620
+	// 73 steps with synthetic 19x19 input: 4356
+	const STEPS = 73
 
 	answer, _, img := dec21BFSflood(lines, []cube.Point{start}, STEPS)
 	ctx.Printf("With %d steps: %d", STEPS, answer)
@@ -99,14 +102,18 @@ func dec21bGenerateTestData(ctx ch.AOContext) (interface{}, error) {
 			return nil, errFailed
 		}
 	}
-	//ctx.Printf("Garden:\n%s", img)
-	row := make([]byte, img.Width+1)
-	row[img.Width] = '\n'
-	for y := 0; y < img.Height; y++ {
-		for x := 0; x < img.Width; x++ {
-			row[x] = ".o#"[img.At(x, y)]
+
+	if true {
+		ctx.Printf("Garden:\n%s", img)
+	} else {
+		row := make([]byte, img.Width+1)
+		row[img.Width] = '\n'
+		for y := 0; y < img.Height; y++ {
+			for x := 0; x < img.Width; x++ {
+				row[x] = ".o#"[img.At(x, y)]
+			}
+			os.Stdout.Write(row)
 		}
-		os.Stdout.Write(row)
 	}
 
 	return answer, nil
@@ -117,7 +124,7 @@ func Dec21b(ctx ch.AOContext) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	size := len(lines) - 1
+	size, sm := len(lines), len(lines)-1
 
 	// Assumption: the start point is in the exact centre
 	start := cube.Point{size / 2, size / 2}
@@ -125,8 +132,8 @@ func Dec21b(ctx ch.AOContext) (interface{}, error) {
 		return nil, errFailed
 	}
 
-	const STEPS = 501 // 26501365
-	const EXPECT = 237868
+	const STEPS = 26501365
+	const EXPECT = 4356
 
 	chunks := (STEPS - size/2) / size
 	stepsLeft := (STEPS - start.Y) % size
@@ -135,16 +142,16 @@ func Dec21b(ctx ch.AOContext) (interface{}, error) {
 	answer := 0
 
 	// Top to right
-	n, _, img := dec21BFSflood(lines, []cube.Point{{X: start.X, Y: size}}, stepsLeft)
+	n, _, img := dec21BFSflood(lines, []cube.Point{{X: start.X, Y: sm}}, stepsLeft)
 	ctx.Printf("top corner: (%d)\n%s", n, img)
 	answer += n
-	n, _, img = dec21BFSflood(lines, []cube.Point{{X: start.X, Y: size}}, stepsLeft+size)
+	n, _, img = dec21BFSflood(lines, []cube.Point{{X: start.X, Y: sm}}, stepsLeft+size)
 	ctx.Printf("below that: (%d)\n%s", n, img)
 	answer += n
-	n, _, img = dec21BFSflood(lines, []cube.Point{{X: 0, Y: size - 1}, {X: 1, Y: size}}, stepsLeft-1+size/2)
+	n, _, img = dec21BFSflood(lines, []cube.Point{{X: 0, Y: sm - 1}, {X: 1, Y: sm}}, stepsLeft-1+size/2)
 	ctx.Printf("just to the right: (%d)\n%s", n, img)
 	answer += n * chunks
-	n, _, img = dec21BFSflood(lines, []cube.Point{{X: 0, Y: size - 1}, {X: 1, Y: size}}, stepsLeft-1+size+size/2)
+	n, _, img = dec21BFSflood(lines, []cube.Point{{X: 0, Y: sm - 1}, {X: 1, Y: sm}}, stepsLeft-1+size+size/2)
 	ctx.Printf("just below that: (%d)\n%s", n, img)
 	answer += n * (chunks - 1)
 
@@ -169,36 +176,46 @@ func Dec21b(ctx ch.AOContext) (interface{}, error) {
 	n, _, img = dec21BFSflood(lines, []cube.Point{{X: start.X, Y: 0}}, stepsLeft+size)
 	ctx.Printf("above that: (%d)\n%s", n, img)
 	answer += n
-	n, _, img = dec21BFSflood(lines, []cube.Point{{X: size, Y: 1}, {X: size - 1, Y: 0}}, stepsLeft-1+size/2)
+	n, _, img = dec21BFSflood(lines, []cube.Point{{X: sm, Y: 1}, {X: sm - 1, Y: 0}}, stepsLeft-1+size/2)
 	ctx.Printf("just left of that: (%d)\n%s", n, img)
 	answer += n * chunks
-	n, _, img = dec21BFSflood(lines, []cube.Point{{X: size, Y: 1}, {X: size - 1, Y: 0}}, stepsLeft-1+size+size/2)
+	n, _, img = dec21BFSflood(lines, []cube.Point{{X: sm, Y: 1}, {X: sm - 1, Y: 0}}, stepsLeft-1+size+size/2)
 	ctx.Printf("just above: (%d)\n%s", n, img)
 	answer += n * (chunks - 1)
 
 	// Left to top
-	n, _, img = dec21BFSflood(lines, []cube.Point{{X: size, Y: start.Y}}, stepsLeft)
+	n, _, img = dec21BFSflood(lines, []cube.Point{{X: sm, Y: start.Y}}, stepsLeft)
 	ctx.Printf("left corner: (%d)\n%s", n, img)
 	answer += n
-	n, _, img = dec21BFSflood(lines, []cube.Point{{X: size, Y: start.Y}}, stepsLeft+size)
+	n, _, img = dec21BFSflood(lines, []cube.Point{{X: sm, Y: start.Y}}, stepsLeft+size)
 	ctx.Printf("next to that: (%d)\n%s", n, img)
 	answer += n
-	n, _, img = dec21BFSflood(lines, []cube.Point{{X: size, Y: size - 1}, {X: size - 1, Y: size}}, stepsLeft-1+size/2)
+	n, _, img = dec21BFSflood(lines, []cube.Point{{X: sm, Y: sm - 1}, {X: sm - 1, Y: sm}}, stepsLeft-1+size/2)
 	ctx.Printf("just above: (%d)\n%s", n, img)
 	answer += n * chunks
-	n, _, img = dec21BFSflood(lines, []cube.Point{{X: size, Y: size - 1}, {X: size - 1, Y: size}}, stepsLeft-1+size+size/2)
+	n, _, img = dec21BFSflood(lines, []cube.Point{{X: sm, Y: sm - 1}, {X: sm - 1, Y: sm}}, stepsLeft-1+size+size/2)
 	ctx.Printf("just right of that: (%d)\n%s", n, img)
 	answer += n * (chunks - 1)
 
 	// Full chunks
-	n, _, img = dec21BFSflood(lines, []cube.Point{{X: start.X, Y: 0}, {X: size, Y: start.Y}, {X: start.X, Y: size}, {X: 0, Y: start.Y}}, size)
-	ctx.Printf("full chunk: (%d)\n%s", n, img)
-	answer += n * (2*(chunks-1)*(chunks-2) + 4*(chunks-1) + 1)
+	fullChunks := 2*(chunks-1)*(chunks-2) + 4*(chunks-1) + 1
+	n, _, img = dec21BFSflood(lines, []cube.Point{{X: start.X, Y: start.Y}}, size*2)
+	ctx.Printf("even chunk: (%d)\n%s", n, img)
+	answer += n * (fullChunks/2 + 1)
+	n, _, img = dec21BFSflood(lines, []cube.Point{{X: start.X, Y: start.Y}}, size*2+1)
+	ctx.Printf("odd chunk: (%d)\n%s", n, img)
+	answer += n * (fullChunks / 2)
 
 	if answer == EXPECT {
 		return answer, nil
 	} else if answer <= 607072529781072 {
 		return answer, fmt.Errorf("your answer is too low")
+	} else if answer <= 608193004095205 {
+		return answer, fmt.Errorf("your answer is too low")
+	} else if answer >= 608193818757429 {
+		return answer, fmt.Errorf("your answer is too high")
+	} else if answer == 608193818757422 {
+		return answer, fmt.Errorf("not it")
 	}
 
 	return answer, errNotImplemented
