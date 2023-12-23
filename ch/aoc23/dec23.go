@@ -1,8 +1,6 @@
 package aoc23
 
 import (
-	"fmt"
-
 	"github.com/thijzert/advent-of-code/ch"
 	"github.com/thijzert/advent-of-code/lib/cube"
 )
@@ -12,49 +10,84 @@ func Dec23a(ctx ch.AOContext) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	return dec23(ctx, lines)
+}
 
+func Dec23b(ctx ch.AOContext) (interface{}, error) {
+	lines, err := ctx.DataLines("inputs/2023/dec23.txt")
+	if err != nil {
+		return nil, err
+	}
+	for i, line := range lines {
+		buf := []byte(line)
+		for j, c := range buf {
+			if c != '#' {
+				buf[j] = '.'
+			}
+		}
+		lines[i] = string(buf)
+	}
+	return dec23(ctx, lines)
+}
+
+func dec23(ctx ch.AOContext, lines []string) (interface{}, error) {
 	start, finish := cube.Pt(1, 0), cube.Pt(len(lines[0])-2, len(lines)-1)
 
 	graph := dec23ReadGraph(lines, start, finish)
 	for pt, otherCorners := range graph {
 		ctx.Printf("From %v: %v", pt, otherCorners)
-		if len(otherCorners) > 2 {
-			return nil, fmt.Errorf("Failed to find a solution: not a Cactus")
-		}
 	}
 
-	front := make(map[cube.Point]int)
-	front[start] = 0
+	corners := []cube.Point{}
+	cornerIdx := make(map[cube.Point]int)
+	for pt := range graph {
+		cornerIdx[pt] = len(corners)
+		corners = append(corners, pt)
+	}
+
+	type corn struct {
+		Location int
+		Mask     int64
+	}
+
+	front := make(map[corn]int)
+	front[corn{
+		Location: cornerIdx[start],
+		Mask:     1 << cornerIdx[start],
+	}] = 0
 	answer, gen := 0, 0
 	for len(front) > 0 {
 		gen++
 		if gen > 1000 {
 			return nil, errFailed
 		}
-		newFront := make(map[cube.Point]int)
-		for pt, dist := range front {
+		newFront := make(map[corn]int)
+		for crn, dist := range front {
+			pt := corners[crn.Location]
 			for pt1, dist1 := range graph[pt] {
 				d := dist + dist1
 				if pt1 == finish && d > answer {
 					answer = d
 				}
-				if d > newFront[pt1] {
-					newFront[pt1] = d
+				j := cornerIdx[pt1]
+				if crn.Mask&(1<<j) != 0 {
+					continue
+				}
+				crn1 := corn{
+					Location: j,
+					Mask:     crn.Mask | (1 << j),
+				}
+				if d > newFront[crn1] {
+					newFront[crn1] = d
 				}
 			}
 		}
-		ctx.Printf("front: %v", newFront)
+		ctx.Printf("front: %d", len(newFront))
 		front = newFront
 	}
 
 	return answer, nil
 }
-
-var Dec23b ch.AdventFunc = nil
-
-// func Dec23b(ctx ch.AOContext) (interface{}, error) {
-// 	return nil, errNotImplemented
-// }
 
 func dec23ReadGraph(lines []string, start, finish cube.Point) map[cube.Point]map[cube.Point]int {
 	corners := make(map[cube.Point]bool)
